@@ -27,7 +27,6 @@ public class MessageReservation {
     private SiteUser sender;
     @ManyToOne(fetch = FetchType.LAZY)
     private Chatroom chatroom;
-
     public MessageReservation(String message, LocalDateTime sendDate, MessageType messageType, SiteUser sender, Chatroom chatroom) {
         this.message = message;
         this.sendDate = sendDate;
