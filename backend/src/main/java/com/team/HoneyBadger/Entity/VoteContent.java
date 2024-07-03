@@ -6,23 +6,27 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
-public class Participant {
-    // 채팅 참가자
+public class VoteContent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
     private Long id;
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
+    private Set<String> voters;
     @ManyToOne(fetch = FetchType.LAZY)
-    private SiteUser user;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Chatroom chatroom;
+    private Vote vote;
 
     @Builder
-    public Participant(SiteUser user, Chatroom chatroom) {
-        this.user = user;
-        this.chatroom = chatroom;
+    public VoteContent(String content, Set<String> voters, Vote vote) {
+        this.content = content;
+        this.voters = voters;
+        this.vote = vote;
     }
 }

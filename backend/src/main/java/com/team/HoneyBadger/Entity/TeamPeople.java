@@ -1,7 +1,7 @@
 package com.team.HoneyBadger.Entity;
 
+import com.team.HoneyBadger.Enum.TeamRole;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,20 +9,20 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class Participant {
-    // 채팅 참가자
+public class TeamPeople {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Setter(AccessLevel.NONE)
     private Long id;
+    private TeamRole role;
     @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser user;
     @ManyToOne(fetch = FetchType.LAZY)
-    private Chatroom chatroom;
+    private Team team;
 
     @Builder
-    public Participant(SiteUser user, Chatroom chatroom) {
+    public TeamPeople(TeamRole role, SiteUser user, Team team) {
+        this.role = role;
         this.user = user;
-        this.chatroom = chatroom;
+        this.team = team;
     }
 }

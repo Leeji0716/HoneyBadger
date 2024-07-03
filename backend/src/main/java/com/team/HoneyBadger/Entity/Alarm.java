@@ -1,9 +1,8 @@
 package com.team.HoneyBadger.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,16 +15,26 @@ public class Alarm {
     // 알림
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Long id;
+    @Column(columnDefinition = "LONGTEXT")
     private String message;
+
+    @Column(columnDefinition = "TEXT")
     private String url;
+
     private LocalDateTime createDate;
     private LocalDateTime modifyDate;
 
-    public Alarm(String message, String url) {
+    @ManyToOne
+    private SiteUser user;
+
+    @Builder
+    public Alarm(String message, String url, SiteUser user) {
         this.message = message;
         this.url = url;
+        this.user = user;
         this.createDate = LocalDateTime.now();
-        this.modifyDate = LocalDateTime.now();
+        this.modifyDate = createDate;
     }
 }

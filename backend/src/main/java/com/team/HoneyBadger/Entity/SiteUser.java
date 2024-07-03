@@ -2,6 +2,7 @@ package com.team.HoneyBadger.Entity;
 
 import com.team.HoneyBadger.Enum.Role;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,19 +16,20 @@ public class SiteUser {
     // 사용자
     @Id
     @Column(length = 24)
+    @Setter(AccessLevel.NONE)
     private String username;
     private String name;
     private Role role;
+    @Column(columnDefinition = "TEXT")
     private String password;
+    @Column(length = 11)
     private String phoneNumber;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
-    private Auth auth;
+    private LocalDateTime createDate;
+    private LocalDateTime modifyDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Group group;
-    private LocalDateTime createDate;
-    private LocalDateTime modifyDate;
 
     @Builder
     public SiteUser(String username, String name, Role role, String password, String phoneNumber) {

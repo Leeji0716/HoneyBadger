@@ -9,8 +9,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class Participant {
-    // 채팅 참가자
+public class Viewer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
@@ -18,11 +17,11 @@ public class Participant {
     @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser user;
     @ManyToOne(fetch = FetchType.LAZY)
-    private Chatroom chatroom;
+    private Approval approval;
 
     @Builder
-    public Participant(SiteUser user, Chatroom chatroom) {
+    public Viewer(SiteUser user, Approval approval) {
         this.user = user;
-        this.chatroom = chatroom;
+        this.approval = approval;
     }
 }

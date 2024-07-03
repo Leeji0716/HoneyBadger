@@ -1,38 +1,38 @@
 package com.team.HoneyBadger.Entity;
 
 import com.team.HoneyBadger.Enum.ApprovalStatus;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 public class Approval {
-    // 결재
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Long id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private SiteUser sender;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private SiteUser approver;
     private String title;
-    private String content;
     private ApprovalStatus status;
+    private SiteUser sender;
+    private SiteUser approver;
 
-    private LocalDateTime createDate;
-    private LocalDateTime modifyDate;
+    private List<Viewer> viewers;
 
-    public Approval(SiteUser sender, SiteUser approver, String title, String content) {
+    @Builder
+    public Approval(String title, ApprovalStatus status, SiteUser sender, SiteUser approver, List<Viewer> viewers) {
+        this.title = title;
+        this.status = status;
         this.sender = sender;
         this.approver = approver;
-        this.title = title;
-        this.content = content;
-        this.status = ApprovalStatus.UNREAD;
-        this.createDate = LocalDateTime.now();
-        this.modifyDate = createDate;
+        this.viewers = viewers;
     }
 }
