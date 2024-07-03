@@ -1,10 +1,7 @@
 package com.team.HoneyBadger.Entity;
 
+import jakarta.persistence.*;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 
 import lombok.Builder;
@@ -28,6 +25,10 @@ public class Group {
     private LocalDateTime modifyDate;
     @OneToMany(mappedBy = "group", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<SiteUser> users;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Group parent;
+    @OneToMany(mappedBy = "parent", orphanRemoval = true, cascade = CascadeType.ALL)
+    private List<Group> subGroups;
 
     @Builder
     public Group(String name) {
