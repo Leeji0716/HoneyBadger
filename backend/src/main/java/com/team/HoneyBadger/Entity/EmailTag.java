@@ -9,20 +9,19 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class Participant {
-    // 채팅 참가자
+public class EmailTag {
+    // 이메일 태그
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
     private Long id;
+    private String name;
     @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser user;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Chatroom chatroom;
 
     @Builder
-    public Participant(SiteUser user, Chatroom chatroom) {
+    public EmailTag(String name, SiteUser user) {
+        this.name = name;
         this.user = user;
-        this.chatroom = chatroom;
     }
 }

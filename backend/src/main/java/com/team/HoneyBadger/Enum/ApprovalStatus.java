@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ApprovalStatus {
-    UNREAD("안 읽음"), READY("결재 대기 중"), APPROVE("결재 완료"), RETURN("반려")
+    NOT_READ("안 읽음"), READY("결재 대기중"), ALLOW("허가"), DENY("반환")
     //
     ;
     private final String name;

@@ -2,7 +2,7 @@ package com.team.HoneyBadger.Entity;
 
 import com.team.HoneyBadger.Enum.MessageType;
 import jakarta.persistence.*;
-import lombok.Builder;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,28 +12,28 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class MessageReservation {
-    // 메시지 예약
+    // 채팅 예약 메시지
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Long id;
+    @Column(columnDefinition = "LONGTEXT")
     private String message;
+    private LocalDateTime sendDate;
+    private LocalDateTime createDate;
+    private LocalDateTime modifyDate;
+    private MessageType messageType;
     @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser sender;
     @ManyToOne(fetch = FetchType.LAZY)
     private Chatroom chatroom;
-    private LocalDateTime sendTime;
-    private MessageType messageType;
-
-    private LocalDateTime createDate;
-    private LocalDateTime modifyDate;
-@Builder
-    public MessageReservation(String message, SiteUser sender, Chatroom chatroom, LocalDateTime sendTime, MessageType messageType) {
+    public MessageReservation(String message, LocalDateTime sendDate, MessageType messageType, SiteUser sender, Chatroom chatroom) {
         this.message = message;
+        this.sendDate = sendDate;
+        this.messageType = messageType;
         this.sender = sender;
         this.chatroom = chatroom;
-        this.sendTime = sendTime;
-        this.messageType = messageType;
-        this.createDate = LocalDateTime.now();
-        this.modifyDate = createDate;
+        this.createDate=LocalDateTime.now();
+        this.modifyDate=createDate;
     }
 }

@@ -1,26 +1,30 @@
 package com.team.HoneyBadger.Entity;
 
-import com.team.HoneyBadger.Enum.RecentStatus;
+import com.team.HoneyBadger.Enum.RecentType;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
 public class Recent {
-    // 최근 보낸 사람 목록
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
-    private SiteUser sender;
+    private SiteUser user;
     @ManyToOne(fetch = FetchType.LAZY)
-    private SiteUser receiver;
-    private RecentStatus status;
+    private SiteUser target;
+    private RecentType type;
 
-    private LocalDateTime createDate;
-    private LocalDateTime modifyDate;
+    @Builder
+    public Recent(SiteUser user, SiteUser target, RecentType type) {
+        this.user = user;
+        this.target = target;
+        this.type = type;
+    }
 }
