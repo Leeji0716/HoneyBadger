@@ -1,8 +1,10 @@
 package com.team.HoneyBadger.Entity;
 
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,5 +38,6 @@ public class Alarm {
         this.user = user;
         this.createDate = LocalDateTime.now();
         this.modifyDate = createDate;
+
     }
 }

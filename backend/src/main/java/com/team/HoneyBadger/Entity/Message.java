@@ -3,12 +3,14 @@ package com.team.HoneyBadger.Entity;
 import com.team.HoneyBadger.Enum.MessageType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+
 
 @Entity
 @Getter

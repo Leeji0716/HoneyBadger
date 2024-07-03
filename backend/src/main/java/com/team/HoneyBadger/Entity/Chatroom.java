@@ -2,6 +2,7 @@ package com.team.HoneyBadger.Entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,11 +14,13 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+
 public class Chatroom {
     // 채팅방
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
+
     private Long id;
     private String name;
     private LocalDateTime createDate;
@@ -40,5 +43,6 @@ public class Chatroom {
         this.modifyDate = createDate;
         this.participants = participants;
         this.messageList = new ArrayList<>();
+
     }
 }

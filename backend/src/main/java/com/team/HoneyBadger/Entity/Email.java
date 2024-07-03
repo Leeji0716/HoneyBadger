@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+
 import java.util.List;
 
 @Entity
@@ -32,5 +33,6 @@ public class Email {
         this.content = content;
         this.sender = sender;
         this.receiverList = receivers;
+
     }
 }
