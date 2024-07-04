@@ -46,11 +46,9 @@ export default function Main(props: Readonly<pageInterface>) {
       </div>
       {/* 밑은 */}
       <div className="flex">
-        <div></div>
-        <div>
+    
           {props?.children}
-        </div>
-
+    
       </div>
 
     </main>
