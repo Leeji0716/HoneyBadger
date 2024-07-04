@@ -31,3 +31,15 @@ body {
     text-wrap: balance;
   }
 }
+
+.login-button {
+  background-color: rgb(143, 190, 233);
+  color: white;
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+.login-button:hover {
+  background-color: #1d4ed8; 
+}
