@@ -25,8 +25,7 @@ public class EmailReservation {
     private String content;
     @ManyToOne(fetch = FetchType.EAGER)
     private SiteUser sender;
-    @OneToMany(mappedBy = "email", orphanRemoval = true, cascade = CascadeType.ALL)
-    private List<EmailReceiver> receiverList;
+    private List<String> receiverList;
     private LocalDateTime sendTime;
 
     @Builder

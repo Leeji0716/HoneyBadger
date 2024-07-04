@@ -37,6 +37,6 @@ public class EmailController {
     @PostMapping("/read")
     public ResponseEntity<?> markEmailAsRead(@RequestBody Long emailId, @RequestBody String receiverId) {
         multiService.markEmailAsRead(emailId, receiverId);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 }

@@ -26,7 +26,7 @@ public class QEmailReservation extends EntityPathBase<EmailReservation> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final ListPath<EmailReceiver, QEmailReceiver> receiverList = this.<EmailReceiver, QEmailReceiver>createList("receiverList", EmailReceiver.class, QEmailReceiver.class, PathInits.DIRECT2);
+    public final ListPath<String, StringPath> receiverList = this.<String, StringPath>createList("receiverList", String.class, StringPath.class, PathInits.DIRECT2);
 
     public final QSiteUser sender;
 
