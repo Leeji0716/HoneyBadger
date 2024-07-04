@@ -2,21 +2,19 @@ package com.team.HoneyBadger.Entity;
 
 import com.team.HoneyBadger.Enum.Role;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class SiteUser {
     // 사용자
     @Id
     @Column(length = 24)
-    @Setter(AccessLevel.NONE)
+//    @Setter(AccessLevel.NONE)
     private String username;
     private String name;
     private Role role;
