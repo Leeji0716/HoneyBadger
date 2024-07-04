@@ -1,14 +1,12 @@
 package com.team.HoneyBadger.Entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class Participant {
     // 채팅 참가자
     @Id

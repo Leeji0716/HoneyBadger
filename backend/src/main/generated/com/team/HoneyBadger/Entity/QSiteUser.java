@@ -56,7 +56,7 @@ public class QSiteUser extends EntityPathBase<SiteUser> {
 
     public QSiteUser(Class<? extends SiteUser> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.department = inits.isInitialized("department") ? new QDepartment(forProperty("department")) : null;
+        this.department = inits.isInitialized("department") ? new QDepartment(forProperty("department"), inits.get("department")) : null;
     }
 
 }
