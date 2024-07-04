@@ -37,11 +37,17 @@ export default function Home() {
       {/* 비밀번호 */}
       <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] mb-8" >
         <img src="password.png" className="w-[30px] h-[30px] m-1" alt="비밀번호 사진" />
-        <input type="password" placeholder="password" className="bolder-0 outline-none" onChange={e => setPassword(e.target.value)} />
+        <input type="password" placeholder="password" className="bolder-0 outline-none" onChange={e => setPassword(e.target.value)} 
+        
+        // 엔터로 로그인 할 수 있게 하는 부분
+        onKeyDown={e=>{
+          if(e.key=="Enter")
+              document.getElementById('login')?.click();
+        }} />
       </div>
 
       {/* 버튼 */}
-      <button className="login-button w-[400px] h-[40px] mb-5 font-semibold" type="submit" onClick={() => Sumbit()}
+      <button id="login" className="login-button w-[400px] h-[40px] mb-5 font-semibold" type="submit" onClick={() => Sumbit()}
       >L O G I N</button>
 
       {/* 찾기 */}
