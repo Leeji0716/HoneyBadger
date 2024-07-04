@@ -1,8 +1,22 @@
-"use clinet";
+"use client";
 import { useState, useEffect } from "react";
+import { Login } from "./API/AuthAPI";
 
 // { params, searchParam }: { params: any, searchParam: any }
 export default function Home() {
+  const [username, setUsername] = useState<string>();
+  const [password, setPassword] = useState<string>();
+
+  function Sumbit() {
+    if (username && password)
+      Login({ username: username, password: password }).then(r => {
+        localStorage.clear();
+        localStorage.setItem('tokenType', r.tokenType);
+        localStorage.setItem('accessToken', r.accessToken);
+        localStorage.setItem('refreshToken', r.refreshToken);
+        window.location.href = '/main';
+      }).catch(e => console.log(e))
+  }
   return <main >
     <div className="flex justify-center items-center flex-col h-screen w-screen bg-white">
 
@@ -17,17 +31,18 @@ export default function Home() {
       {/* 이메일 */}
       <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] mb-2">
         <img src="mail.png" className="w-[30px] h-[30px] m-1" alt="메일 사진" />
-        <input type="text" placeholder="email" className="bolder-0 outline-none" />
+        <input type="text" placeholder="email" className="bolder-0 outline-none" onChange={e => setUsername(e.target.value)} />
       </div>
 
       {/* 비밀번호 */}
       <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] mb-8" >
         <img src="password.png" className="w-[30px] h-[30px] m-1" alt="비밀번호 사진" />
-        <input type="password" placeholder="password" className="bolder-0 outline-none" />
+        <input type="password" placeholder="password" className="bolder-0 outline-none" onChange={e => setPassword(e.target.value)} />
       </div>
 
       {/* 버튼 */}
-      <button className="login-button w-[400px] h-[40px] mb-5 font-semibold" type="submit">L O G I N</button>
+      <button className="login-button w-[400px] h-[40px] mb-5 font-semibold" type="submit" onClick={() => Sumbit()}
+      >L O G I N</button>
 
       {/* 찾기 */}
       <div className="flex flex-row">
