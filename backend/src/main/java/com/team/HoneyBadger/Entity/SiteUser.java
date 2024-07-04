@@ -2,16 +2,14 @@ package com.team.HoneyBadger.Entity;
 
 import com.team.HoneyBadger.Enum.Role;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class SiteUser {
     // 사용자
     @Id
@@ -29,7 +27,7 @@ public class SiteUser {
     private LocalDateTime modifyDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Group group;
+    private Department department;
 
     @Builder
     public SiteUser(String username, String name, Role role, String password, String phoneNumber) {

@@ -26,7 +26,7 @@ public class QGroupCycle extends EntityPathBase<GroupCycle> {
 
     public final DateTimePath<java.time.LocalDateTime> endDate = createDateTime("endDate", java.time.LocalDateTime.class);
 
-    public final QGroup group;
+    public final QDepartment group;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
@@ -52,7 +52,7 @@ public class QGroupCycle extends EntityPathBase<GroupCycle> {
 
     public QGroupCycle(Class<? extends GroupCycle> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.group = inits.isInitialized("group") ? new QGroup(forProperty("group"), inits.get("group")) : null;
+        this.group = inits.isInitialized("group") ? new QDepartment(forProperty("group"), inits.get("group")) : null;
     }
 
 }

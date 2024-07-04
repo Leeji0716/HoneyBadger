@@ -34,7 +34,7 @@ public class QMessage extends EntityPathBase<Message> {
 
     public final DateTimePath<java.time.LocalDateTime> modifyDate = createDateTime("modifyDate", java.time.LocalDateTime.class);
 
-    public final SetPath<String, StringPath> reads = this.<String, StringPath>createSet("reads", String.class, StringPath.class, PathInits.DIRECT2);
+    public final ListPath<String, StringPath> readUsers = this.<String, StringPath>createList("readUsers", String.class, StringPath.class, PathInits.DIRECT2);
 
     public final QSiteUser sender;
 

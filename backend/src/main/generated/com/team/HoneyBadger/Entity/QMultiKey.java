@@ -22,7 +22,7 @@ public class QMultiKey extends EntityPathBase<MultiKey> {
 
     public final StringPath k = createString("k");
 
-    public final SetPath<String, StringPath> keys = this.<String, StringPath>createSet("keys", String.class, StringPath.class, PathInits.DIRECT2);
+    public final ListPath<String, StringPath> keyValues = this.<String, StringPath>createList("keyValues", String.class, StringPath.class, PathInits.DIRECT2);
 
     public QMultiKey(String variable) {
         super(MultiKey.class, forVariable(variable));

@@ -24,7 +24,7 @@ public class QSiteUser extends EntityPathBase<SiteUser> {
 
     public final DateTimePath<java.time.LocalDateTime> createDate = createDateTime("createDate", java.time.LocalDateTime.class);
 
-    public final QGroup group;
+    public final QDepartment department;
 
     public final DateTimePath<java.time.LocalDateTime> modifyDate = createDateTime("modifyDate", java.time.LocalDateTime.class);
 
@@ -56,7 +56,7 @@ public class QSiteUser extends EntityPathBase<SiteUser> {
 
     public QSiteUser(Class<? extends SiteUser> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.group = inits.isInitialized("group") ? new QGroup(forProperty("group"), inits.get("group")) : null;
+        this.department = inits.isInitialized("department") ? new QDepartment(forProperty("department"), inits.get("department")) : null;
     }
 
 }
