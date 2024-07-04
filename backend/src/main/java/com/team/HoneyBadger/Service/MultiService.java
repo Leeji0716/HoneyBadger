@@ -8,7 +8,6 @@ import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
-import com.team.HoneyBadger.Service.Module.AuthService;
 import com.team.HoneyBadger.Service.Module.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

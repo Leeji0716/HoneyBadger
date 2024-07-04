@@ -25,10 +25,10 @@ public class GroupCycle {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     @ManyToOne(fetch = FetchType.LAZY)
-    private Group group;
+    private Department group;
 
     @Builder
-    public GroupCycle(String title, String content, LocalDateTime startDate, LocalDateTime endDate, Group group) {
+    public GroupCycle(String title, String content, LocalDateTime startDate, LocalDateTime endDate, Department group) {
         this.title = title;
         this.content = content;
         this.startDate = startDate;
