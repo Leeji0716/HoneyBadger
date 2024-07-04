@@ -1,12 +1,15 @@
 package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.DTO.*;
+import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.Email;
 import com.team.HoneyBadger.Entity.EmailReceiver;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
+import com.team.HoneyBadger.Service.Module.ChatroomService;
+import com.team.HoneyBadger.Service.Module.ParticipantService;
 import com.team.HoneyBadger.Service.Module.EmailReceiverService;
 import com.team.HoneyBadger.Service.Module.EmailService;
 import com.team.HoneyBadger.Service.Module.UserService;
@@ -24,6 +27,8 @@ import java.util.List;
 public class MultiService {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ParticipantService participantService;
+    private final ChatroomService chatroomService;
     private final EmailService emailService;
     private final EmailReceiverService emailReceiverService;
 
@@ -80,6 +85,38 @@ public class MultiService {
     }
 
     /*
+     * ChatRoom
+     */
+
+    @Transactional
+    public Chatroom createChatroom(ChatroomRequestDTO chatroomRequestDTO) {
+        // Chatroom 생성
+        Chatroom chatroom = chatroomService.save(chatroomRequestDTO.name());
+        // Participant 생성 및 저장
+
+        for (String username : chatroomRequestDTO.users()) {
+            SiteUser user = userService.get(username);
+            participantService.save(user, chatroom);
+        }
+        return chatroom;
+    }
+
+    @Transactional
+    public Chatroom getChatroom(Long chatroomId) {
+        return chatroomService.getChatRoomById(chatroomId);
+    }
+
+    @Transactional
+    public Chatroom updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+
+        return chatroomService.modify(chatroomRequestDTO.name(), chatroom);
+    }
+
+    public void deleteChatroom(Chatroom chatroom) {
+        chatroomService.delete(chatroom);
+    }
+     /*
      * Email
      */
     public Email sendEmail(String title, String content, String senderId, List<String> receiverIds) {
