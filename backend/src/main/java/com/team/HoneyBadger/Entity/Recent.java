@@ -2,14 +2,12 @@ package com.team.HoneyBadger.Entity;
 
 import com.team.HoneyBadger.Enum.RecentType;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class Recent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
