@@ -23,6 +23,7 @@ const DropDown = (props: DropProps) => {
     const y = props.y ? props.y : 0;
 
     let position = {};
+
     const background = document.getElementById("main")?.getBoundingClientRect();
     const button = document.getElementById(props.button)?.getBoundingClientRect();
 
