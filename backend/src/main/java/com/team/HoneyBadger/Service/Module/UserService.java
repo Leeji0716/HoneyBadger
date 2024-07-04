@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Service.Module;
 
 import com.team.HoneyBadger.DTO.SignupRequestDTO;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,7 @@ public class UserService {
     }
 
     public SiteUser get(String username) throws IllegalArgumentException {
-        return this.userRepository.findById(username).orElse(null);
+        return this.userRepository.findById(username).orElseThrow(() -> new DataNotFoundException("user not found"));
     }
 }
 

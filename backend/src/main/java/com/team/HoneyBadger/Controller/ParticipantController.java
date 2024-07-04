@@ -26,7 +26,7 @@ public class ParticipantController {
     @PostMapping
     public ResponseEntity<?> plusParticipant(@RequestBody ParticipantRequestDTO participantRequestDTO){ //채팅방에 유저 추가 하기
         try {
-            Chatroom chatroom = multiService.getChatRoom(participantRequestDTO.chatroomId());
+            Chatroom chatroom = multiService.getChatroom(participantRequestDTO.chatroomId());
             SiteUser siteUser = userService.get(participantRequestDTO.username());
             participantService.save(siteUser, chatroom);
             List<String> users = chatroom.getParticipants().stream()

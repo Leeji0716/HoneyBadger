@@ -28,7 +28,7 @@ UserApi.interceptors.response.use((response) => {
             return UserApi(originalRequest);
         } else if (error.response.status === 403 && (error.response.data == '' || error.response.data == null)) {
             localStorage.clear();
-            window.location.href = '/account/login';
+            window.location.href = '/';
             return;
         }
     return Promise.reject(error);
@@ -43,7 +43,7 @@ const refreshAccessToken = async () => {
 }
 
 export const getUser = async () => {
-    const response = await UserApi.get('/api/user');
+    const response = await UserApi.get('/api/user', { headers: { id: "" } });
     return response.data;
 }
 interface UpdateProps {
@@ -56,6 +56,6 @@ interface UpdateProps {
     url: string
 }
 export const updateUser = async (data: UpdateProps) => {
-    const response = await UserApi.put('/api/user', data);
+    const response = await UserApi.put('/api/user', {data});
     return response.data;
 }

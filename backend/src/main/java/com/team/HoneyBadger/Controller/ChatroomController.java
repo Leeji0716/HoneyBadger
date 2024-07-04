@@ -23,7 +23,7 @@ public class ChatroomController {
     @GetMapping
     public ResponseEntity<?> getChatroom(@RequestHeader Long chatroomId){ //채팅방 가져오기(찾아오기)
         try {
-            Chatroom chatroom = multiService.getChatRoom(chatroomId);
+            Chatroom chatroom = multiService.getChatroom(chatroomId);
             List<String> users = chatroom.getParticipants().stream()
                     .map(participant -> participant.getUser().getUsername())
                     .toList();
@@ -37,7 +37,7 @@ public class ChatroomController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody ChatroomRequestDTO chatroomRequestDTO){ //채팅방 만들기 (최초 생성 : 채팅방 이름, 참여자 이름 String)
 
-            Chatroom chatroom = multiService.create(chatroomRequestDTO);
+            Chatroom chatroom = multiService.createChatroom(chatroomRequestDTO);
             List<String> users = chatroom.getParticipants().stream()
                     .map(participant -> participant.getUser().getUsername())
                     .toList();
@@ -48,7 +48,7 @@ public class ChatroomController {
     @PutMapping
     public ResponseEntity<?> updateName(@RequestHeader Long chatroomId, @RequestBody ChatroomRequestDTO chatroomRequestDTO){ //채팅방 이름 수정
         try {
-            Chatroom chatroom = multiService.update(chatroomId, chatroomRequestDTO);
+            Chatroom chatroom = multiService.updateChatroom(chatroomId, chatroomRequestDTO);
             ChatroomResponseDTO chatroomResponseDTO = new ChatroomResponseDTO(chatroom.getId(), chatroom.getName(), chatroomRequestDTO.users());
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
         } catch (DataNotFoundException ex) {
@@ -61,7 +61,7 @@ public class ChatroomController {
     @DeleteMapping
     public ResponseEntity<?> delete(@RequestHeader Long chatroomId){ //채팅방 삭제(참여자 테이블에서도 삭제됨.)
         try {
-            Chatroom chatroom = multiService.getChatRoom(chatroomId);
+            Chatroom chatroom = multiService.getChatroom(chatroomId);
             multiService.deleteChatroom(chatroom);
             return ResponseEntity.status(HttpStatus.OK).body(null);
             // throw new DataNotFoundException("not found chatroom");

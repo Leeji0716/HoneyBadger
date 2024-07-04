@@ -29,4 +29,6 @@ public class ChatroomService {
     public void delete(Chatroom chatroom) {
         chatroomRepository.delete(chatroom);
     }
+
+
 }
