@@ -13,7 +13,6 @@ import lombok.Setter;
 @Setter
 public class FileSystem {
     @Id
-    @Column(columnDefinition = "TEXT")
     @Setter(AccessLevel.NONE)
     private String k;
     @Column(columnDefinition = "LONGTEXT")

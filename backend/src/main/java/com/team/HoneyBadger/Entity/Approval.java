@@ -1,10 +1,7 @@
 package com.team.HoneyBadger.Entity;
 
 import com.team.HoneyBadger.Enum.ApprovalStatus;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,9 +20,11 @@ public class Approval {
     private Long id;
     private String title;
     private ApprovalStatus status;
+    @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser sender;
+    @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser approver;
-
+    @OneToMany(mappedBy = "approval", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<Viewer> viewers;
 
     @Builder

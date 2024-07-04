@@ -29,7 +29,7 @@ public class SiteUser {
     private LocalDateTime modifyDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Group group;
+    private Department department;
 
     @Builder
     public SiteUser(String username, String name, Role role, String password, String phoneNumber) {

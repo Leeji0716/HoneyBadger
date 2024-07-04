@@ -3,13 +3,12 @@ package com.team.HoneyBadger.Entity;
 import com.team.HoneyBadger.Enum.MessageType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 
 
 @Entity
@@ -26,19 +25,19 @@ public class Message {
     private LocalDateTime createDate;
     private LocalDateTime modifyDate;
     private MessageType messageType;
-    private Set<String> reads;
+    private List<String> readUsers;
     @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser sender;
     @ManyToOne(fetch = FetchType.LAZY)
     private Chatroom chatroom;
 
     @Builder
-    public Message(String message, MessageType messageType, Set<String> reads, SiteUser sender, Chatroom chatroom) {
+    public Message(String message, MessageType messageType, List<String> readUsers, SiteUser sender, Chatroom chatroom) {
         this.message = message;
         this.createDate = LocalDateTime.now();
         this.modifyDate = createDate;
         this.messageType = messageType;
-        this.reads = reads;
+        this.readUsers = readUsers;
         this.sender = sender;
         this.chatroom = chatroom;
     }
