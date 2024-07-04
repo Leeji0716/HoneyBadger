@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Email {
+public class EmailReservation {
     // 이메일
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,17 +25,15 @@ public class Email {
     private String content;
     @ManyToOne(fetch = FetchType.EAGER)
     private SiteUser sender;
-    @OneToMany(mappedBy = "email", orphanRemoval = true, cascade = CascadeType.ALL)
-    private List<EmailReceiver> receiverList;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private EmailTag tag;
+    private List<String> receiverList;
+    private LocalDateTime sendTime;
 
     @Builder
-    public Email(String title, String content, SiteUser sender, EmailTag tag) {
+    public EmailReservation(String title, String content, SiteUser sender, LocalDateTime sendTime) {
         this.title = title;
         this.content = content;
         this.sender = sender;
-        this.tag = tag;
+        this.sendTime = sendTime;
         this.receiverList = new ArrayList<>();
     }
 }
