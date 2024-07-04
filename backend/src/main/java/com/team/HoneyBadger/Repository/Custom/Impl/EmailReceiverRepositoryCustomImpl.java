@@ -2,7 +2,7 @@ package com.team.HoneyBadger.Repository.Custom.Impl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team.HoneyBadger.Entity.Email;
-import com.team.HoneyBadger.DTO.Entity.QEmailReceiver;
+import com.team.HoneyBadger.Entity.QEmailReceiver;
 import com.team.HoneyBadger.Repository.Custom.EmailReceiverRepositoryCustom;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
