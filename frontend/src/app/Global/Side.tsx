@@ -10,7 +10,6 @@ interface ModalProps {
   className?: string;
   escClose: boolean;
   outlineClose: boolean;
-  right?: boolean;
 }
 
 const Side = ({ open, onClose, children, outlineClassName, className, escClose, outlineClose }: ModalProps) => {
@@ -28,7 +27,7 @@ const Side = ({ open, onClose, children, outlineClassName, className, escClose, 
   const portal = ReactDOM.createPortal(
     <>
       <div className={outlineClassName + ' fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-30'} onClick={() => { if (outlineClose) onClose(); }} />
-      <div className={className + ' fixed p-0 bg-white z-[5]'}>
+      <div className={className + ' fixed p-0 bg-white top-0 z-[5]'}>
         {children}
       </div>
     </>,
