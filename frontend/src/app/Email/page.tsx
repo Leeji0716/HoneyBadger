@@ -1,4 +1,3 @@
-'use client';
 import { useEffect, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
@@ -13,11 +12,6 @@ interface EmailResponseDTO {
     semderName: string,
     receiverIds: string[]
 }
-
-interface EmailList {
-    mail: EmailResponseDTO[]
-}
-
 
 export default function Email() {
     const [open, setOpen] = useState(false);
