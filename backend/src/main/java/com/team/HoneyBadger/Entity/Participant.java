@@ -3,6 +3,8 @@ package com.team.HoneyBadger.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -18,9 +20,14 @@ public class Participant {
     @ManyToOne(fetch = FetchType.EAGER)
     private Chatroom chatroom;
 
+    private LocalDateTime createDate;
+    private LocalDateTime modifyDate;
+
     @Builder
     public Participant(SiteUser user, Chatroom chatroom) {
         this.user = user;
         this.chatroom = chatroom;
+        this.createDate = LocalDateTime.now();
+        this.modifyDate = createDate;
     }
 }

@@ -7,6 +7,8 @@ import com.team.HoneyBadger.Repository.ParticipantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ParticipantService {
@@ -18,5 +20,13 @@ public class ParticipantService {
 
     public Participant get(SiteUser user, Chatroom chatroom) {
         return participantRepository.findByUserAndChatroom(user, chatroom);
+    }
+
+    public void delete(Participant participant) {
+        participantRepository.delete(participant);
+    }
+
+    public List<Participant> getAll() {
+        return participantRepository.findAll();
     }
 }
