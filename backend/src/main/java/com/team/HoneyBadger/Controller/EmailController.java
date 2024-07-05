@@ -2,9 +2,9 @@ package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
 import com.team.HoneyBadger.DTO.EmailResponseDTO;
+import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Entity.Email;
 import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Repository.UserRepository;
 import com.team.HoneyBadger.Service.Module.EmailService;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,6 @@ import java.util.List;
 public class EmailController {
     private final MultiService multiService;
     private final EmailService emailService;
-    private final UserRepository userRepository;
 
     @PostMapping
     public ResponseEntity<?> sendEmail(@RequestBody EmailRequestDTO emailDTO) {
@@ -29,9 +28,12 @@ public class EmailController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getEmailsForUser(@RequestHeader String username) {
-        List<EmailResponseDTO> emails = multiService.getEmailsForUser(username);
-        return ResponseEntity.status(HttpStatus.OK).body(emails);
+    public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            List<EmailResponseDTO> emails = multiService.getEmailsForUser(tokenDTO.username());
+            return ResponseEntity.status(HttpStatus.OK).body(emails);
+        } else return tokenDTO.getResponseEntity();
     }
 
     @PostMapping("/read")
