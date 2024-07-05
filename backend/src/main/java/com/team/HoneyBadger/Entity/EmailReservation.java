@@ -29,6 +29,8 @@ public class EmailReservation {
     private List<String> receiverList;
     private LocalDateTime sendTime;
 
+    private LocalDateTime createTime;
+
     @Builder
     public EmailReservation(String title, String content, SiteUser sender, LocalDateTime sendTime) {
         this.title = title;
