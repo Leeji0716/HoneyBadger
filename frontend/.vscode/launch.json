@@ -5,7 +5,6 @@
             "name": "main",
             "request": "launch",
             "url": "http://localhost:3000",
-
             "webRoot": "${workspaceFolder}",
             "sourceMaps": "off",
             "resolveSourceMapLocations": [
@@ -15,7 +14,8 @@
               "outFiles": ["${workspaceFolder}/**"],
               "runtimeArgs": [
                 "--remote-debugging-port=9229",
-                "--incognito"
+                "--incognito",
+                // "--force-dark-mode"
               ],
               "env": {
                 "NODE_ENV": "development"
