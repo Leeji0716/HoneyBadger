@@ -40,14 +40,20 @@ public class MultiService {
     public TokenDTO checkToken(String accessToken) {
         HttpStatus httpStatus = HttpStatus.FORBIDDEN;
         String username = null;
+        String error_message = null;
         if (accessToken != null && accessToken.length() > 7) {
             String token = accessToken.substring(7);
             if (this.jwtTokenProvider.validateToken(token)) {
                 httpStatus = HttpStatus.OK;
                 username = this.jwtTokenProvider.getUsernameFromToken(token);
-            } else httpStatus = HttpStatus.UNAUTHORIZED;
-        }
-        return TokenDTO.builder().httpStatus(httpStatus).username(username).build();
+            } else {
+                httpStatus = HttpStatus.UNAUTHORIZED;
+                error_message = "refresh";
+            }
+        } else error_message = "not login";
+
+
+        return TokenDTO.builder().httpStatus(httpStatus).username(username).error_message(error_message).build();
     }
 
     @Transactional
@@ -83,6 +89,22 @@ public class MultiService {
     @Transactional
     public void signup(SignupRequestDTO signupRequestDTO) throws DataDuplicateException {
         userService.save(signupRequestDTO);
+    }
+
+    public UserResponseDTO getProfile(String username) {
+        SiteUser user = userService.get(username);
+        return getUserResponseDTo(user);
+    }
+
+    private UserResponseDTO getUserResponseDTo(SiteUser user) {
+        return UserResponseDTO.builder() //
+                .role(user.getRole().ordinal())//
+                .createDate(dateTimeTransfer(user.getCreateDate()))//
+                .modifyDate(dateTimeTransfer(user.getModifyDate()))//
+                .phoneNumber(user.getPhoneNumber())//
+                .name(user.getName()) //
+                .url(null) //
+                .build();
     }
 
     /*
@@ -228,10 +250,21 @@ public class MultiService {
                     .senderId(email  //
                             .getSender() //
                             .getUsername()) //
+                    .senderName(email //
+                            .getSender() //
+                            .getUsername()) //
                     .receiverIds(receivers) //
                     .build());
         }
         return list;
+    }
+
+    private EmailResponseDTO GetEmail(Email email) {
+        return EmailResponseDTO.builder()
+                .id(email.getId())
+                .title(email.getTitle())
+                .senderName(email.getSender().getName())
+                .build();
     }
 
     public void markEmailAsRead(Long emailId, String receiverId) {
@@ -287,4 +320,12 @@ public class MultiService {
 //            throw new RuntimeException("Cannot delete message older than 5 minutes");
         }
     }
+
+    /*
+     * Time
+     */
+    private Long dateTimeTransfer(LocalDateTime dateTime) {
+        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
 }
