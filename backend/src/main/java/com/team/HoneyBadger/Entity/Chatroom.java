@@ -36,6 +36,5 @@ public class Chatroom {
         this.modifyDate = createDate;
         this.participants = new ArrayList<>();
         this.messageList = new ArrayList<>();
-
     }
 }
