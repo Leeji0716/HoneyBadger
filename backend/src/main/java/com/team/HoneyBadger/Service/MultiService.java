@@ -111,7 +111,6 @@ public class MultiService {
                             .getSender() //
                             .getUsername()) //
                     .receiverIds(receivers) //
-                            .r
                     .build());
         }
         return list;
