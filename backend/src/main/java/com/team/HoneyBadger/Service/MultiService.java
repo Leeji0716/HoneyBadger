@@ -144,10 +144,21 @@ public class MultiService {
                     .senderId(email  //
                             .getSender() //
                             .getUsername()) //
+                    .senderName(email //
+                            .getSender() //
+                            .getUsername()) //
                     .receiverIds(receivers) //
                     .build());
         }
         return list;
+    }
+
+    private EmailResponseDTO GetEmail(Email email) {
+        return EmailResponseDTO.builder()
+                .id(email.getId())
+                .title(email.getTitle())
+                .senderName(email.getSender().getName())
+                .build();
     }
 
     public void markEmailAsRead(Long emailId, String receiverId) {

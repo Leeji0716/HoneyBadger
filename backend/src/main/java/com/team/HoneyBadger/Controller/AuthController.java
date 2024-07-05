@@ -25,7 +25,6 @@ public class AuthController {
         }
     }
 
-
     @GetMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestHeader("REFRESH_TOKEN") String refreshToken) {
         String newAccessToken = this.multiService.refreshToken(refreshToken);

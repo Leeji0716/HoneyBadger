@@ -25,6 +25,7 @@ public class EmailReservation {
     private String content;
     @ManyToOne(fetch = FetchType.EAGER)
     private SiteUser sender;
+    @ElementCollection
     private List<String> receiverList;
     private LocalDateTime sendTime;
 

@@ -3,6 +3,9 @@ package com.team.HoneyBadger.Controller;
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
 import com.team.HoneyBadger.DTO.EmailResponseDTO;
 import com.team.HoneyBadger.Entity.Email;
+import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Repository.UserRepository;
+import com.team.HoneyBadger.Service.Module.EmailService;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,15 +19,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmailController {
     private final MultiService multiService;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
 
     @PostMapping
     public ResponseEntity<?> sendEmail(@RequestBody EmailRequestDTO emailDTO) {
-        Email email = multiService.sendEmail(
-                emailDTO.title(),
-                emailDTO.content(),
-                emailDTO.senderId(),
-                emailDTO.receiverIds()
-        );
+        Email email = multiService.sendEmail(emailDTO.title(), emailDTO.content(), emailDTO.senderId(), emailDTO.receiverIds());
         return ResponseEntity.ok(email);
     }
 
@@ -38,5 +38,24 @@ public class EmailController {
     public ResponseEntity<?> markEmailAsRead(@RequestBody Long emailId, @RequestBody String receiverId) {
         multiService.markEmailAsRead(emailId, receiverId);
         return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @PostMapping("/schedule")
+    public ResponseEntity<?> scheduleEmail(@RequestBody EmailRequestDTO request) {
+        SiteUser sender = emailService.getUserByUsername(request.senderId());
+        emailService.scheduleEmail(
+                request.title(),
+                request.content(),
+                sender,
+                request.receiverIds(),
+                request.sendTime()
+        );
+        return ResponseEntity.ok("Email scheduled successfully.");
+    }
+
+    @DeleteMapping("/cancel")
+    public ResponseEntity<?> cancelScheduledEmail(@RequestHeader Long id) {
+        emailService.cancelScheduledEmail(id);
+        return ResponseEntity.ok("Scheduled email canceled successfully.");
     }
 }

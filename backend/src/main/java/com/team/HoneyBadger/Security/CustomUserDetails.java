@@ -49,7 +49,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
         collect.add(new GrantedAuthority() {
             @Override
             public String getAuthority() {
-                return "ROLE_"+user.getRole().name();
+                return "ROLE_" + user.getRole().name();
             }
         });
         return collect;
@@ -85,7 +85,8 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     public boolean isEnabled() {
         return true;
     }
-    public String getPhoneNumber(){
+
+    public String getPhoneNumber() {
         return user.getPhoneNumber();
     }
 

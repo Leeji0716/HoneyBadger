@@ -5,8 +5,10 @@ import com.team.HoneyBadger.Exception.DataNotFoundException;
 import lombok.Getter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 public class HoneyBadgerApplication {
     @Getter
     private static OsType osType;
