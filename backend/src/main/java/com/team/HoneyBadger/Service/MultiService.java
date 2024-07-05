@@ -102,6 +102,7 @@ public class MultiService {
                 .createDate(dateTimeTransfer(user.getCreateDate()))//
                 .modifyDate(dateTimeTransfer(user.getModifyDate()))//
                 .phoneNumber(user.getPhoneNumber())//
+                .username(user.getUsername())//
                 .name(user.getName()) //
                 .url(null) //
                 .build();
@@ -134,28 +135,21 @@ public class MultiService {
         List<Participant> participantList = participantService.getAll();
 
         // 모든 참가자들을 채팅방 ID 별로 그룹화
-        Map<Long, List<Participant>> chatrooms = participantList.stream()
-                .collect(Collectors.groupingBy(p -> p.getChatroom().getId()));
+        Map<Long, List<Participant>> chatrooms = participantList.stream().collect(Collectors.groupingBy(p -> p.getChatroom().getId()));
 
         for (Map.Entry<Long, List<Participant>> entry : chatrooms.entrySet()) {
             List<Participant> chatroomParticipants = entry.getValue();
 
             // 각 채팅방이 정확히 두 명의 참가자를 가지고 있는지 확인
             if (chatroomParticipants.size() == 2) {
-                List<String> chatroomUsernames = chatroomParticipants.stream()
-                        .map(p -> p.getUser().getUsername())
-                        .collect(Collectors.toList());
+                List<String> chatroomUsernames = chatroomParticipants.stream().map(p -> p.getUser().getUsername()).collect(Collectors.toList());
 
                 // 요청된 사용자 목록과 동일여부
                 if (new HashSet<>(chatroomRequestDTO.users()).containsAll(chatroomUsernames)) {
                     Chatroom chatroom = chatroomParticipants.get(0).getChatroom();
 
                     // 채팅방이 존재할 경우 ChatroomResponseDTO 생성하여 반환
-                    return ChatroomResponseDTO.builder()
-                            .id(chatroom.getId())
-                            .name(chatroom.getName())
-                            .users(chatroomUsernames)
-                            .build();
+                    return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(chatroomUsernames).build();
                 }
             }
         }
@@ -260,11 +254,7 @@ public class MultiService {
     }
 
     private EmailResponseDTO GetEmail(Email email) {
-        return EmailResponseDTO.builder()
-                .id(email.getId())
-                .title(email.getTitle())
-                .senderName(email.getSender().getName())
-                .build();
+        return EmailResponseDTO.builder().id(email.getId()).title(email.getTitle()).senderName(email.getSender().getName()).build();
     }
 
     public void markEmailAsRead(Long emailId, String receiverId) {
@@ -277,12 +267,7 @@ public class MultiService {
     public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO) {
         Chatroom chatroom = chatroomService.getChatRoomById(id);
         SiteUser siteUser = userService.get(messageRequestDTO.username());
-        Message message = Message.builder()
-                .message(messageRequestDTO.message())
-                .sender(siteUser)
-                .chatroom(chatroom)
-                .messageType(MessageType.TEXT)
-                .build();
+        Message message = Message.builder().message(messageRequestDTO.message()).sender(siteUser).chatroom(chatroom).messageType(MessageType.TEXT).build();
 
         messageService.save(message);
 
@@ -290,12 +275,7 @@ public class MultiService {
     }
 
     private MessageResponseDTO GetMessage(Message message) {
-        return MessageResponseDTO.builder()
-                .id(message.getId())
-                .sendTime(message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
-                .username(message.getSender().getUsername())
-                .message(message.getMessage())
-                .build();
+        return MessageResponseDTO.builder().id(message.getId()).sendTime(message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()).username(message.getSender().getUsername()).message(message.getMessage()).build();
     }
 
     public void deleteMessage(Long messageId) {

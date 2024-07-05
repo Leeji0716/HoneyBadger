@@ -43,7 +43,7 @@ const refreshAccessToken = async () => {
 }
 
 export const getUser = async () => {
-    const response = await UserApi.get('/api/user', { headers: { id: "" } });
+    const response = await UserApi.get('/api/user');
     return response.data;
 }
 interface UpdateProps {

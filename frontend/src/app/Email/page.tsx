@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
 import { getDate } from "../Global/Method";
+import { getUser } from "../API/UserAPI";
 
 interface EmailResponseDTO {
     id: number,
@@ -22,8 +23,12 @@ export default function Email() {
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
     const [user, setUser] = useState(null as any);
+    const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
+    useEffect(() => {
+        getUser().then(r => setUser(r)).catch(e => console.log(e));
 
-
+    }, [ACCESS_TOKEN])
+    console.log(user);
     function MailBox({ title, content, date }: { title: string, content: string, date: number }) {
         return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300">
             <div className="h-full w-[6px] official-color mr-2"></div>
@@ -104,7 +109,7 @@ export default function Email() {
         </div>
         <div className="w-8/12 flex items-center justify-center">
             <div className="h-11/12 w-11/12 mt-10 bg-white h-screen shadow p-4">
-                <MailDetail/>
+                <MailDetail />
             </div>
         </div>
         <div>
