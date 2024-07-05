@@ -3,6 +3,8 @@ package com.team.HoneyBadger.Controller;
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
 import com.team.HoneyBadger.DTO.EmailResponseDTO;
 import com.team.HoneyBadger.Entity.Email;
+import com.team.HoneyBadger.Repository.UserRepository;
+import com.team.HoneyBadger.Service.Module.EmailService;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,15 +18,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmailController {
     private final MultiService multiService;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
 
     @PostMapping
     public ResponseEntity<?> sendEmail(@RequestBody EmailRequestDTO emailDTO) {
-        Email email = multiService.sendEmail(
-                emailDTO.title(),
-                emailDTO.content(),
-                emailDTO.senderId(),
-                emailDTO.receiverIds()
-        );
+        Email email = multiService.sendEmail(emailDTO.title(), emailDTO.content(), emailDTO.senderId(), emailDTO.receiverIds());
         return ResponseEntity.ok(email);
     }
 
