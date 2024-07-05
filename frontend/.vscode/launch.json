@@ -15,7 +15,8 @@
               "outFiles": ["${workspaceFolder}/**"],
               "runtimeArgs": [
                 "--remote-debugging-port=9229",
-                "--incognito"
+                "--incognito",
+                "--force-dark-mode"
               ],
               "env": {
                 "NODE_ENV": "development"

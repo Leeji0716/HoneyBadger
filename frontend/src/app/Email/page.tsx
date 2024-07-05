@@ -1,10 +1,10 @@
-'use client';
+ 'use client';
 import { useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
 
 
-export default function email() {
+export default function Email() {
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
     return <Main>
