@@ -3,6 +3,7 @@ import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
 import { getDate } from "../Global/Method";
 import { getUser } from "../API/UserAPI";
+import { getSocket, Subscribe } from "../API/SocketAPI";
 
 interface EmailResponseDTO {
     id: number,
@@ -17,10 +18,13 @@ export default function Email() {
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
     const [user, setUser] = useState(null as any);
+    const [socket, setSocket] = useState(null as any);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     useEffect(() => {
         getUser().then(r => setUser(r)).catch(e => console.log(e));
-
+        const sub = [] as Subscribe[];
+        sub.push({ location: "/api/sub/message/1", active: (r) => { console.log("actived", r) } })
+        setSocket(getSocket(sub, () => console.log("test")));
     }, [ACCESS_TOKEN])
     console.log(user);
     function MailBox({ title, content, date }: { title: string, content: string, date: number }) {
@@ -77,6 +81,7 @@ export default function Email() {
     const test = { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 };
     const test2 = [{ title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }, { title: "디아블로 확장팩 사게 오만..", content: "안녕하셍쇼", date: 1730000000000 }]
     return <Main>
+        <button className="btn btn-xl" onClick={() => { socket.publish({ destination: "/api/pub/message/1", body: JSON.stringify({ username: user?.username, message: "test" }) }); }}>test</button>
         <div className="w-4/12 flex items-center justify-center">
             <div className="h-11/12 w-11/12 mt-10 bg-white h-screen shadow p-2">
                 <div className="w-full h-30 flex flex-row gap-20 ">
