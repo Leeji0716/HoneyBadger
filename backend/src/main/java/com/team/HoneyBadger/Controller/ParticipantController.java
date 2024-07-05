@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Controller;
 import com.team.HoneyBadger.DTO.ChatroomResponseDTO;
 import com.team.HoneyBadger.DTO.ParticipantRequestDTO;
 import com.team.HoneyBadger.Entity.Chatroom;
+import com.team.HoneyBadger.Entity.Participant;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Service.Module.ParticipantService;
@@ -21,18 +22,21 @@ import java.util.List;
 @RequestMapping("/api/participant")
 public class ParticipantController {
     private final MultiService multiService;
-    private final UserService userService;
-    private final ParticipantService participantService;
+
     @PostMapping
-    public ResponseEntity<?> plusParticipant(@RequestBody ParticipantRequestDTO participantRequestDTO){ //채팅방에 유저 추가 하기
+    public ResponseEntity<?> plusParticipant(@RequestBody ParticipantRequestDTO participantRequestDTO){ //채팅방에 유저 추가 or 차감 하기
         try {
-            Chatroom chatroom = multiService.getChatroom(participantRequestDTO.chatroomId());
-            SiteUser siteUser = userService.get(participantRequestDTO.username());
-            participantService.save(siteUser, chatroom);
-            List<String> users = chatroom.getParticipants().stream()
-                    .map(participant -> participant.getUser().getUsername())
-                    .toList();
-            ChatroomResponseDTO chatroomResponseDTO = new ChatroomResponseDTO(chatroom.getId(), chatroom.getName(), users);
+            ChatroomResponseDTO chatroomResponseDTO = multiService.plusParticipant(participantRequestDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
+        } catch (DataDuplicateException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> minusParticipant(@RequestBody ParticipantRequestDTO participantRequestDTO){ //채팅방에 유저 추가 or 차감 하기
+        try {
+            ChatroomResponseDTO chatroomResponseDTO = multiService.minusParticipant(participantRequestDTO);
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
         } catch (DataDuplicateException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());

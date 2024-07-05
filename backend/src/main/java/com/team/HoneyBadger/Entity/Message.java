@@ -2,10 +2,7 @@ package com.team.HoneyBadger.Entity;
 
 import com.team.HoneyBadger.Enum.MessageType;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +11,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class Message {
     // 채팅 메시지
     @Id
