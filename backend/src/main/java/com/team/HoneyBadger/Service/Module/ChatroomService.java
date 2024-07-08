@@ -44,4 +44,9 @@ public class ChatroomService {
         chatroom.setName(name);
         return chatroomRepository.save(chatroom);
     }
+
+    @Transactional
+    public List<Chatroom> getChatRoomListByUser(SiteUser user) {
+        return chatroomRepository.findChatroomsByUser(user);
+    }
 }

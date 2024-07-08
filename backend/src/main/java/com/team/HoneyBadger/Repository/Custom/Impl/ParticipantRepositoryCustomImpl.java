@@ -13,8 +13,6 @@ import java.util.List;
 public class ParticipantRepositoryCustomImpl implements ParticipantRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
-
-
     QParticipant qParticipant = QParticipant.participant;
 
     public List<Participant> findByUserIn(List<SiteUser> users){

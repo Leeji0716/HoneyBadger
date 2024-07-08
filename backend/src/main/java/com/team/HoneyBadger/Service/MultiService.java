@@ -4,22 +4,26 @@ import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.MessageType;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
+import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
 import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -178,6 +182,17 @@ public class MultiService {
     }
 
     @Transactional
+    public List<ChatroomResponseDTO> getChatRoomListByUser(String username) {
+        SiteUser siteUser = userService.get(username);
+        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser);
+        List<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
+        for(Chatroom chatroom : chatroomList){
+            chatroomResponseDTOList.add(getChatRoom(chatroom));
+        }
+        return chatroomResponseDTOList;
+    }
+
+    @Transactional
     private ChatroomResponseDTO getChatRoom(Chatroom chatroom) {
         List<String> users = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
         return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).build();
@@ -264,14 +279,38 @@ public class MultiService {
     /*
      * Message or Chat
      */
-    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO) {
+    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(id);
-        SiteUser siteUser = userService.get(messageRequestDTO.username());
-        Message message = Message.builder().message(messageRequestDTO.message()).sender(siteUser).chatroom(chatroom).messageType(MessageType.TEXT).build();
 
-        messageService.save(message);
+        SiteUser siteUser = userService.get(username);
+        MessageType messageType;
 
-        return GetMessage(message);
+        switch (messageRequestDTO.messageType()) {
+            case 0:
+                messageType = MessageType.TEXT;
+                break;
+            case 1:
+                messageType = MessageType.IMAGE;
+                break;
+            case 2:
+                messageType = MessageType.LINK;
+                break;
+            case 3:
+                messageType = MessageType.FILE;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown message type: " + messageRequestDTO.messageType());
+        }
+
+        Message message = Message.builder()
+                .message(messageRequestDTO.message())
+                .sender(siteUser)
+                .chatroom(chatroom)
+                .messageType(messageType)
+                .build();
+
+
+        return GetMessage(messageService.save(message));
     }
 
     private MessageResponseDTO GetMessage(Message message) {
@@ -299,6 +338,36 @@ public class MultiService {
             System.out.println("Cannot delete message older than 5 minutes");
 //            throw new RuntimeException("Cannot delete message older than 5 minutes");
         }
+    }
+
+    public String fileUpload(Long roomId, MultipartFile file) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/chatroom/" + roomId.toString() + "/" + uuid.toString() + ".";// IMAGE
+        switch (file.getContentType().split("/")[0]) {
+            case "image" -> fileName += file.getContentType().split("/")[1];
+            case "text" -> fileName += "txt";
+            case "application" -> {
+                String value = file.getContentType().split("/")[1];
+                if (value.contains("presentation") && value.contains("12")) fileName += "pptm";
+                else if (value.equals("zip"))
+                    fileName += "zip";
+                else if (value.contains("spreadsheetml"))
+                    fileName += "xlsx";
+                else {
+                    throw new DataNotFoundException("not support");
+                }
+            }
+            default -> {
+                throw new DataNotFoundException("not support");
+            }
+        }
+        File dest = new File(path + fileName);
+
+        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+        file.transferTo(dest);
+
+        return fileName;
     }
 
     /*
