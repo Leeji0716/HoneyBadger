@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Chat with File Upload</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.4.0/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script>
+        function sendFile() {
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.readAsArrayBuffer(file);
+
+                reader.onload = function (event) {
+                    var arrayBuffer = event.target.result;
+                    var messageSender = document.getElementById('username').value;
+
+                    // Extract file name from fileInput
+                    var fileName = file.name;
+
+                    // Send file as ArrayBuffer and additional metadata
+                    stompClient.send("/api/pub/message/2", {}, JSON.stringify({
+                        username: messageSender,
+                        message: fileName, // 파일 이름을 메시지 필드로 전달
+                        messageType: 4, // FILE 메시지 타입은 4로 설정
+                        file: Array.from(new Uint8Array(arrayBuffer)) // ArrayBuffer를 Uint8Array로 변환하여 전송
+                    }));
+                };
+
+                reader.onerror = function (event) {
+                    console.error('File read error:', event.target.error);
+                };
+            } else {
+                console.error('No file selected.');
+            }
+        }
+    </script>
+</head>
+
+<form method="POST" action="/api/email" enctype="multipart/form-data">
+    <input type="text" name="title" placeholder="Email Title"><br>
+    <textarea name="content" placeholder="Email Content"></textarea><br>
+    <input type="text" name="senderId" placeholder="Sender ID"><br>
+    <input type="text" name="receiverIds" placeholder="Receiver IDs (comma-separated)"><br>
+    <input type="datetime-local" name="sendTime" placeholder="Scheduled Send Time"><br>
+    <input type="file" name="attachments" multiple><br>
+    <button type="submit">Send Email</button>
+</form>
+
+</html>

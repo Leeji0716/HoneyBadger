@@ -1,14 +1,15 @@
 package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
-import com.team.HoneyBadger.DTO.EmailResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.Entity.Email;
+import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Service.Module.EmailReservationService;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -16,26 +17,84 @@ import java.util.List;
 @RequestMapping("/api/email")
 @RequiredArgsConstructor
 public class EmailController {
-    private final MultiService multiService;
 
-    @PostMapping
-    public ResponseEntity<?> sendEmail(@RequestBody EmailRequestDTO emailDTO) {
-        Email email = multiService.sendEmail(emailDTO.title(), emailDTO.content(), emailDTO.senderId(), emailDTO.receiverIds(), emailDTO.sendTime());
-        return ResponseEntity.ok(email);
+    private final MultiService multiService;
+    private final EmailReservationService emailReservationService;
+
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<?> sendEmail(
+            @ModelAttribute EmailRequestDTO emailDTO,
+            @RequestParam("attachments") List<MultipartFile> attachments
+    ) {
+        SiteUser sender = emailReservationService.getUserByUsername(emailDTO.senderId());
+        emailReservationService.scheduleEmail(
+                emailDTO.title(),
+                emailDTO.content(),
+                sender,
+                emailDTO.receiverIds(),
+                emailDTO.sendTime(),
+                attachments  // 여기서 attachments를 전달합니다
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
 
     @GetMapping
     public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
-            List<EmailResponseDTO> emails = multiService.getEmailsForUser(tokenDTO.username());
-            return ResponseEntity.status(HttpStatus.OK).body(emails);
-        } else return tokenDTO.getResponseEntity();
+            return ResponseEntity.status(HttpStatus.OK).body(multiService.getEmailsForUser(tokenDTO.username()));
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
     }
 
     @PostMapping("/read")
     public ResponseEntity<?> markEmailAsRead(@RequestBody Long emailId, @RequestBody String receiverId) {
         multiService.markEmailAsRead(emailId, receiverId);
         return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteEmail(@RequestHeader("Authorization") String accessToken, @RequestBody Long emailId) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            multiService.deleteEmail(emailId, tokenDTO.username());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
+    }
+
+    @DeleteMapping("/reservation")
+    public ResponseEntity<?> deleteScheduledEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long reservationId) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            emailReservationService.cancelScheduledEmail(reservationId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
+    }
+
+    @PostMapping(value = "/schedule", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> scheduleEmail(
+            @ModelAttribute EmailRequestDTO emailDTO,
+            @RequestParam("attachments") List<MultipartFile> attachments
+    ) {
+        TokenDTO tokenDTO = multiService.checkToken(emailDTO.senderId());
+        if (tokenDTO.isOK()) {
+            SiteUser sender = emailReservationService.getUserByUsername(emailDTO.senderId());
+            emailReservationService.scheduleEmail(
+                    emailDTO.title(),
+                    emailDTO.content(),
+                    sender,
+                    emailDTO.receiverIds(),
+                    emailDTO.sendTime(),
+                    attachments  // 여기서 attachments를 전달합니다
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(null);
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
     }
 }

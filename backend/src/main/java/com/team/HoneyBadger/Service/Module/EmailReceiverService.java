@@ -2,6 +2,7 @@ package com.team.HoneyBadger.Service.Module;
 
 import com.team.HoneyBadger.Entity.Email;
 import com.team.HoneyBadger.Entity.EmailReceiver;
+import com.team.HoneyBadger.Entity.EmailReservation;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Repository.EmailReceiverRepository;
 import jakarta.transaction.Transactional;
@@ -28,5 +29,8 @@ public class EmailReceiverService {
     }
     public List<Email> getEmailsForUser(String userId) {
         return emailReceiverRepository.findByReceiver(userId);
+    }
+
+    public void save(EmailReservation emailReservation) {
     }
 }

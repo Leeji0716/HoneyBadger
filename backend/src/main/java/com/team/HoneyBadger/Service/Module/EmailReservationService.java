@@ -11,7 +11,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,8 +26,11 @@ public class EmailReservationService {
     private final UserRepository userRepository;
     private final EmailRepository emailRepository;
 
+    // 파일을 저장할 경로 설정
+    private final String uploadDir = "/path/to/upload/directory";
+
     @Transactional
-    public void scheduleEmail(String title, String content, SiteUser sender, List<String> receivers, LocalDateTime sendTime) {
+    public void scheduleEmail(String title, String content, SiteUser sender, List<String> receivers, LocalDateTime sendTime, List<MultipartFile> attachments) {
         EmailReservation emailReservation = new EmailReservation();
         emailReservation.setTitle(title);
         emailReservation.setContent(content);
@@ -59,7 +65,7 @@ public class EmailReservationService {
         emailRepository.save(email);
     }
 
-    @Scheduled(cron = "0 0/30 * * * *")
+    @Scheduled(cron = "0 0 */1 * * *")
     public void processScheduledEmails() {
         LocalDateTime now = LocalDateTime.now();
         List<EmailReservation> emailsToProcess = emailReservationRepository.findBySendTimeBeforeAndSendTimeIsNotNull(now);
@@ -73,5 +79,14 @@ public class EmailReservationService {
     public SiteUser getUserByUsername(String username) {
         return userRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    }
+
+    private void saveFile(MultipartFile file) {
+        try {
+            String filePath = uploadDir + "/" + file.getOriginalFilename();
+            file.transferTo(new File(filePath));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save file", e);
+        }
     }
 }
