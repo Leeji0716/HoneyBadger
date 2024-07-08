@@ -47,8 +47,15 @@ body {
   background-color: rgb(143, 190, 233); /* RGB 값으로 배경 색상 설정 */
 }
 
+
 .text-official-color {
   color: rgb(143, 190, 233); /* RGB 값으로 텍스트 색상 설정 */
+}
+
+
+.mail-hover:hover{
+  border: solid 2px rgb(143, 190, 233);
+  border-radius: 5px;
 }
 
 .hamburger {
