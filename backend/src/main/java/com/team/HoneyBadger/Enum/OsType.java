@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum OsType {
-    Window("C:/web/shopping"), Linux("/home/ubuntu/shopping/data")
+    Window("C:/web/honeybadger"), Linux("/home/ubuntu/honeybadger/data")
     //
     ;
     private final String loc;
