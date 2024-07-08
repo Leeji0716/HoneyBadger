@@ -61,7 +61,7 @@ export const updateUser = async (data: UpdateProps) => {
 }
 
 export const getChat = async () => {
-    const response = await UserApi.get('/api/chatroom');
+    const response = await UserApi.get('/api/chatroom/list');
     console.log("-==========");
     console.log(response.data)
     return response.data;

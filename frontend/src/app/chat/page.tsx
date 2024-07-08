@@ -5,9 +5,15 @@ import DropDown, { Direcion } from "../Global/DropDown";
 import ReactTooltip, { Tooltip } from 'react-tooltip';
 import Link from "next/link";
 import { getChat, getUser } from "../API/UserAPI";
+import { getDateTimeFormat } from "../Global/Method";
 
 export default function Chat() {
-
+    interface messageRespnseDTO {
+        username: string,
+        message: string,
+        type: number,
+        date: number
+    }
     interface chatroomResponseDTO {
         id: number,
         name: string,
@@ -18,32 +24,23 @@ export default function Chat() {
     const [open1, setOpen1] = useState(false);
     const [filter, setFilter] = useState(false);
     const [drop, setDrop] = useState(false);
-    const [chat, setChat] = useState("채팅▾");
+    // const [chat, setChat] = useState("채팅▾");
     const [chatrooms, setChatrooms] = useState([] as any);
     const [chatroom, setChatroom] = useState(null as any);
     const [user, setUser] = useState(null as any);
+    const [test, setTest] = useState<messageRespnseDTO[]>([]);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => setUser(r)).catch(e => console.log(e));
-
+        const test = [] as messageRespnseDTO[];
+        test.push({ username: "admin", message: "test", type: 0, date: 0 });
+        test.push({ username: "admin2", message: "test3", type: 0, date: 0 });
+        test.push({ username: "admin", message: "tes4t", type: 0, date: 0 });
+        test.push({ username: "admin", message: "test5", type: 0, date: 0 });
+        setTest(test);
     }, [ACCESS_TOKEN])
 
-    function Filter(filter: boolean) {
-        if (filter) {
-            setFilter(false);
-        } else {
-            setFilter(true);
-        }
-    }
-
-    useEffect(() => {
-        if (filter) {
-            setChat("채팅▴");
-        } else {
-            setChat("채팅▾");
-        }
-    }, [filter])
 
     useEffect(() => {
         getChat().then(r => {
@@ -54,92 +51,27 @@ export default function Chat() {
 
     function ChatList(chatroom: { chatroom: chatroomResponseDTO }) {
         const joinMembers: number = chatroom.chatroom.users.length;
-
-        switch (joinMembers) {
-
-            case 1:
-                return <div className="flex hover:bg-gray-400 text-white rounded-md">
-                    <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />
-                    <div className="w-full m-2 flex flex-col">
-                        <div className="flex justify-between">
-                            <p className="text-black font-bold">{chatroom?.chatroom.name}</p>
-
-                        </div>
-                        <div className="flex justify-between mt-2">
-                            <p className="text-black text-sm">안녕하세요 저는 이렇게 어떻게 하아 이거 맞냐? 어디까지 길어지는 거예요?</p>
-                        </div>
+        function getValue(confirm: number) {
+            switch (joinMembers) {
+                case 1: return <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />;
+                case 2: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
+                    <div className="w-[80px] h-[40px] flex">
+                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full ml-2 mt-2" />
                     </div>
-                    <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
-                        <div>
-                            <p className="text-gray-300 whitespace-nowrap">오후 1:03</p>
-                        </div>
-                        <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
-                            <p className="text-white text-sm">1</p>
-                        </div>
+                    <div className="w-[80px] h-[40px] flex justify-end">
+                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full mr-2 mb-2" />
                     </div>
                 </div>
-
-            case 2:
-                return <div className="flex hover:bg-gray-400 text-white rounded-md">
-                    <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
-                        <div className="w-[80px] h-[40px] flex">
-                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full ml-2 mt-2" />
-                        </div>
-                        <div className="w-[80px] h-[40px] flex justify-end">
-                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full mr-2 mb-2" />
-                        </div>
+                case 3: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
+                    <div className="w-[80px] h-[40px] flex justify-center">
+                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
                     </div>
-                    <div className="w-full m-2 flex flex-col">
-                        <div className="flex justify-between">
-                            <p className="text-black font-bold">PAYCO</p>
-
-                        </div>
-                        <div className="flex justify-between mt-2">
-                            <p className="text-black text-sm">안녕하세요 저는 이렇게 어떻게 하아 이거 맞냐? 어디까지 길어지는 거예요?</p>
-                        </div>
-                    </div>
-                    <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
-                        <div>
-                            <p className="text-gray-300 whitespace-nowrap">오후 1:03</p>
-                        </div>
-                        <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
-                            <p className="text-white text-sm">1</p>
-                        </div>
+                    <div className="w-[80px] h-[40px] flex">
+                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
+                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
                     </div>
                 </div>
-
-            case 3:
-                return <div className="flex hover:bg-gray-400 text-white rounded-md">
-                    <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
-                        <div className="w-[80px] h-[40px] flex justify-center">
-                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
-                        </div>
-                        <div className="w-[80px] h-[40px] flex">
-                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
-                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
-                        </div>
-                    </div>
-                    <div className="w-full m-2 flex flex-col">
-                        <div className="flex justify-between">
-                            <p className="text-black font-bold">PAYCO</p>
-
-                        </div>
-                        <div className="flex justify-between mt-2">
-                            <p className="text-black text-sm">안녕하세요 저는 이렇게 어떻게 하아 이거 맞냐? 어디까지 길어지는 거예요? 어디까지 길어지고 언제까지 커지는지 그게 궁금해ㅑ서 말이죠 저는 그게 진짜 궁금해요</p>
-                        </div>
-                    </div>
-                    <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
-                        <div>
-                            <p className="text-gray-300 whitespace-nowrap">오후 1:03</p>
-                        </div>
-                        <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
-                            <p className="text-white text-sm">1</p>
-                        </div>
-                    </div>
-                </div>
-
-            default:
-                return <div className="flex hover:bg-gray-400 text-white rounded-md">
+                default:
                     <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
                         <div className="w-[80px] h-[40px] flex">
                             <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
@@ -150,25 +82,28 @@ export default function Chat() {
                             <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
                         </div>
                     </div>
-                    <div className="w-full m-2 flex flex-col">
-                        <div className="flex justify-between">
-                            <p className="text-black font-bold">PAYCO</p>
+            }
+        }
+        return <div className="flex hover:bg-gray-400 text-white rounded-md cursor-pointer" onClick={() => { console.log(chatroom?.chatroom?.id) }}>
+            {getValue(joinMembers)}
 
-                        </div>
-                        <div className="flex justify-between mt-2">
-                            <p className="text-black text-sm">안녕하세요 저는 이렇게 어떻게 하아 이거 맞냐? 어디까지 길어지는 거예요? </p>
-                        </div>
-                    </div>
-                    <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
-                        <div>
-                            <p className="text-gray-300 whitespace-nowrap">오후 1:03</p>
-                        </div>
-                        <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
-                            <p className="text-white text-sm">1</p>
-                        </div>
-                    </div>
+            <div className="w-full m-2 flex flex-col">
+                <div className="flex justify-between">
+                    <p className="text-black font-bold">{chatroom?.chatroom.name}</p>
                 </div>
-        }   
+                <div className="flex justify-between mt-2">
+                    <p className="text-black text-sm">안녕하세요 저는 이렇게 어떻게 하아 이거 맞냐? 어디까지 길어지는 거예요?</p>
+                </div>
+            </div>
+            <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
+                <div>
+                    <p className="text-gray-300 whitespace-nowrap">오후 1:03</p>
+                </div>
+                <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
+                    <p className="text-white text-sm">1</p>
+                </div>
+            </div>
+        </div>
     }
 
     return <Main>
@@ -176,7 +111,7 @@ export default function Chat() {
             {/* 왼 쪽 부분 */}
             <div className=" h-11/12 w-11/12 mt-10 bg-white h-[95%] shadow">
                 <div className="flex justify-start text-xl ml-5 mr-5 mt-5 mb-5 text-black">
-                    <button className="font-bold" id="button1" onClick={() => { setOpen(!open), setFilter(!filter) }}>{chat}</button>
+                    <button className="font-bold" id="button1" onClick={() => { setOpen(!open), setFilter(!filter) }}>채팅{open ? '▴' : '▾'}</button>
                     <DropDown open={open} onClose={() => setOpen(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="button1">
                         <button>개인</button>
                         <button>단체</button>
@@ -268,6 +203,44 @@ export default function Chat() {
                         </div>
                     </div>
                     {/* 채팅 */}
+                    {test?.map((t, index) => <div key={index} className="w-full flex flex-col items-start m-1">
+                        {
+                            t.username == user?.username ?
+                                <div className="flex w-full justify-end">
+                                    <div className="w-6/12 flex justify-end mr-2">
+                                        <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getDateTimeFormat(t?.date)}</p>
+                                        <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
+                                            <div className="mt-2 mb-2 ml-3 mr-3">
+                                                {t.type == 0 ? t?.message : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                :
+                                <div className="flex w-6/12 ml-2">
+                                    <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
+                                    <div className="flex flex-col ml-2">
+                                        <p className="text-black font-bold ml-2">
+                                            {t.username}
+                                        </p>
+                                        <div className="w-full flex">
+                                            <p className="text-black ml-2">
+                                                {t?.message}
+                                            </p>
+                                            <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getDateTimeFormat(t?.date)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                        }
+
+                    </div>)
+
+                    }
+
+
+
                     <div className="w-full h-[70%] flex flex-col items-start m-1">
                         <div className="flex w-6/12 ml-2">
                             <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
