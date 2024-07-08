@@ -47,10 +47,17 @@ body {
   background-color: rgb(143, 190, 233); /* RGB 값으로 배경 색상 설정 */
 }
 
+
+.text-official-color {
+  color: rgb(143, 190, 233); /* RGB 값으로 텍스트 색상 설정 */
+}
+
+
 .mail-hover:hover{
   border: solid 2px rgb(143, 190, 233);
   border-radius: 5px;
 }
+
 .hamburger {
   display: inline-block;
   cursor: pointer;
@@ -69,42 +76,33 @@ body {
   border-radius: 1.5px;
 }
 
-.bubble-1 {
-  display: inline-flex;
-  background-color: hsl(0, 0%, 0%);
-  border-radius: 16px;
-  padding: 8px 16px;
-  font-size: 14px;
-  max-width: 60%;
-  position: relative;
-  margin: 5px;
-  font-weight: bold;
+.hamburger1 {
+  display: inline-block;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 10px;
 }
 
-/* 왼쪽 말풍선 */
-.bubble-1.left::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 0;
-  left: -8px;
-  top: 50%;
-  border-right: 10px solid #000000;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  transform: translate(10%, -50%);
+.hamburger1:hover {
+  background-color: #e0e0e0;
+  
 }
 
-/* 오른쪽 말풍선 */
-.bubble-1.right::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 0;
-  right: -8px;
-  top: 50%;
-  border-left: 8px solid hwb(0 0% 100%);
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
-  transform: translate(-10%, -50%);
+.hamburger1 span {
+  display: block;
+  width: 25px;  /* 줄의 너비 */
+  height: 3px;  /* 줄의 높이 */
+  margin: 5px auto;
+  background-color: black;  /* 줄의 색상 */
+  transition: all 0.3s ease; /* 애니메이션 효과 */
+  border-radius: 1.5px;
+}
+
+.send{
+  background-color: white;
+}
+.send:hover{
+  background-color: #e0e0e0;
+  
 }
