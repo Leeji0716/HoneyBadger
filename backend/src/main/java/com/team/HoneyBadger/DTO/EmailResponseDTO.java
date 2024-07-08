@@ -5,6 +5,6 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record EmailResponseDTO(Long id, String title, String content, String senderId, List<String> receiverIds) {
-
+public record EmailResponseDTO(Long id, String title, String content, String senderId, String senderName,
+                               Long senderTime, List<String> receiverIds) {
 }
