@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,9 +83,9 @@ public class MultiService {
     /*
      * Email
      */
-    public Email sendEmail(String title, String content, String senderId, List<String> receiverIds) {
+    public Email sendEmail(String title, String content, String senderId, List<String> receiverIds, LocalDateTime sendTime) {
         SiteUser sender = userService.get(senderId);
-        Email email = emailService.save(title, content, sender);
+        Email email = emailService.save(title, content, sender, sendTime);
 
         for (String receiverId : receiverIds) {
             SiteUser receiver = userService.get(receiverId);
