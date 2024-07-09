@@ -31,7 +31,7 @@ public class MessageController {
     @MessageMapping("/message/{id}")
     @SendTo("/api/sub/message/{id}")
     public ResponseEntity<?> sendMessage(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
-        MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO, messageRequestDTO.username());
+        MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO);
         return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
     }
 

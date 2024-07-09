@@ -14,15 +14,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -304,10 +303,11 @@ public class MultiService {
         }
     }
 
-    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO, String username) {
-        Chatroom chatroom = chatroomService.getChatRoomById (id);
-        SiteUser siteUser = userService.get (username);
-        MessageType messageType = this.getMessageType (messageRequestDTO.messageType ());
+
+    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO) {
+        Chatroom chatroom = chatroomService.getChatRoomById(id);
+        SiteUser siteUser = userService.get(messageRequestDTO.username());
+        MessageType messageType = this.getMessageType(messageRequestDTO.messageType());
 
         Message message = Message.builder ()
                 .message (messageRequestDTO.message ())
@@ -321,7 +321,14 @@ public class MultiService {
     }
 
     private MessageResponseDTO GetMessage(Message message) {
-        return MessageResponseDTO.builder ().id (message.getId ()).sendTime (message.getCreateDate ().atZone (ZoneId.systemDefault ()).toInstant ().toEpochMilli ()).username (message.getSender ().getUsername ()).message (message.getMessage ()).build ();
+
+        return MessageResponseDTO.builder()
+                .id(message.getId())
+                .sendTime(message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .username(message.getSender().getUsername())
+                .message(message.getMessage())
+                .messageType(message.getMessageType())
+                .build();
     }
 
     public void deleteMessage(Long messageId) {
@@ -377,34 +384,51 @@ public class MultiService {
     /*
      * MessageReservation or ChatReservation
      */
-    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO
-                                                                    messageReservationRequestDTO, String username) {
-        Chatroom chatroom = chatroomService.getChatRoomById (messageReservationRequestDTO.chatroomId ());
-        SiteUser sender = userService.get (username);
-        MessageReservation messageReservation = MessageReservation.builder ()
-                .chatroom (chatroom)
-                .message (messageReservationRequestDTO.message ())
-                .sender (sender)
-                .sendDate (messageReservationRequestDTO.sendTime ())
-                .messageType (getMessageType (messageReservationRequestDTO.messageType ()))
-                .build ();
-        return getMessageReservation (messageReservation);
-    }
+    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
+        SiteUser sender = userService.get(username);
+        MessageReservation messageReservation = MessageReservation.builder()
+                .chatroom(chatroom)
+                .message(messageReservationRequestDTO.message())
+                .sender(sender)
+                .sendDate(messageReservationRequestDTO.sendTime())
+                .messageType(messageReservationRequestDTO.messageType())
+                .build();
 
-    private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
-        return MessageReservationResponseDTO.builder ()
-                .id (messageReservation.getId ())
-                .chatroomId (messageReservation.getChatroom ().getId ())
-                .message (messageReservation.getMessage ())
-                .username (messageReservation.getSender ().getUsername ())
-                .sendTime (messageReservation.getSendDate ().atZone (ZoneId.systemDefault ()).toInstant ().toEpochMilli ())
-                .build ();
+        messageReservationService.save(messageReservation);
+        return getMessageReservation(messageReservation);
     }
-
+      
     /*
      * Time
      */
-    private Long dateTimeTransfer (LocalDateTime dateTime){
-        return dateTime == null ? 0 : dateTime.atZone (ZoneId.systemDefault ()).toInstant ().toEpochMilli ();
+    private Long dateTimeTransfer(LocalDateTime dateTime) {
+        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+       
+    private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
+        return MessageReservationResponseDTO.builder()
+                .id(messageReservation.getId())
+                .chatroomId(messageReservation.getChatroom().getId())
+                .message(messageReservation.getMessage())
+                .username(messageReservation.getSender().getUsername())
+                .sendTime(messageReservation.getSendDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .messageType(messageReservation.getMessageType())
+                .build();
+    }
+
+
+    public void deleteReservationMessage(Long reservationMessageId) {
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
+        messageReservationService.delete(messageReservation);
+    }
+
+    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) {
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
+
+
+        messageReservationService.save(messageReservation);
+
+        return getMessageReservation(messageReservation);
     }
 }
