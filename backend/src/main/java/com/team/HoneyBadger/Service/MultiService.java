@@ -6,7 +6,9 @@ import com.team.HoneyBadger.Entity.EmailReceiver;
 import com.team.HoneyBadger.Entity.EmailReservation;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
+import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Repository.EmailRepository;
+import com.team.HoneyBadger.Repository.EmailReservationRepository;
 import com.team.HoneyBadger.Repository.UserRepository;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
@@ -35,10 +37,7 @@ public class MultiService {
     private final EmailReceiverService emailReceiverService;
     private final EmailRepository emailRepository;
     private final UserRepository userRepository;
-    private final EmailReceiverService emailReservationRepository;
-
-    // 파일을 저장할 경로 설정
-    private final String uploadDir = "/path/to/upload/directory";
+    private final EmailReservationRepository emailReservationRepository;
 
     /**
      * Auth
@@ -83,8 +82,6 @@ public class MultiService {
         String refreshToken = this.jwtTokenProvider.generateRefreshToken(new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), user.getPassword()));
         return AuthResponseDTO.builder().tokenType("Bearer").accessToken(accessToken).refreshToken(refreshToken).build();
     }
-
-
 
     /*
      * User
@@ -136,10 +133,24 @@ public class MultiService {
     }
 
     private void saveFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            System.out.println("Empty file received, skipping...");
+            return;
+        }
+
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        File directory = new File(path);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
         try {
-            String filePath = uploadDir + "/" + file.getOriginalFilename();
+            String filePath = path + "/" + file.getOriginalFilename();
+            System.out.println("Saving file to: " + filePath);
             file.transferTo(new File(filePath));
+            System.out.println("File saved successfully");
         } catch (IOException e) {
+            System.err.println("Failed to save file: " + e.getMessage());
             throw new RuntimeException("Failed to save file", e);
         }
     }
@@ -152,28 +163,16 @@ public class MultiService {
             for (EmailReceiver receiver : email.getReceiverList()) {
                 receivers.add(receiver.getReceiver().getUsername());
             }
-            list.add(EmailResponseDTO.builder() //
-                    .id(email.getId()) //
-                    .title(email.getTitle()) //
-                    .content(email.getContent()) //
-                    .senderId(email //
-                            .getSender() //
-                            .getUsername()) //
-                    .senderName(email //
-                            .getSender() //
-                            .getUsername()) //
-                    .receiverIds(receivers) //
+            list.add(EmailResponseDTO.builder()
+                    .id(email.getId())
+                    .title(email.getTitle())
+                    .content(email.getContent())
+                    .senderId(email.getSender().getUsername())
+                    .senderName(email.getSender().getUsername())
+                    .receiverIds(receivers)
                     .build());
         }
         return list;
-    }
-
-    private EmailResponseDTO getEmail(Email email) {
-        return EmailResponseDTO.builder()
-                .id(email.getId())
-                .title(email.getTitle())
-                .senderName(email.getSender().getName())
-                .build();
     }
 
     public void markEmailAsRead(Long emailId, String receiverId) {
@@ -188,7 +187,6 @@ public class MultiService {
         SiteUser user = userRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
 
-        // Check if the user is either sender or receiver of the email
         if (email.getSender().equals(user) || email.getReceiverList().stream().anyMatch(receiver -> receiver.getReceiver().equals(user))) {
             emailRepository.delete(email);
         } else {

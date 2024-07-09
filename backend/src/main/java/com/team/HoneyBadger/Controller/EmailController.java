@@ -17,7 +17,6 @@ import java.util.List;
 @RequestMapping("/api/email")
 @RequiredArgsConstructor
 public class EmailController {
-
     private final MultiService multiService;
     private final EmailReservationService emailReservationService;
 
@@ -26,6 +25,7 @@ public class EmailController {
             @ModelAttribute EmailRequestDTO emailDTO,
             @RequestParam("attachments") List<MultipartFile> attachments
     ) {
+        System.out.println("Received email send request");
         SiteUser sender = emailReservationService.getUserByUsername(emailDTO.senderId());
         emailReservationService.scheduleEmail(
                 emailDTO.title(),
@@ -33,10 +33,11 @@ public class EmailController {
                 sender,
                 emailDTO.receiverIds(),
                 emailDTO.sendTime(),
-                attachments  // 여기서 attachments를 전달합니다
+                attachments
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
+
 
     @GetMapping
     public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken) {
@@ -90,7 +91,7 @@ public class EmailController {
                     sender,
                     emailDTO.receiverIds(),
                     emailDTO.sendTime(),
-                    attachments  // 여기서 attachments를 전달합니다
+                    attachments
             );
             return ResponseEntity.status(HttpStatus.CREATED).body(null);
         } else {

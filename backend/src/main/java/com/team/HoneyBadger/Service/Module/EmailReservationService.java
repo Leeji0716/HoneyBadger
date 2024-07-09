@@ -4,6 +4,7 @@ import com.team.HoneyBadger.Entity.Email;
 import com.team.HoneyBadger.Entity.EmailReceiver;
 import com.team.HoneyBadger.Entity.EmailReservation;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Repository.EmailRepository;
 import com.team.HoneyBadger.Repository.EmailReservationRepository;
 import com.team.HoneyBadger.Repository.UserRepository;
@@ -21,13 +22,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EmailReservationService {
-
     private final EmailReservationRepository emailReservationRepository;
     private final UserRepository userRepository;
     private final EmailRepository emailRepository;
-
-    // 파일을 저장할 경로 설정
-    private final String uploadDir = "/path/to/upload/directory";
 
     @Transactional
     public void scheduleEmail(String title, String content, SiteUser sender, List<String> receivers, LocalDateTime sendTime, List<MultipartFile> attachments) {
@@ -38,7 +35,33 @@ public class EmailReservationService {
         emailReservation.setSendTime(sendTime);
         emailReservation.setReceiverList(receivers);
 
+        // 첨부 파일 저장
+        if (attachments != null && !attachments.isEmpty()) {
+            for (MultipartFile file : attachments) {
+                System.out.println("Received file: " + file.getOriginalFilename());
+                saveFile(file);
+            }
+        }
+
         emailReservationRepository.save(emailReservation);
+    }
+
+    private void saveFile(MultipartFile file) {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        File directory = new File(path);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        try {
+            String filePath = path + "/" + file.getOriginalFilename();
+            System.out.println("Saving file to: " + filePath);
+            file.transferTo(new File(filePath));
+            System.out.println("File saved successfully");
+        } catch (IOException e) {
+            System.err.println("Failed to save file: " + e.getMessage());
+            throw new RuntimeException("Failed to save file", e);
+        }
     }
 
     @Transactional
@@ -79,14 +102,5 @@ public class EmailReservationService {
     public SiteUser getUserByUsername(String username) {
         return userRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
-    }
-
-    private void saveFile(MultipartFile file) {
-        try {
-            String filePath = uploadDir + "/" + file.getOriginalFilename();
-            file.transferTo(new File(filePath));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save file", e);
-        }
     }
 }
