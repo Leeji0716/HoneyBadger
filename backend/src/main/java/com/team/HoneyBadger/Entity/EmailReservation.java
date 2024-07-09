@@ -29,6 +29,11 @@ public class EmailReservation {
     private List<String> receiverList;
     private LocalDateTime sendTime;
 
+    @ElementCollection
+    @CollectionTable(name = "email_attachments", joinColumns = @JoinColumn(name = "email_reservation_id"))
+    @Column(name = "file_path")
+    private List<String> attachmentPaths;
+
     private LocalDateTime createTime;
 
     @Builder
@@ -38,5 +43,6 @@ public class EmailReservation {
         this.sender = sender;
         this.sendTime = sendTime;
         this.receiverList = new ArrayList<>();
+        this.createTime = LocalDateTime.now();
     }
 }

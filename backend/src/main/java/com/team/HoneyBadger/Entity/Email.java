@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,15 +28,18 @@ public class Email {
     private SiteUser sender;
     @OneToMany(mappedBy = "email", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<EmailReceiver> receiverList;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private EmailTag tag;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    private EmailTag tag;
+
+    private LocalDateTime sendTime;
 
     @Builder
-    public Email(String title, String content, SiteUser sender, EmailTag tag) {
+    public Email(String title, String content, SiteUser sender, EmailTag tag, LocalDateTime sendTime) {
         this.title = title;
         this.content = content;
         this.sender = sender;
-        this.tag = tag;
+        this.sendTime = sendTime;
+//        this.tag = tag;
         this.receiverList = new ArrayList<>();
     }
 }
