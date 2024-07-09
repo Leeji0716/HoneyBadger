@@ -1,16 +1,15 @@
 package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
-import com.team.HoneyBadger.DTO.EmailResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.Entity.Email;
 import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Service.Module.EmailService;
+import com.team.HoneyBadger.Service.Module.EmailReservationService;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,21 +18,35 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmailController {
     private final MultiService multiService;
-    private final EmailService emailService;
+    private final EmailReservationService emailReservationService;
 
-    @PostMapping
-    public ResponseEntity<?> sendEmail(@RequestBody EmailRequestDTO emailDTO) {
-        Email email = multiService.sendEmail(emailDTO.title(), emailDTO.content(), emailDTO.senderId(), emailDTO.receiverIds());
-        return ResponseEntity.ok(email);
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<?> sendEmail(
+            @ModelAttribute EmailRequestDTO emailDTO,
+            @RequestParam("attachments") List<MultipartFile> attachments
+    ) {
+        System.out.println("Received email send request");
+        SiteUser sender = multiService.getUserByUsername(emailDTO.senderId());
+        multiService.scheduleEmail(
+                emailDTO.title(),
+                emailDTO.content(),
+                sender,
+                emailDTO.receiverIds(),
+                emailDTO.sendTime(),
+                attachments
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
+
 
     @GetMapping
     public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
-            List<EmailResponseDTO> emails = multiService.getEmailsForUser(tokenDTO.username());
-            return ResponseEntity.status(HttpStatus.OK).body(emails);
-        } else return tokenDTO.getResponseEntity();
+            return ResponseEntity.status(HttpStatus.OK).body(multiService.getEmailsForUser(tokenDTO.username()));
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
     }
 
     @PostMapping("/read")
@@ -42,22 +55,47 @@ public class EmailController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
-    @PostMapping("/schedule")
-    public ResponseEntity<?> scheduleEmail(@RequestBody EmailRequestDTO request) {
-        SiteUser sender = emailService.getUserByUsername(request.senderId());
-        emailService.scheduleEmail(
-                request.title(),
-                request.content(),
-                sender,
-                request.receiverIds(),
-                request.sendTime()
-        );
-        return ResponseEntity.ok("Email scheduled successfully.");
+    @DeleteMapping
+    public ResponseEntity<?> deleteEmail(@RequestHeader("Authorization") String accessToken, @RequestBody Long emailId) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            multiService.deleteEmail(emailId, tokenDTO.username());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
     }
 
-    @DeleteMapping("/cancel")
-    public ResponseEntity<?> cancelScheduledEmail(@RequestHeader Long id) {
-        emailService.cancelScheduledEmail(id);
-        return ResponseEntity.ok("Scheduled email canceled successfully.");
+    @DeleteMapping("/reservation")
+    public ResponseEntity<?> deleteScheduledEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long reservationId) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            emailReservationService.cancelScheduledEmail(reservationId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
+    }
+
+    @PostMapping(value = "/schedule", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> scheduleEmail(
+            @ModelAttribute EmailRequestDTO emailDTO,
+            @RequestParam("attachments") List<MultipartFile> attachments
+    ) {
+        TokenDTO tokenDTO = multiService.checkToken(emailDTO.senderId());
+        if (tokenDTO.isOK()) {
+            SiteUser sender = multiService.getUserByUsername(emailDTO.senderId());
+            multiService.scheduleEmail(
+                    emailDTO.title(),
+                    emailDTO.content(),
+                    sender,
+                    emailDTO.receiverIds(),
+                    emailDTO.sendTime(),
+                    attachments
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(null);
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
     }
 }
