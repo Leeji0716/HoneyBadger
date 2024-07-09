@@ -1,8 +1,9 @@
 'use client';
 
-import { getUser, sendEmail } from "@/app/API/UserAPI";
+import { getUser, reservationEmail, sendEmail } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
+import { transferLocalTime } from "@/app/Global/Method";
 import QuillNoSSRWrapper from "@/app/Global/QuillNoSSRWrapper";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
@@ -19,12 +20,15 @@ export default function EmailForm() {
     const [receiverIds, setReceiverIds] = useState<string[]>([]);
     const [user, setUser] = useState(null as any);
     const [fileList, setFileList] = useState<File[]>([]);
-    const [time,setTime] = useState<Date>();
+    const [time, setTime] = useState<Date | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [tagList ,setTagList] = useState<string[]>([]);
+
     // const [email, setEmail] = useState<Email | null>(null);
     const quillInstance = useRef<ReactQuill>(null);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
 
-
+    useEffect(() => { console.log(time) }, [time])
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => setUser(r)).catch(e => console.log(e));
@@ -76,19 +80,29 @@ export default function EmailForm() {
             <button className="btn">{name}</button>
         </div>
     }
-    useEffect(() => {
-        console.log(time);
-    }, [time])
+
+    function ShowTag(index: number, name: string) {
+        return <div key={index}>
+            <button className="btn">{name}</button>
+        </div>
+    }
 
     return <Main>
-        <div className="flex flex-col items-start gap-5 bg-white w-full p-6">
+        <div className="flex flex-col items-center gap-5 bg-white w-full p-6">
             <h2 className="font-bold">메일 쓰깅</h2>
             <div className="w-full border-b-2"></div>
-            <div className="flex flex-row gap-3">
-                <button className="mail-hover w-[100px]" onClick={() => { sendEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username }).then(r => window.location.href = "/email").catch(e => console.log(e)) }}>보내기</button>
-                <button className="mail-hover w-[100px]"  onClick={() => setOpen(!open)}>예약</button>
-                <DropDown open={open} onClose={() => setOpen(false)} className="" defaultDriection={Direcion.DOWN} width={200} height={200} button="button1">
-                    <input type="datetime-local" name="" id="" onChange={(e)=> {
+            <div className="flex flex-row justify-center gap-3">
+                <button className="mail-hover w-[100px]" onClick={() => {
+                    receiverIds.length == 0 ? setError("받는 사람을 입력해 주세요") :
+
+                        time == undefined || null ?
+                            sendEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, tagList:tagList }).then(r => window.location.href = "/email").catch(e => console.log(e))
+                            :
+                            reservationEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: transferLocalTime(time), tagList:tagList }).then(r => window.location.href = "/email").catch(e => console.log(e))
+                }}>보내기</button>
+                <button className="mail-hover w-[100px]" onClick={() => setOpen(!open)}>예약</button>
+                <DropDown open={open} onClose={() => setOpen(false)} className="mt-8" defaultDriection={Direcion.DOWN} width={200} height={200} button="button1">
+                    <input type="datetime-local" name="" id="" onChange={(e) => {
                         const inputDateTimeString = e.target.value; // "YYYY-MM-DDTHH:mm" 형식의 문자열
                         const selectedDate = new Date(inputDateTimeString);
                         setTime(selectedDate);
@@ -96,7 +110,8 @@ export default function EmailForm() {
                 </DropDown>
                 <button className="mail-hover w-[100px]">임시저장</button>
             </div>
-            <div className="flex gap-5 w-full">
+            {error ? <p className="font-bold text-red-600">{error}</p> : <></>}
+            <div className="flex justify-center gap-5 w-full">
                 <label htmlFor="" className="w-[5%]">받는 사람</label>
                 {receiverIds.length == 0 ? <></> : receiverIds.map((recever, index) => (ShowReciver(index, recever)))}
                 <input type="text" className="border-b-2 w-[70%]" onKeyDown={(e) => {
@@ -108,22 +123,34 @@ export default function EmailForm() {
                     }
                 }} />
             </div>
-            <div className="flex gap-5 w-full">
+            <div className="flex justify-center gap-5 w-full">
+                <label htmlFor="" className="w-[5%]">태그</label>
+                {tagList.length == 0 ? <></> : tagList.map((tag, index) => (ShowReciver(index, tag)))}
+                <input type="text" className="border-b-2 w-[70%]" onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        const tag: string[] = [...tagList];
+                        tag.push(e.currentTarget.value);
+                        setTagList(tag);
+                        e.currentTarget.value = "";
+                    }
+                }} />
+            </div>
+            <div className="flex justify-center gap-5 w-full">
                 <label htmlFor="" className="w-[5%]">제목</label>
                 <input type="text" className="border-b-2 w-[70%]" onChange={(e) => {
                     setTitle(e.target.value);
                 }} />
             </div>
-            <div className="flex w-full gap-5">
+            <div className="flex justify-center w-full gap-5">
                 <label htmlFor="" className="w-[5%]">파일첨부</label>
                 <input type="file" multiple className="border-b-2 w-[70%]" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                    if(event.target.files){
-                    const filesArray = Array.from(event.target.files);
-                    setFileList((prevFiles) => [...prevFiles, ...filesArray]);
-                }
+                    if (event.target.files) {
+                        const filesArray = Array.from(event.target.files);
+                        setFileList((prevFiles) => [...prevFiles, ...filesArray]);
+                    }
                 }} />
             </div>
-            <div className="w-full h-[500px]">
+            <div className="w-full flex justify-center h-[500px]">
                 <QuillNoSSRWrapper
                     forwardedRef={quillInstance}
                     value={content}
@@ -134,7 +161,6 @@ export default function EmailForm() {
                     placeholder="내용을 입력해주세요."
                 />
             </div>
-            <input type="datetime-local" name="" id="" />
             {/* <div dangerouslySetInnerHTML={{ __html: A }}></div> */}
         </div>
     </Main>

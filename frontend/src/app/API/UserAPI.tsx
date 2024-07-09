@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import { getAPI } from './AxiosAPI';
 
 
@@ -61,7 +62,9 @@ interface SendEmail{
     title:string,
     content:string,
     senderId:string,
-    receiverIds:string[]
+    receiverIds:string[],
+    sendTime?:Date,
+    tagList:string[]
 }
 
 export const updateUser = async (data: UpdateProps) => {    
@@ -85,5 +88,47 @@ export const sendEmail = async (data:SendEmail) => {
     const response = await UserApi.post('/api/email',data);
     return response.data;
 }
+
+export const reservationEmail = async (data:SendEmail) => {
+    const response = await UserApi.post('/api/email/schedule',data);
+    return response.data;
+}
+
+export const readEmail = async ({emailId,readerId}:{emailId:number,readerId:string}) => {
+
+    const data = {
+        emailId : emailId,
+        readerId : readerId
+    };
+    const response = await UserApi.post('/api/email/read', data);
+    return response.data;
+}
+
+
+export const mailCancel = async (mailId:number) => {
+    const response = await UserApi.delete('/api/email/cancel',{
+        headers: {
+            id : mailId
+        }
+    });
+    return response.data;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

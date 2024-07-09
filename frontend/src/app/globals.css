@@ -106,3 +106,23 @@ body {
   background-color: #e0e0e0;
   
 }
+
+.mail-hamburger{
+  display: inline-block;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  /* padding: 10px; */
+  margin-right: 3px;
+  width: 30px;
+}
+
+.mail-hamburger span {
+  display: block;
+  width: 2px;  /* 줄의 너비 */
+  height: 2px;  /* 줄의 높이 */
+  margin: 5px auto;
+  background-color: black;  /* 줄의 색상 */
+  transition: all 0.3s ease; /* 애니메이션 효과 */
+  border-radius: 1.5px;
+}
