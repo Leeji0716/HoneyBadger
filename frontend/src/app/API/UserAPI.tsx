@@ -33,6 +33,7 @@ UserApi.interceptors.response.use((response) => {
         }
     return Promise.reject(error);
 });
+
 // 토큰 갱신
 const refreshAccessToken = async () => {
     const response = await UserApi.get('/api/auth/refresh');
@@ -43,7 +44,7 @@ const refreshAccessToken = async () => {
 }
 
 export const getUser = async () => {
-    const response = await UserApi.get('/api/user', { headers: { id: "" } });
+    const response = await UserApi.get('/api/user');
     return response.data;
 }
 interface UpdateProps {
@@ -55,7 +56,34 @@ interface UpdateProps {
     newPassword: string,
     url: string
 }
-export const updateUser = async (data: UpdateProps) => {
-    const response = await UserApi.put('/api/user', {data});
+
+interface SendEmail{
+    title:string,
+    content:string,
+    senderId:string,
+    receiverIds:string[]
+}
+
+export const updateUser = async (data: UpdateProps) => {    
+    const response = await UserApi.put('/api/user', data);
     return response.data;
 }
+export const getEmail = async () => {
+    const response = await UserApi.get('/api/email');
+    return response.data;
+}
+
+
+export const getChat = async () => {
+    const response = await UserApi.get('/api/chatroom/list');
+    console.log("-==========");
+    console.log(response.data)
+    return response.data;
+}
+
+export const sendEmail = async (data:SendEmail) => {
+    const response = await UserApi.post('/api/email',data);
+    return response.data;
+}
+
+

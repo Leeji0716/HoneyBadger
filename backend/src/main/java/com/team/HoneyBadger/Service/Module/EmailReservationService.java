@@ -17,15 +17,11 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService {
+public class EmailReservationService {
 
-    private final EmailRepository emailRepository;
-    private final UserRepository userRepository;
     private final EmailReservationRepository emailReservationRepository;
-
-    public Email save(String title, String content, SiteUser sender) {
-        return emailRepository.save(Email.builder().title(title).content(content).sender(sender).build());
-    }
+    private final UserRepository userRepository;
+    private final EmailRepository emailRepository;
 
     @Transactional
     public void scheduleEmail(String title, String content, SiteUser sender, List<String> receivers, LocalDateTime sendTime) {
