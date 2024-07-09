@@ -26,8 +26,6 @@ public class ChatroomController {
     public ResponseEntity<?> getChatroomList(@RequestHeader("Authorization") String accessToken) { //채팅방 가져오기(찾아오기)
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-//            tokenDTO.username();
-
             List<ChatroomResponseDTO> chatroomResponseDTOList = multiService.getChatRoomListByUser(tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTOList);
         } catch (DataNotFoundException ex) {
@@ -40,8 +38,6 @@ public class ChatroomController {
     public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) { //채팅방 가져오기(찾아오기)
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-//            tokenDTO.username();
-
             ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoom(chatroomId);
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
         } catch (DataNotFoundException ex) {

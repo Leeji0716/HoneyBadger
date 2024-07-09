@@ -4,5 +4,5 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
-public record MessageRequestDTO(String message, int messageType){
+public record MessageRequestDTO(String message, String username, int messageType){
 }
