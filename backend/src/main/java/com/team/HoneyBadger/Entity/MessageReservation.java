@@ -21,14 +21,14 @@ public class MessageReservation {
     private LocalDateTime sendDate;
     private LocalDateTime createDate;
     private LocalDateTime modifyDate;
-    private MessageType messageType;
+    private int messageType;
     @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser sender;
     @ManyToOne(fetch = FetchType.LAZY)
     private Chatroom chatroom;
 
     @Builder
-    public MessageReservation(String message, LocalDateTime sendDate, MessageType messageType, SiteUser sender, Chatroom chatroom) {
+    public MessageReservation(String message, LocalDateTime sendDate, int messageType, SiteUser sender, Chatroom chatroom) {
         this.message = message;
         this.sendDate = sendDate;
         this.messageType = messageType;

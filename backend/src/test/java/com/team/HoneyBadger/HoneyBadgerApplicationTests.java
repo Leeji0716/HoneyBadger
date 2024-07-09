@@ -15,6 +15,6 @@ class HoneyBadgerApplicationTests {
 	private PasswordEncoder encoder;
 	@Test
 	void contextLoads() {
-			userRepository.save(SiteUser.builder().username("admin5").password(encoder.encode("5")).phoneNumber("01055555555").name("이름5").build());
+			userRepository.save(SiteUser.builder().username("admin2").password(encoder.encode("2")).phoneNumber("01022222222").name("이름2").build());
 	}
 }
