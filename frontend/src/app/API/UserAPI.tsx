@@ -76,8 +76,6 @@ export const getEmail = async () => {
 
 export const getChat = async () => {
     const response = await UserApi.get('/api/chatroom/list');
-    console.log("-==========");
-    console.log(response.data)
     return response.data;
 }
 
