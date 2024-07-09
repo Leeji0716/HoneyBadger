@@ -1,5 +1,6 @@
 package com.team.HoneyBadger.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +17,7 @@ public class Participant {
     @Setter(AccessLevel.NONE)
     private Long id;
     @ManyToOne(fetch = FetchType.EAGER)
+    @JsonBackReference
     private SiteUser user;
     @ManyToOne(fetch = FetchType.EAGER)
     private Chatroom chatroom;

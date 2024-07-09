@@ -1,5 +1,7 @@
 package com.team.HoneyBadger.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,6 +27,7 @@ public class Chatroom {
     private Message notification;
 
     @OneToMany( mappedBy = "chatroom", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Participant> participants;
     @OneToMany(mappedBy = "chatroom", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<Message> messageList;

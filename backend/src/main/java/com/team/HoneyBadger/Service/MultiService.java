@@ -36,6 +36,7 @@ public class MultiService {
     private final EmailService emailService;
     private final EmailReceiverService emailReceiverService;
     private final MessageService messageService;
+    private final MessageReservationService messageReservationService;
 
     /**
      * Auth
@@ -195,7 +196,8 @@ public class MultiService {
     @Transactional
     private ChatroomResponseDTO getChatRoom(Chatroom chatroom) {
         List<String> users = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).build();
+        List<MessageResponseDTO> messageResponseDTOList = messageService.getMessageList(chatroom.getMessageList());
+        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).messageResponseDTOList(messageResponseDTOList).build();
     }
 
     @Transactional
@@ -279,28 +281,37 @@ public class MultiService {
     /*
      * Message or Chat
      */
+
     public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(id);
 
         SiteUser siteUser = userService.get(username);
         MessageType messageType;
 
-        switch (messageRequestDTO.messageType()) {
+    private MessageType getMessageType(int MessageTypeInt) {
+        MessageType messageType;
+        switch (MessageTypeInt) {
             case 0:
                 messageType = MessageType.TEXT;
-                break;
+                return messageType;
             case 1:
                 messageType = MessageType.IMAGE;
-                break;
+                return messageType;
             case 2:
                 messageType = MessageType.LINK;
-                break;
+                return messageType;
             case 3:
                 messageType = MessageType.FILE;
-                break;
+                return messageType;
             default:
-                throw new IllegalArgumentException("Unknown message type: " + messageRequestDTO.messageType());
+                throw new IllegalArgumentException("Unknown message type: " + MessageTypeInt);
         }
+    }
+
+    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById(id);
+        SiteUser siteUser = userService.get(username);
+        MessageType messageType = this.getMessageType(messageRequestDTO.messageType());
 
         Message message = Message.builder()
                 .message(messageRequestDTO.message())
@@ -328,15 +339,12 @@ public class MultiService {
             messageService.deleteMessage(message);
 
             // 삭제된 메시지에 대한 응답을 생성합니다.
-//            return MessageResponseDTO.builder()
-//                    .status("Message deleted")
-//                    .build();
             System.out.println("Message deleted");
-//            throw new RuntimeException("Message deleted");
+            // throw new RuntimeException("Message deleted");
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
             System.out.println("Cannot delete message older than 5 minutes");
-//            throw new RuntimeException("Cannot delete message older than 5 minutes");
+            // throw new RuntimeException("Cannot delete message older than 5 minutes");
         }
     }
 
@@ -371,10 +379,34 @@ public class MultiService {
     }
 
     /*
+     * MessageReservation or ChatReservation
+     */
+    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
+        SiteUser sender = userService.get(username);
+        MessageReservation messageReservation = MessageReservation.builder()
+                .chatroom(chatroom)
+                .message(messageReservationRequestDTO.message())
+                .sender(sender)
+                .sendDate(messageReservationRequestDTO.sendTime())
+                .messageType(getMessageType(messageReservationRequestDTO.messageType()))
+                .build();
+    /*
      * Time
      */
     private Long dateTimeTransfer(LocalDateTime dateTime) {
         return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
+        return getMessageReservation(messageReservation);
+    }
 
+    private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
+        return MessageReservationResponseDTO.builder()
+                .id(messageReservation.getId())
+                .chatroomId(messageReservation.getChatroom().getId())
+                .message(messageReservation.getMessage())
+                .username(messageReservation.getSender().getUsername())
+                .sendTime(messageReservation.getSendDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .build();
+    }
 }
