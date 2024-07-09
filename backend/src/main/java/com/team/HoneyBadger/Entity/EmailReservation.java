@@ -43,5 +43,6 @@ public class EmailReservation {
         this.sender = sender;
         this.sendTime = sendTime;
         this.receiverList = new ArrayList<>();
+        this.createTime = LocalDateTime.now();
     }
 }
