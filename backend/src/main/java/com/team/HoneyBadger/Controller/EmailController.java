@@ -26,8 +26,8 @@ public class EmailController {
             @RequestParam("attachments") List<MultipartFile> attachments
     ) {
         System.out.println("Received email send request");
-        SiteUser sender = emailReservationService.getUserByUsername(emailDTO.senderId());
-        emailReservationService.scheduleEmail(
+        SiteUser sender = multiService.getUserByUsername(emailDTO.senderId());
+        multiService.scheduleEmail(
                 emailDTO.title(),
                 emailDTO.content(),
                 sender,
@@ -84,8 +84,8 @@ public class EmailController {
     ) {
         TokenDTO tokenDTO = multiService.checkToken(emailDTO.senderId());
         if (tokenDTO.isOK()) {
-            SiteUser sender = emailReservationService.getUserByUsername(emailDTO.senderId());
-            emailReservationService.scheduleEmail(
+            SiteUser sender = multiService.getUserByUsername(emailDTO.senderId());
+            multiService.scheduleEmail(
                     emailDTO.title(),
                     emailDTO.content(),
                     sender,

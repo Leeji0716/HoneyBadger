@@ -1,9 +1,6 @@
 package com.team.HoneyBadger.Service.Module;
 
-import com.team.HoneyBadger.Entity.Email;
-import com.team.HoneyBadger.Entity.EmailReceiver;
-import com.team.HoneyBadger.Entity.EmailReservation;
-import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Repository.EmailRepository;
 import com.team.HoneyBadger.Repository.EmailReservationRepository;
@@ -25,26 +22,6 @@ public class EmailReservationService {
     private final EmailReservationRepository emailReservationRepository;
     private final UserRepository userRepository;
     private final EmailRepository emailRepository;
-
-    @Transactional
-    public void scheduleEmail(String title, String content, SiteUser sender, List<String> receivers, LocalDateTime sendTime, List<MultipartFile> attachments) {
-        EmailReservation emailReservation = new EmailReservation();
-        emailReservation.setTitle(title);
-        emailReservation.setContent(content);
-        emailReservation.setSender(sender);
-        emailReservation.setSendTime(sendTime);
-        emailReservation.setReceiverList(receivers);
-
-        // 첨부 파일 저장
-        if (attachments != null && !attachments.isEmpty()) {
-            for (MultipartFile file : attachments) {
-                System.out.println("Received file: " + file.getOriginalFilename());
-                saveFile(file);
-            }
-        }
-
-        emailReservationRepository.save(emailReservation);
-    }
 
     private void saveFile(MultipartFile file) {
         String path = HoneyBadgerApplication.getOsType().getLoc();
@@ -97,10 +74,5 @@ public class EmailReservationService {
             createEmailFromReservation(emailReservation);
             emailReservationRepository.delete(emailReservation);
         }
-    }
-
-    public SiteUser getUserByUsername(String username) {
-        return userRepository.findById(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
 }

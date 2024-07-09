@@ -193,4 +193,9 @@ public class MultiService {
             throw new RuntimeException("User is not authorized to delete this email");
         }
     }
+
+    public SiteUser getUserByUsername(String username) {
+        return userRepository.findById(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    }
 }
