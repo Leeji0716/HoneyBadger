@@ -76,16 +76,13 @@ export const getEmail = async () => {
     return response.data;
 }
 
-
-export const getChat = async () => {
-    const response = await UserApi.get('/api/chatroom/list');
-    console.log("-==========");
-    console.log(response.data)
+export const sendEmail = async (data:SendEmail) => {
+    const response = await UserApi.post('/api/email',data);
     return response.data;
 }
 
-export const sendEmail = async (data:SendEmail) => {
-    const response = await UserApi.post('/api/email',data);
+export const getChat = async () => {
+    const response = await UserApi.get('/api/chatroom/list');
     return response.data;
 }
 

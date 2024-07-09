@@ -22,7 +22,7 @@ export default function Email() {
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
     const [user, setUser] = useState(null as any);
-    const [socket, setSocket] = useState(null as any);
+    
     const [emailList, setEmailList] = useState([] as any[]);
     const [email, setEmail] = useState(null as any);
     const [open3, setOpen3] = useState(null as any);
@@ -32,10 +32,6 @@ export default function Email() {
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => setUser(r)).catch(e => console.log(e));
-        const sub = [] as Subscribe[];
-        sub.push({ location: "/api/sub/message/1", active: (r) => { console.log("actived", r) } })
-        setSocket(getSocket(sub, () => console.log("test")));
-
     }, [ACCESS_TOKEN])
     useEffect(() => {
         getEmail().then(r => {
@@ -109,7 +105,6 @@ export default function Email() {
     }
 
     return <Main>
-        <button className="btn btn-xl" onClick={() => { socket.publish({ destination: "/api/pub/message/1", body: JSON.stringify({ username: user?.username, message: "test" }) }); }}>test</button>
         <div className="w-4/12 flex items-center justify-center">
             <div className="h-11/12 w-11/12 mt-10 bg-white h-screen shadow p-2">
                 <div className="w-full h-30 flex flex-row gap-20 ">
