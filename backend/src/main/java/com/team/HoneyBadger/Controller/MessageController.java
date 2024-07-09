@@ -30,16 +30,9 @@ public class MessageController {
 
     @MessageMapping("/message/{id}")
     @SendTo("/api/sub/message/{id}")
-    public ResponseEntity<?> sendMessage(@DestinationVariable Long id, @RequestHeader("Authorization") String accessToken, MessageRequestDTO messageRequestDTO) {
-        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) try {
-//            tokenDTO.username();
-            MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO, tokenDTO.username());
-            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-        }
-        else return tokenDTO.getResponseEntity();
+    public ResponseEntity<?> sendMessage(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
+        MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO, messageRequestDTO.username());
+        return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
     }
 
     @PostMapping("/upload")
@@ -57,16 +50,6 @@ public class MessageController {
 
         else return tokenDTO.getResponseEntity();
     }
-
-//    @PostMapping("/message/{id}")
-//    public ResponseEntity<?> sendMessage(@PathVariable Long id, @RequestBody MessageRequestDTO messageRequestDTO) {
-//        try {
-//            MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO);
-//            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
-//        } catch (DataNotFoundException ex) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-//        }
-//    }
 
     @DeleteMapping
     public ResponseEntity<?> deleteMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long messageId) {

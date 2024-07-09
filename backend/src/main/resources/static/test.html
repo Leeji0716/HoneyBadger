@@ -56,7 +56,7 @@
                     stompClient.send("/api/pub/message/2", {}, JSON.stringify({
                         username: messageSender,
                         message: xhr.responseText,
-                        messageType: 4 // FILE 메시지 타입은 4로 설정
+                        messageType: 3 // FILE 메시지 타입은 4로 설정
                     }));
                 } else {
                     console.error('Failed to upload file:', xhr.responseText);
