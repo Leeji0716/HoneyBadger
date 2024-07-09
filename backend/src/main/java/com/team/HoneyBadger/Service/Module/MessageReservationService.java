@@ -38,4 +38,11 @@ public class MessageReservationService {
     public MessageReservation getMessageReservation(Long reservationMessageId) {
         return messageReservationRepository.findById(reservationMessageId).orElseThrow();
     }
+
+    public void update(MessageReservation messageReservation, String message, LocalDateTime sendDate) {
+        messageReservation.setMessage(message);
+        messageReservation.setSendDate(sendDate);
+
+        messageReservationRepository.save(messageReservation);
+    }
 }

@@ -186,7 +186,7 @@ public class MultiService {
         SiteUser siteUser = userService.get(username);
         List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser);
         List<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
-        for(Chatroom chatroom : chatroomList){
+        for (Chatroom chatroom : chatroomList) {
             chatroomResponseDTOList.add(getChatRoom(chatroom));
         }
         return chatroomResponseDTOList;
@@ -280,13 +280,6 @@ public class MultiService {
     /*
      * Message or Chat
      */
-
-    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO, String username) {
-        Chatroom chatroom = chatroomService.getChatRoomById(id);
-
-        SiteUser siteUser = userService.get(username);
-        MessageType messageType;
-
     private MessageType getMessageType(int MessageTypeInt) {
         MessageType messageType;
         switch (MessageTypeInt) {
@@ -312,25 +305,14 @@ public class MultiService {
         SiteUser siteUser = userService.get(messageRequestDTO.username());
         MessageType messageType = this.getMessageType(messageRequestDTO.messageType());
 
-        Message message = Message.builder()
-                .message(messageRequestDTO.message())
-                .sender(siteUser)
-                .chatroom(chatroom)
-                .messageType(messageType)
-                .build();
+        Message message = Message.builder().message(messageRequestDTO.message()).sender(siteUser).chatroom(chatroom).messageType(messageType).build();
 
 
         return GetMessage(messageService.save(message));
     }
 
     private MessageResponseDTO GetMessage(Message message) {
-        return MessageResponseDTO.builder()
-                .id(message.getId())
-                .sendTime(message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
-                .username(message.getSender().getUsername())
-                .message(message.getMessage())
-                .messageType(message.getMessageType())
-                .build();
+        return MessageResponseDTO.builder().id(message.getId()).sendTime(message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()).username(message.getSender().getUsername()).message(message.getMessage()).messageType(message.getMessageType()).build();
     }
 
     public void deleteMessage(Long messageId) {
@@ -363,10 +345,8 @@ public class MultiService {
             case "application" -> {
                 String value = file.getContentType().split("/")[1];
                 if (value.contains("presentation") && value.contains("12")) fileName += "pptm";
-                else if (value.equals("zip"))
-                    fileName += "zip";
-                else if (value.contains("spreadsheetml"))
-                    fileName += "xlsx";
+                else if (value.equals("zip")) fileName += "zip";
+                else if (value.contains("spreadsheetml")) fileName += "xlsx";
                 else {
                     throw new DataNotFoundException("not support");
                 }
@@ -386,37 +366,25 @@ public class MultiService {
     /*
      * MessageReservation or ChatReservation
      */
-    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
+    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO
+                                                                    messageReservationRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
-        MessageReservation messageReservation = MessageReservation.builder()
-                .chatroom(chatroom)
-                .message(messageReservationRequestDTO.message())
-                .sender(sender)
-                .sendDate(messageReservationRequestDTO.sendTime())
-                .messageType(messageReservationRequestDTO.messageType())
-                .build();
+        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendTime()).messageType(messageReservationRequestDTO.messageType()).build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
     }
-      
+
     /*
      * Time
      */
     private Long dateTimeTransfer(LocalDateTime dateTime) {
         return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
-       
+
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
-        return MessageReservationResponseDTO.builder()
-                .id(messageReservation.getId())
-                .chatroomId(messageReservation.getChatroom().getId())
-                .message(messageReservation.getMessage())
-                .username(messageReservation.getSender().getUsername())
-                .sendTime(messageReservation.getSendDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
-                .messageType(messageReservation.getMessageType())
-                .build();
+        return MessageReservationResponseDTO.builder().id(messageReservation.getId()).chatroomId(messageReservation.getChatroom().getId()).message(messageReservation.getMessage()).username(messageReservation.getSender().getUsername()).sendTime(messageReservation.getSendDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()).messageType(messageReservation.getMessageType()).build();
     }
 
 
@@ -427,9 +395,9 @@ public class MultiService {
 
     public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
-
-
-        messageReservationService.save(messageReservation);
+        if (messageReservation.getSender().getUsername().equals(username)){
+            messageReservationService.update(messageReservation, messageReservationRequestDTO.message(), messageReservation.getSendDate());
+        }
 
         return getMessageReservation(messageReservation);
     }
