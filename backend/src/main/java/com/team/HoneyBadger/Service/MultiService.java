@@ -1,42 +1,29 @@
 package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.DTO.*;
-
-import com.team.HoneyBadger.Entity.Email;
-import com.team.HoneyBadger.Entity.EmailReceiver;
-import com.team.HoneyBadger.Entity.EmailReservation;
-import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Exception.DataDuplicateException;
-import com.team.HoneyBadger.HoneyBadgerApplication;
-import com.team.HoneyBadger.Repository.EmailRepository;
-import com.team.HoneyBadger.Repository.EmailReservationRepository;
-import com.team.HoneyBadger.Repository.UserRepository;
-
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.MessageType;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.HoneyBadgerApplication;
+import com.team.HoneyBadger.Repository.EmailRepository;
+import com.team.HoneyBadger.Repository.EmailReservationRepository;
+import com.team.HoneyBadger.Repository.UserRepository;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
 import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
-import java.time.*;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -202,7 +189,7 @@ public class MultiService {
         SiteUser siteUser = userService.get(username);
         List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser);
         List<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
-        for(Chatroom chatroom : chatroomList){
+        for (Chatroom chatroom : chatroomList) {
             chatroomResponseDTOList.add(getChatRoom(chatroom));
         }
         return chatroomResponseDTOList;
@@ -359,17 +346,11 @@ public class MultiService {
         return userRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
-}
+
 
     /*
      * Message or Chat
      */
-
-    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO, String username) {
-        Chatroom chatroom = chatroomService.getChatRoomById(id);
-
-        SiteUser siteUser = userService.get(username);
-        MessageType messageType;
 
     private MessageType getMessageType(int MessageTypeInt) {
         MessageType messageType;
@@ -484,14 +465,14 @@ public class MultiService {
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
     }
-      
+
     /*
      * Time
      */
     private Long dateTimeTransfer(LocalDateTime dateTime) {
         return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
-       
+
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
         return MessageReservationResponseDTO.builder()
                 .id(messageReservation.getId())
