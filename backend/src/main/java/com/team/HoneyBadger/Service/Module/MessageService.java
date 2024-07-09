@@ -37,7 +37,8 @@ public class MessageService {
                         message.getId(),
                         message.getMessage(),
                         message.getSender().getName(),
-                        message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                        message.getMessageType()
                 ))
                 .collect(Collectors.toList());
     }

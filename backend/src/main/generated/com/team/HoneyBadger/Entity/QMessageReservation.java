@@ -30,7 +30,7 @@ public class QMessageReservation extends EntityPathBase<MessageReservation> {
 
     public final StringPath message = createString("message");
 
-    public final EnumPath<com.team.HoneyBadger.Enum.MessageType> messageType = createEnum("messageType", com.team.HoneyBadger.Enum.MessageType.class);
+    public final NumberPath<Integer> messageType = createNumber("messageType", Integer.class);
 
     public final DateTimePath<java.time.LocalDateTime> modifyDate = createDateTime("modifyDate", java.time.LocalDateTime.class);
 
