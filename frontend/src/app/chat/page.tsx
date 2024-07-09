@@ -18,6 +18,7 @@ export default function Chat() {
         id: number,
         name: string,
         users: string[]
+        messages : messageRespnseDTO[]
     }
 
     const [open, setOpen] = useState(false);
@@ -34,10 +35,10 @@ export default function Chat() {
         if (ACCESS_TOKEN)
             getUser().then(r => setUser(r)).catch(e => console.log(e));
         const test = [] as messageRespnseDTO[];
-        // test.push({ username: "admin", message: "test", type: 0, date: 0 });
-        // test.push({ username: "admin2", message: "test3", type: 0, date: 0 });
-        // test.push({ username: "admin", message: "tes4t", type: 0, date: 0 });
-        // test.push({ username: "admin", message: "test5", type: 0, date: 0 });
+        test.push({ username: "admin", message: "test", type: 0, date: 0 });
+        test.push({ username: "admin2", message: "test3", type: 0, date: 0 });
+        test.push({ username: "admin", message: "tes4t", type: 0, date: 0 });
+        test.push({ username: "admin", message: "test5", type: 0, date: 0 });
         setTest(test);
     }, [ACCESS_TOKEN])
 
@@ -177,7 +178,6 @@ export default function Chat() {
                                     </div>
                                 </div>
                             </div>
-
                     }
                 </div>)
                 }
