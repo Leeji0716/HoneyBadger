@@ -24,7 +24,11 @@ public class QParticipant extends EntityPathBase<Participant> {
 
     public final QChatroom chatroom;
 
+    public final DateTimePath<java.time.LocalDateTime> createDate = createDateTime("createDate", java.time.LocalDateTime.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    public final DateTimePath<java.time.LocalDateTime> modifyDate = createDateTime("modifyDate", java.time.LocalDateTime.class);
 
     public final QSiteUser user;
 

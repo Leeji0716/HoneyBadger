@@ -28,11 +28,12 @@ UserApi.interceptors.response.use((response) => {
             return UserApi(originalRequest);
         } else if (error.response.status === 403 && (error.response.data == '' || error.response.data == null)) {
             localStorage.clear();
-            window.location.href = '/account/login';
+            window.location.href = '/';
             return;
         }
     return Promise.reject(error);
 });
+
 // 토큰 갱신
 const refreshAccessToken = async () => {
     const response = await UserApi.get('/api/auth/refresh');
@@ -55,7 +56,34 @@ interface UpdateProps {
     newPassword: string,
     url: string
 }
-export const updateUser = async (data: UpdateProps) => {
+
+interface SendEmail{
+    title:string,
+    content:string,
+    senderId:string,
+    receiverIds:string[]
+}
+
+export const updateUser = async (data: UpdateProps) => {    
     const response = await UserApi.put('/api/user', data);
     return response.data;
 }
+export const getEmail = async () => {
+    const response = await UserApi.get('/api/email');
+    return response.data;
+}
+
+
+export const getChat = async () => {
+    const response = await UserApi.get('/api/chatroom/list');
+    console.log("-==========");
+    console.log(response.data)
+    return response.data;
+}
+
+export const sendEmail = async (data:SendEmail) => {
+    const response = await UserApi.post('/api/email',data);
+    return response.data;
+}
+
+

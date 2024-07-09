@@ -7,7 +7,6 @@ interface DropProps {
     width: number;
     height: number;
     defaultDriection: Direcion;
-    background: string;
     button: string;
     x?: number;
     y?: number;
@@ -24,7 +23,8 @@ const DropDown = (props: DropProps) => {
     const y = props.y ? props.y : 0;
 
     let position = {};
-    const background = document.getElementById(props.background)?.getBoundingClientRect();
+
+    const background = document.getElementById("main")?.getBoundingClientRect();
     const button = document.getElementById(props.button)?.getBoundingClientRect();
 
     if (background && button)
