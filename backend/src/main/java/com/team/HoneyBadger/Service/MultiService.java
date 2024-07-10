@@ -338,23 +338,9 @@ public class MultiService {
     public String fileUpload(Long roomId, MultipartFile file) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
-        String fileName = "/chatroom/" + roomId.toString() + "/" + uuid.toString() + ".";// IMAGE
-        switch (file.getContentType().split("/")[0]) {
-            case "image" -> fileName += file.getContentType().split("/")[1];
-            case "text" -> fileName += "txt";
-            case "application" -> {
-                String value = file.getContentType().split("/")[1];
-                if (value.contains("presentation") && value.contains("12")) fileName += "pptm";
-                else if (value.equals("zip")) fileName += "zip";
-                else if (value.contains("spreadsheetml")) fileName += "xlsx";
-                else {
-                    throw new DataNotFoundException("not support");
-                }
-            }
-            default -> {
-                throw new DataNotFoundException("not support");
-            }
-        }
+        String fileName = "/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+
+        // 너굴맨이 해치우고 갔어요!
         File dest = new File(path + fileName);
 
         if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
@@ -395,7 +381,7 @@ public class MultiService {
 
     public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
-        if (messageReservation.getSender().getUsername().equals(username)){
+        if (messageReservation.getSender().getUsername().equals(username)) {
             messageReservationService.update(messageReservation, messageReservationRequestDTO.message(), messageReservation.getSendDate());
         }
 

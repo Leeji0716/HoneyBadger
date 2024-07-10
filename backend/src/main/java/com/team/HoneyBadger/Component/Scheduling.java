@@ -22,7 +22,7 @@ public class Scheduling {
     private final MultiService multiService;
     private final MessageReservationService messageReservationService;
 
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0 0 */1 * * *")
     @Transactional
     public void sendReservation() {
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
