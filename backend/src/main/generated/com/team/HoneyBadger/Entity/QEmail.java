@@ -30,7 +30,7 @@ public class QEmail extends EntityPathBase<Email> {
 
     public final QSiteUser sender;
 
-    public final QEmailTag tag;
+    public final DateTimePath<java.time.LocalDateTime> sendTime = createDateTime("sendTime", java.time.LocalDateTime.class);
 
     public final StringPath title = createString("title");
 
@@ -53,7 +53,6 @@ public class QEmail extends EntityPathBase<Email> {
     public QEmail(Class<? extends Email> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.sender = inits.isInitialized("sender") ? new QSiteUser(forProperty("sender"), inits.get("sender")) : null;
-        this.tag = inits.isInitialized("tag") ? new QEmailTag(forProperty("tag"), inits.get("tag")) : null;
     }
 
 }

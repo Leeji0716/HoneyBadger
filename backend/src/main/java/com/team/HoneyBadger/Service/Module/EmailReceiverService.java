@@ -26,6 +26,7 @@ public class EmailReceiverService {
             throw new IllegalArgumentException("Invalid email or receiver ID");
         }
     }
+
     public List<Email> getEmailsForUser(String userId) {
         return emailReceiverRepository.findByReceiver(userId);
     }

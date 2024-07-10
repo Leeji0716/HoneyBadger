@@ -20,5 +20,4 @@ public class HoneyBadgerApplication {
         else
             throw new DataNotFoundException("없는 OS 입니다.");
     }
-
 }
