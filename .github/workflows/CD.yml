@@ -1,0 +1,47 @@
+name: CD with Docker Hub
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: application.yml 생성
+        env:
+          ACTIONS_STEP_DEBUG: true
+          APPLICATION_SECRET: ${{secrets.APPLICATION_SECRET}}
+        run: echo "$APPLICATION_SECRET" > backend/src/main/resources/application.yml
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{secrets.DOCKERHUB_USERNAME}} # 도커 허브 이름
+          password: ${{secrets.DOCKERHUB_TOKEN}} # 도커 허브 access token
+      - name: Build and Release
+        run: |
+          docker build -t ${{secrets.DOCKERHUB_REPO}} .
+          docker tag ${{secrets.DOCKERHUB_REPO}}:latest ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+          docker push ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        id: deploy
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }} # pem키
+          script: |
+            echo "${{secrets.BASH}}" > /home/ubuntu/honeybadger/build.bash
+            if [ -e "/home/ubuntu/honeybadger/sub" ]; then
+              sudo rm -rf /home/ubuntu/honeybadger/sub
+              sudo docker rm -f $(docker ps -aqf "name=^${{secrets.DOCKERHUB_REPO}}") # 컨테이너 찾아서 종료
+              sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+              sudo docker run -d -p 3001:3000 -p 8081:8080 -v /home/ubuntu/honeybadger:/config --name ${{secrets.DOCKERHUB_REPO}} ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+              sudo docker image prune -f
+            else
+              sudo mkdir /home/ubuntu/honeybadger/sub
+              sudo docker rm -f $(docker ps -aqf "name=^${{secrets.DOCKERHUB_REPO}}") # 컨테이너 찾아서 종료
+              sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+              sudo docker run -d -p 3000:3000 -p 8080:8080 -v /home/ubuntu/honeybadger:/config --name ${{secrets.DOCKERHUB_REPO}} ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+              sudo docker image prune -f
+            fi
