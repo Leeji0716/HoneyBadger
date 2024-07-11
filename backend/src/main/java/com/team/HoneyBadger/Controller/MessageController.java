@@ -35,7 +35,7 @@ public class MessageController {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
         if (tokenDTO.isOK()) try {
-            String fileName = multiService.fileUpload(roomId, file);
+            String fileName = multiService.emailContentUpload(roomId, file);
             return ResponseEntity.status(HttpStatus.OK).body(fileName);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 업로드 실패");

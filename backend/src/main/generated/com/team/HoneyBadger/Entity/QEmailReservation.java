@@ -22,8 +22,6 @@ public class QEmailReservation extends EntityPathBase<EmailReservation> {
 
     public static final QEmailReservation emailReservation = new QEmailReservation("emailReservation");
 
-    public final ListPath<String, StringPath> attachmentPaths = this.<String, StringPath>createList("attachmentPaths", String.class, StringPath.class, PathInits.DIRECT2);
-
     public final StringPath content = createString("content");
 
     public final DateTimePath<java.time.LocalDateTime> createTime = createDateTime("createTime", java.time.LocalDateTime.class);

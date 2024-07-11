@@ -31,14 +31,14 @@ public class Email {
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    private EmailTag tag;
 
-    private LocalDateTime sendTime;
+    private LocalDateTime createDate;
 
     @Builder
-    public Email(String title, String content, SiteUser sender, EmailTag tag, LocalDateTime sendTime) {
+    public Email(String title, String content, SiteUser sender) {
         this.title = title;
         this.content = content;
         this.sender = sender;
-        this.sendTime = sendTime;
+        this.createDate = LocalDateTime.now();
 //        this.tag = tag;
         this.receiverList = new ArrayList<>();
     }

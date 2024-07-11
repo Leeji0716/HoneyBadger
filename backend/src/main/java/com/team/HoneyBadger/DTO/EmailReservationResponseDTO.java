@@ -1,7 +1,10 @@
 package com.team.HoneyBadger.DTO;
 
+import lombok.Builder;
+
 import java.util.List;
 
-public record EmailReservationResponseDTO(Long id, String title, String content, String senderId, String senderName,
-                                         Long senderTime, List<String> receiverIds) {
+@Builder
+public record EmailReservationResponseDTO(Long id, String title, String content, Long senderTime,
+                                          List<String> receiverIds) {
 }
