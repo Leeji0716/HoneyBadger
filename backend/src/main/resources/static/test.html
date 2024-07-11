@@ -86,9 +86,9 @@
 
 <!--        function sendFile() {-->
 <!--            var fileInput = document.getElementById('fileInput');-->
-<!--            var file = fileInput.files[0];-->
-<!--            if (!file) {-->
-<!--                alert('Please select a file to upload.');-->
+<!--            var files = fileInput.files[0];-->
+<!--            if (!files) {-->
+<!--                alert('Please select a files to upload.');-->
 <!--                return;-->
 <!--            }-->
 
@@ -96,7 +96,7 @@
 <!--            var roomId = 'room1'; // 테스트할 채팅방 ID-->
 
 <!--            var formData = new FormData();-->
-<!--            formData.append('file', file);-->
+<!--            formData.append('files', files);-->
 <!--            formData.append('username', messageSender);-->
 <!--            formData.append('messageType', 4); // FILE 메시지 타입은 4로 설정-->
 
@@ -111,7 +111,7 @@
 <!--                        messageType: 3 // FILE 메시지 타입은 4로 설정-->
 <!--                    }));-->
 <!--                } else {-->
-<!--                    console.error('Failed to upload file:', xhr.responseText);-->
+<!--                    console.error('Failed to upload files:', xhr.responseText);-->
 <!--                }-->
 <!--            };-->
 <!--            xhr.send(formData);-->
@@ -138,7 +138,7 @@
 <!--</div>-->
 <!--<div>-->
 <!--    <label for="fileInput">Upload File:</label>-->
-<!--    <input type="file" id="fileInput">-->
+<!--    <input type="files" id="fileInput">-->
 <!--    <button onclick="sendFile()">Upload</button>-->
 <!--</div>-->
 <!--<ul id="messages"></ul>-->

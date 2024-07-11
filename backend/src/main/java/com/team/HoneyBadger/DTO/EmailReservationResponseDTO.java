@@ -6,5 +6,5 @@ import java.util.List;
 
 @Builder
 public record EmailReservationResponseDTO(Long id, String title, String content, Long senderTime,
-                                          List<String> receiverIds) {
+                                          List<String> receiverIds, List<FileResponseDTO> files) {
 }

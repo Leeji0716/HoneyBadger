@@ -31,13 +31,13 @@ public class EmailReservationService {
         }
         try {
             String filePath = path + "/" + file.getOriginalFilename();
-            System.out.println("Saving file to: " + filePath);
+            System.out.println("Saving files to: " + filePath);
             file.transferTo(new File(filePath));
             System.out.println("File saved successfully");
             return filePath;
         } catch (IOException e) {
-            System.err.println("Failed to save file: " + e.getMessage());
-            throw new RuntimeException("Failed to save file", e);
+            System.err.println("Failed to save files: " + e.getMessage());
+            throw new RuntimeException("Failed to save files", e);
         }
     }
 
@@ -55,22 +55,14 @@ public class EmailReservationService {
             }
     }
 
-//    @Transactional
-//    public void createEmailFromReservation(EmailReservation emailReservation) {
-//        Email email = new Email();
-//        email.setTitle(emailReservation.getTitle());
-//        email.setContent(emailReservation.getContent());
-//        email.setSender(emailReservation.getSender());
-//
-//        for (String receiverUsername : emailReservation.getReceiverList()) {
-//            SiteUser receiver = userRepository.findById(receiverUsername)
-//                    .orElseThrow(() -> new RuntimeException("User not found with username: " + receiverUsername));
-//            EmailReceiver emailReceiver = new EmailReceiver();
-//            emailReceiver.setEmail(email);
-//            emailReceiver.setReceiver(receiver);
-//            email.getReceiverList().add(emailReceiver);
-//        }
-//
-//        emailRepository.save(email);
-//    }
+    public void update(EmailReservation emailReservation, EmailReservationRequestDTO emailReservationRequestDTO) {
+        emailReservation.setTitle(emailReservationRequestDTO.title());
+        emailReservation.setContent(emailReservationRequestDTO.content());
+        emailReservation.setReceiverList(emailReservationRequestDTO.receiverIds());
+        emailReservation.setSendTime(emailReservationRequestDTO.sendTime());
+
+
+
+        emailReservationRepository.save(emailReservation);
+    }
 }

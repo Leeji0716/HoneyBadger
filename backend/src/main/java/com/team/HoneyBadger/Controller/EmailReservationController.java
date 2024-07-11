@@ -38,7 +38,7 @@ public class EmailReservationController {
                 multiService.emailFilesUpload(email_id, attachments);
                 return ResponseEntity.status(HttpStatus.OK).body("okay");
             } catch (IOException ex) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("file not uploaded");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("files not uploaded");
             }
         } else
             return tokenDTO.getResponseEntity();
@@ -71,5 +71,22 @@ public class EmailReservationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
+    }
+
+    @PutMapping
+    public ResponseEntity<?> updateEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReservationRequestDTO emailReservationRequestDTO) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            try {
+                EmailReservationResponseDTO emailReservationResponseDTO = multiService.updateEmailReservation(emailReservationRequestDTO, tokenDTO.username());
+                return ResponseEntity.status(HttpStatus.OK).body(emailReservationResponseDTO);
+            } catch (DataNotFoundException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            } catch (RuntimeException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+            }
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
     }
 }
