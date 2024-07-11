@@ -1,10 +1,9 @@
 package com.team.HoneyBadger.Service;
 
+import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.MessageType;
-import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
@@ -503,9 +502,8 @@ public class MultiService {
 
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
-        String fileName = "/chatroom/" + username + "/temp/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        String fileName = "/users/" + username + "/temp/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
-        // 너굴맨이 해치우고 갔어요!
         File dest = new File(path + fileName);
 
         if (!dest.getParentFile ().exists ()) dest.getParentFile ().mkdirs ();
@@ -520,7 +518,6 @@ public class MultiService {
     private Long dateTimeTransfer(LocalDateTime dateTime) {
         return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
-
     /*
      * MessageReservation or ChatReservation
      */
@@ -531,13 +528,6 @@ public class MultiService {
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
-    }
-
-    /*
-     * Time
-     */
-    private Long dateTimeTransfer(LocalDateTime dateTime) {
-        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
