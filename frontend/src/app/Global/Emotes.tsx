@@ -7,7 +7,6 @@ interface EmoteDropDownProps {
     setIsOpen: (v: boolean) => void;
     input_id: string;
     button: string;
-    background: string;
     onClick?: (item: string) => void;
 }
 export function EmoteDropDown(props: EmoteDropDownProps) {
@@ -19,7 +18,7 @@ export function EmoteDropDown(props: EmoteDropDownProps) {
     }
 
     return <>
-        <DropDown open={props.open} onClose={() => props.setIsOpen(false)} className={" flex border rounded-box bg-base-100 "} width={150} height={80} defaultDriection={Direcion.UP} background={props.background} button={props.button}>
+        <DropDown open={props.open} onClose={() => props.setIsOpen(false)} className={" flex border rounded-box bg-base-100 "} width={150} height={80} defaultDriection={Direcion.UP} button={props.button}>
             <div className="z-[100] fixed top-0 left-0 right-0 bottom-0" onClick={() => props.setIsOpen(false)}></div>
             <ul className="z-[100] flex flex-wrap overflow-y-scroll w-full h-full">
                 {items.map((item) => (
