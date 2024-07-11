@@ -22,4 +22,11 @@ public class ChatroomRepositoryCustomImpl implements ChatroomRepositoryCustom {
     public List<Chatroom> findChatroomsByUser(SiteUser user){
         return jpaQueryFactory.select(qChatroom).from(qChatroom).join(qChatroom.participants, participant).where(participant.user.eq(user)).fetch();
     }
+//
+//    @Query("SELECT c FROM Chatroom c WHERE c.user = :user AND c.name LIKE %:keyword%")
+//    List<Chatroom> findChatroomsByUserAndKeyword(@Param("user") SiteUser user, @Param("keyword") String keyword);
+
+    public List<Chatroom> findChatroomsByUserAndKeyword(SiteUser user, String keyword){
+        return jpaQueryFactory.select(qChatroom).from(qChatroom).join(qChatroom.participants, participant).where(participant.user.eq(user).and(qChatroom.name.contains(keyword))).fetch();
+    }
 }

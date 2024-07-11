@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,4 +44,18 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
+    public Message getLatesMessage(List<Message> messageList) {
+        // 메시지 리스트가 비어 있는지 확인
+        if (messageList == null || messageList.isEmpty()) {
+            return null; // 또는 예외를 던지거나 적절한 기본 값을 반환
+        }
+
+        // 최신 메시지를 찾음
+        Message latestMessage = messageList.stream()
+                .max(Comparator.comparing(Message::getCreateDate))
+                .orElseThrow(() -> new RuntimeException("No messages found"));
+
+        // MessageResponseDTO로 변환 (MessageResponseDTO 생성자 또는 빌더 사용)
+        return latestMessage;
+    }
 }

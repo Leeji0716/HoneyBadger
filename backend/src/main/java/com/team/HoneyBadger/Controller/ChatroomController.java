@@ -1,8 +1,6 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.DTO.ChatroomRequestDTO;
-import com.team.HoneyBadger.DTO.ChatroomResponseDTO;
-import com.team.HoneyBadger.DTO.TokenDTO;
+import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
@@ -23,10 +21,11 @@ public class ChatroomController {
     private final MultiService multiService;
 
     @GetMapping("/list")
-    public ResponseEntity<?> getChatroomList(@RequestHeader("Authorization") String accessToken) { //채팅방 가져오기(찾아오기)
+    public ResponseEntity<?> getChatroomList(@RequestHeader("Authorization") String accessToken,
+                                             @RequestHeader(value = "keyword", defaultValue = "") String keyword) { //채팅방리스트 가져오기
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            List<ChatroomResponseDTO> chatroomResponseDTOList = multiService.getChatRoomListByUser(tokenDTO.username());
+            List<ChatroomResponseDTO> chatroomResponseDTOList = multiService.getChatRoomListByUser(tokenDTO.username(), keyword);
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTOList);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
@@ -35,11 +34,11 @@ public class ChatroomController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) { //채팅방 가져오기(찾아오기)
+    public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) { //채팅방 찾아오기
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoom(chatroomId);
-            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
+            ChatDetailResponseDTO chatDetailResponseDTO = multiService.getChatRoomDetail(chatroomId);
+            return ResponseEntity.status(HttpStatus.OK).body(chatDetailResponseDTO);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
@@ -85,6 +84,20 @@ public class ChatroomController {
             // throw new DataNotFoundException("not found chatroom");
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
+    @PutMapping("/notification")
+    public ResponseEntity<?> notification(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader Long MessageId) { //채팅방 공지 설정
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            MessageResponseDTO messageResponseDTO = multiService.notification(chatroomId, MessageId);
+            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }

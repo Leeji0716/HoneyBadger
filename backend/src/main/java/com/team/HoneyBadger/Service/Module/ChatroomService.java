@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Service.Module;
 import com.team.HoneyBadger.DTO.ChatroomRequestDTO;
 import com.team.HoneyBadger.DTO.ChatroomResponseDTO;
 import com.team.HoneyBadger.Entity.Chatroom;
+import com.team.HoneyBadger.Entity.Message;
 import com.team.HoneyBadger.Entity.Participant;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Repository.ChatroomRepository;
@@ -46,7 +47,18 @@ public class ChatroomService {
     }
 
     @Transactional
-    public List<Chatroom> getChatRoomListByUser(SiteUser user) {
-        return chatroomRepository.findChatroomsByUser(user);
+    public List<Chatroom> getChatRoomListByUser(SiteUser user, String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            // 키워드가 없을 경우, 기본적으로 유저의 모든 채팅방을 반환
+            return chatroomRepository.findChatroomsByUser(user);
+        } else {
+            // 키워드가 있을 경우, 키워드를 포함한 채팅방을 반환
+            return chatroomRepository.findChatroomsByUserAndKeyword(user, keyword);
+        }
+    }
+
+    public Chatroom notification(Chatroom chatroom, Message message) {
+        chatroom.setNotification(message);
+        return chatroomRepository.save(chatroom);
     }
 }
