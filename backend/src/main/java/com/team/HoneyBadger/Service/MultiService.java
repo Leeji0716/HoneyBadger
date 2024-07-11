@@ -192,8 +192,8 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatDetailResponseDTO getChatRoomDetail(Long chatroomId0) {
-        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId0);
+    public ChatDetailResponseDTO getChatRoomDetail(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         List<String> users = chatroom.getParticipants ().stream ().map (participant -> participant.getUser ().getUsername ()).toList ();
         List<MessageResponseDTO> messageResponseDTOList = messageService.getMessageList(chatroom.getMessageList());
         return ChatDetailResponseDTO.builder ().id (chatroom.getId ()).name (chatroom.getName ()).users (users).messageResponseDTOList (messageResponseDTOList).build ();
@@ -203,6 +203,7 @@ public class MultiService {
     private ChatroomResponseDTO getChatRoom(Chatroom chatroom) {
         List<String> users = chatroom.getParticipants ().stream ().map (participant -> participant.getUser ().getUsername ()).toList ();
         Message latestMessage = messageService.getLatesMessage (chatroom.getMessageList ());
+        // TODO: 마지막 메세지가 없어서 null 반환해. 그럼 리스폰스 못보내 바보멍청아
         MessageResponseDTO messageResponseDTO = GetMessage(latestMessage);
         return ChatroomResponseDTO.builder ().id (chatroom.getId ()).name (chatroom.getName ()).users (users).messageResponseDTO (messageResponseDTO).build ();
     }
@@ -221,17 +222,17 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatroomResponseDTO plusParticipant(ParticipantRequestDTO participantRequestDTO) {
-        Chatroom chatroom = chatroomService.getChatRoomById (participantRequestDTO.chatroomId ());
-        SiteUser siteUser = userService.get (participantRequestDTO.username ());
+    public ChatroomResponseDTO plusParticipant(Long chatroomId, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById (chatroomId);
+        SiteUser siteUser = userService.get (username);
         participantService.save (siteUser, chatroom);
         return getChatRoom (chatroom);
     }
 
     @Transactional
-    public ChatroomResponseDTO minusParticipant(ParticipantRequestDTO participantRequestDTO) {
-        Chatroom chatroom = chatroomService.getChatRoomById (participantRequestDTO.chatroomId ());
-        SiteUser siteUser = userService.get (participantRequestDTO.username ());
+    public ChatroomResponseDTO minusParticipant(Long chatroomId, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById (chatroomId);
+        SiteUser siteUser = userService.get (username);
         Participant participant = participantService.get (siteUser, chatroom);
         chatroom.getParticipants ().remove (participant);
         participantService.delete (participant);
