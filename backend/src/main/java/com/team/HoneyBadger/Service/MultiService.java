@@ -181,9 +181,9 @@ public class MultiService {
     }
 
     @Transactional
-    public List<ChatroomResponseDTO> getChatRoomListByUser(String username) {
+    public List<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword) {
         SiteUser siteUser = userService.get(username);
-        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser);
+        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
         List<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
         for (Chatroom chatroom : chatroomList) {
             chatroomResponseDTOList.add(getChatRoom(chatroom));
@@ -192,10 +192,19 @@ public class MultiService {
     }
 
     @Transactional
+    public ChatDetailResponseDTO getChatRoomDetail(Long chatroomId0) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId0);
+        List<String> users = chatroom.getParticipants ().stream ().map (participant -> participant.getUser ().getUsername ()).toList ();
+        List<MessageResponseDTO> messageResponseDTOList = messageService.getMessageList(chatroom.getMessageList());
+        return ChatDetailResponseDTO.builder ().id (chatroom.getId ()).name (chatroom.getName ()).users (users).messageResponseDTOList (messageResponseDTOList).build ();
+    }
+
+    @Transactional
     private ChatroomResponseDTO getChatRoom(Chatroom chatroom) {
         List<String> users = chatroom.getParticipants ().stream ().map (participant -> participant.getUser ().getUsername ()).toList ();
-        List<MessageResponseDTO> messageResponseDTOList = messageService.getMessageList (chatroom.getMessageList ());
-        return ChatroomResponseDTO.builder ().id (chatroom.getId ()).name (chatroom.getName ()).users (users).messageResponseDTOList (messageResponseDTOList).build ();
+        Message latestMessage = messageService.getLatesMessage (chatroom.getMessageList ());
+        MessageResponseDTO messageResponseDTO = GetMessage(latestMessage);
+        return ChatroomResponseDTO.builder ().id (chatroom.getId ()).name (chatroom.getName ()).users (users).messageResponseDTO (messageResponseDTO).build ();
     }
 
     @Transactional
@@ -487,7 +496,7 @@ public class MultiService {
 
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
-        String fileName = "/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        String fileName = "/api/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
         // 너굴맨이 해치우고 갔어요!
         File dest = new File(path + fileName);
@@ -502,7 +511,7 @@ public class MultiService {
 
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
-        String fileName = "/users/" + username + "/temp/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        String fileName = "/api/user/" + username + "/temp/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
         File dest = new File(path + fileName);
 
@@ -555,5 +564,13 @@ public class MultiService {
         }
 
         return getMessageReservation(messageReservation);
+    }
+
+    public MessageResponseDTO notification(Long chatroomId, Long messageId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        Message message = messageService.getMessageById(messageId);
+        chatroomService.notification(chatroom, message);
+
+        return GetMessage(message);
     }
 }
