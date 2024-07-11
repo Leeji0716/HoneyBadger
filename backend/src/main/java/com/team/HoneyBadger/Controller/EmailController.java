@@ -1,14 +1,9 @@
 package com.team.HoneyBadger.Controller;
 
+import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
 import com.team.HoneyBadger.DTO.EmailResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
-
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
-import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Exception.DataNotFoundException;
-import com.team.HoneyBadger.Service.Module.EmailReservationService;
-
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
