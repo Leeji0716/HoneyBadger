@@ -1,42 +1,26 @@
 package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.DTO.*;
-
-import com.team.HoneyBadger.Entity.Email;
-import com.team.HoneyBadger.Entity.EmailReceiver;
-import com.team.HoneyBadger.Entity.EmailReservation;
-import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Exception.DataDuplicateException;
-import com.team.HoneyBadger.HoneyBadgerApplication;
-import com.team.HoneyBadger.Repository.EmailRepository;
-import com.team.HoneyBadger.Repository.EmailReservationRepository;
-import com.team.HoneyBadger.Repository.UserRepository;
-
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.MessageType;
-import com.team.HoneyBadger.Exception.DataDuplicateException;
-import com.team.HoneyBadger.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
+import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
 import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
-import java.time.*;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,11 +34,9 @@ public class MultiService {
     private final ChatroomService chatroomService;
     private final EmailService emailService;
     private final EmailReceiverService emailReceiverService;
-    private final EmailRepository emailRepository;
-    private final UserRepository userRepository;
-    private final EmailReservationRepository emailReservationRepository;
     private final MessageService messageService;
     private final MessageReservationService messageReservationService;
+    private final EmailReservationService emailReservationService;
 
     /**
      * Auth
@@ -273,24 +255,24 @@ public class MultiService {
         return email;
     }
 
-    @Transactional
-    public void scheduleEmail(String title, String content, SiteUser sender, List<String> receivers, LocalDateTime sendTime, List<MultipartFile> attachments) {
-        EmailReservation emailReservation = new EmailReservation();
-        emailReservation.setTitle(title);
-        emailReservation.setContent(content);
-        emailReservation.setSender(sender);
-        emailReservation.setSendTime(sendTime);
-        emailReservation.setReceiverList(receivers);
-
-        // 첨부 파일 저장
-        if (attachments != null && !attachments.isEmpty()) {
-            for (MultipartFile file : attachments) {
-                saveFile(file);
-            }
-        }
-
-        emailReservationRepository.save(emailReservation);
-    }
+//    @Transactional
+//    public void scheduleEmail(String title, String content, SiteUser sender, List<String> receivers, LocalDateTime sendTime, List<MultipartFile> attachments) {
+//        EmailReservation emailReservation = new EmailReservation();
+//        emailReservation.setTitle(title);
+//        emailReservation.setContent(content);
+//        emailReservation.setSender(sender);
+//        emailReservation.setSendTime(sendTime);
+//        emailReservation.setReceiverList(receivers);
+//
+//        // 첨부 파일 저장
+//        if (attachments != null && !attachments.isEmpty()) {
+//            for (MultipartFile file : attachments) {
+//                saveFile(file);
+//            }
+//        }
+//
+//        emailReservationRepository.save(emailReservation);
+//    }
 
     private void saveFile(MultipartFile file) {
         if (file.isEmpty()) {
@@ -315,9 +297,17 @@ public class MultiService {
         }
     }
 
-    public List<EmailResponseDTO> getEmailsForUser(String username) {
-        List<EmailResponseDTO> list = new ArrayList<> ();
-        List<Email> emails = emailReceiverService.getEmailsForUser (username);
+
+    public List<EmailResponseDTO> getEmailsForUser(String username, int is) {
+        List<EmailResponseDTO> list = new ArrayList<>();
+        List<Email> emails = List.of();
+        if (is == 1){
+            emails = emailReceiverService.getEmailsForUser(username); //구분 해야 함
+        }else if (is == 2){
+            emails = emailReceiverService.getEmailsForUser(username); //구분 해야 함
+        }
+
+
         for (Email email : emails) {
             List<String> receivers = new ArrayList<>();
             for (EmailReceiver receiver : email.getReceiverList()) {
@@ -337,32 +327,92 @@ public class MultiService {
     }
 
     private EmailResponseDTO GetEmail(Email email) {
-        return EmailResponseDTO.builder ().id (email.getId ()).title (email.getTitle ()).senderName (email.getSender ().getName ()).build ();
+        Long sendTime = this.dateTimeTransfer(email.getSendTime());
+        List<String> receiverList = email.getReceiverList().stream().map(reciver -> reciver.getReceiver().getUsername()).toList();
+        return EmailResponseDTO.builder()
+                .id(email.getId())
+                .title(email.getTitle())
+                .content(email.getContent())
+                .senderName(email.getSender().getName())
+                .senderId(email.getSender().getUsername())
+                .senderTime(sendTime)
+                .receiverIds(receiverList)
+                .build();
     }
 
-    public void markEmailAsRead(Long emailId, String receiverId) {
-        emailReceiverService.markEmailAsRead (emailId, receiverId);
+    public Boolean markEmailAsRead(Long emailId, String receiverId) {
+        Boolean isRead = emailReceiverService.markEmailAsRead(emailId, receiverId);
+        return isRead;
     }
 
     @Transactional
     public void deleteEmail(Long emailId, String username) {
-        Email email = emailRepository.findById(emailId)
-                .orElseThrow(() -> new RuntimeException("Email not found with id: " + emailId));
+        Email email = emailService.getEmail(emailId);
+        emailService.findByUsernameDelete(email, username);
+    }
 
-        SiteUser user = userRepository.findById(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    public EmailResponseDTO createEmail(String username, EmailRequestDTO emailRequestDTO, List<MultipartFile> attachments) {
+        SiteUser sender = userService.get(username);
+        Email email = emailService.create(sender, emailRequestDTO);
 
-        if (email.getSender().equals(user) || email.getReceiverList().stream().anyMatch(receiver -> receiver.getReceiver().equals(user))) {
-            emailRepository.delete(email);
-        } else {
-            throw new RuntimeException("User is not authorized to delete this email");
+        //유저 이름으로 된 리스트를 유저 객체에 담기 (receiverList)
+        for (String user : emailRequestDTO.receiverIds()) {
+            SiteUser reciver = userService.get(user);
+            emailReceiverService.save(email, reciver);
         }
+        List<String> filePathList = new ArrayList<>();
+        //파일 경로 리스트 담기 (filePathList)
+        for (MultipartFile file : attachments){
+            String filePath = emailReservationService.saveFile(file);
+            filePathList.add(filePath);
+        }
+        return getEamil(email, filePathList);
     }
 
-    public SiteUser getUserByUsername(String username) {
-        return userRepository.findById(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    private EmailResponseDTO getEamil(Email email, List<String> filePathList) {
+        List<String> receiverList = email.getReceiverList().stream().map(reciver -> reciver.getReceiver().getUsername()).toList();
+        Long sendTime = this.dateTimeTransfer(email.getSendTime());
+
+        return EmailResponseDTO.builder()
+                .id(email.getId())
+                .senderName(email.getSender().getName())
+                .title(email.getTitle())
+                .content(email.getContent())
+                .receiverIds(receiverList)
+                .senderId(email.getSender().getUsername())
+                .senderTime(sendTime)
+                .filePathList(filePathList)
+                .build();
     }
+
+    public void deleteEmailReservation(Long reservationId, String username) {
+        EmailReservation emailReservation = emailReservationService.getEmailReservation(reservationId);
+        emailReservationService.findByUsernameDelete(emailReservation, username);
+    }
+
+    public EmailResponseDTO getEmail(Long emailId) {
+        Email email = emailService.getEmail(emailId);
+        return GetEmail(email);
+    }
+
+//    @Transactional
+//    public void createEmailFromReservation(EmailReservation emailReservation) {
+//        Email email = new Email();
+//        email.setTitle(emailReservation.getTitle());
+//        email.setContent(emailReservation.getContent());
+//        email.setSender(emailReservation.getSender());
+//
+//        for (String receiverUsername : emailReservation.getReceiverList()) {
+//            SiteUser receiver = userRepository.findById(receiverUsername)
+//                    .orElseThrow(() -> new RuntimeException("User not found with username: " + receiverUsername));
+//            EmailReceiver emailReceiver = new EmailReceiver();
+//            emailReceiver.setEmail(email);
+//            emailReceiver.setReceiver(receiver);
+//            email.getReceiverList().add(emailReceiver);
+//        }
+//
+//        emailRepository.save(email);
+//    }
 
 
     /*
@@ -462,6 +512,13 @@ public class MultiService {
         file.transferTo (dest);
 
         return fileName;
+    }
+
+    /*
+     * Time
+     */
+    private Long dateTimeTransfer(LocalDateTime dateTime) {
+        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
     /*

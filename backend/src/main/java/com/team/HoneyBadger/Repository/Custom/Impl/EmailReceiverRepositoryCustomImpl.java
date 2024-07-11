@@ -16,14 +16,26 @@ public class EmailReceiverRepositoryCustomImpl implements EmailReceiverRepositor
     private final JPAQueryFactory jpaQueryFactory;
     QEmailReceiver qEmailReceiver = QEmailReceiver.emailReceiver;
 
+//    @Override
+//    @Transactional
+//    public Boolean markEmailAsRead(Long emailId, String receiverId) {
+//        return (Boolean) jpaQueryFactory.update(qEmailReceiver)
+//                .set(qEmailReceiver.status, true)
+//                .where(qEmailReceiver.email.id.eq(emailId)
+//                        .and(qEmailReceiver.receiver.username.eq(receiverId)))
+//                .execute();
+//    }
+
     @Override
     @Transactional
-    public int markEmailAsRead(Long emailId, String receiverId) {
-        return (int) jpaQueryFactory.update(qEmailReceiver)
+    public Boolean markEmailAsRead(Long emailId, String receiverId) {
+        long updatedCount = jpaQueryFactory.update(qEmailReceiver)
                 .set(qEmailReceiver.status, true)
                 .where(qEmailReceiver.email.id.eq(emailId)
                         .and(qEmailReceiver.receiver.username.eq(receiverId)))
                 .execute();
+
+        return updatedCount > 0; // 업데이트된 행의 수가 0보다 크면 true를 반환
     }
 
     @Override
