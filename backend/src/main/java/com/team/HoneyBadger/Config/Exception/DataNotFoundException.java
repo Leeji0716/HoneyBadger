@@ -1,4 +1,4 @@
-package com.team.HoneyBadger.Exception;
+package com.team.HoneyBadger.Config.Exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

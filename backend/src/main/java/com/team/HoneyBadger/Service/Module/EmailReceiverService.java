@@ -20,11 +20,12 @@ public class EmailReceiverService {
     }
 
     @Transactional
-    public void markEmailAsRead(Long emailId, String receiverId) {
-        int updatedCount = emailReceiverRepository.markEmailAsRead(emailId, receiverId);
-        if (updatedCount == 0) {
+    public Boolean markEmailAsRead(Long emailId, String receiverId) {
+        Boolean isRead = emailReceiverRepository.markEmailAsRead(emailId, receiverId);
+        if (!isRead) {
             throw new IllegalArgumentException("Invalid email or receiver ID");
         }
+        return isRead;
     }
 
     public List<Email> getEmailsForUser(String userId) {

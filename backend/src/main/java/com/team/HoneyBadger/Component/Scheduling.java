@@ -2,6 +2,7 @@ package com.team.HoneyBadger.Component;
 
 import com.team.HoneyBadger.DTO.MessageRequestDTO;
 import com.team.HoneyBadger.Entity.MessageReservation;
+import com.team.HoneyBadger.Service.Module.EmailReservationService;
 import com.team.HoneyBadger.Service.Module.MessageReservationService;
 import com.team.HoneyBadger.Service.MultiService;
 import jakarta.transaction.Transactional;
@@ -10,7 +11,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -21,8 +21,9 @@ import java.util.List;
 public class Scheduling {
     private final MultiService multiService;
     private final MessageReservationService messageReservationService;
+    private final EmailReservationService emailReservationService;
 
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0 0 */1 * * *")
     @Transactional
     public void sendReservation() {
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -35,4 +36,15 @@ public class Scheduling {
             }
         }
     }
+
+//    @Scheduled(cron = "0 0 */1 * * *")
+//    public void processScheduledEmails() {
+//        LocalDateTime now = LocalDateTime.now();
+//        List<EmailReservation> emailsToProcess = emailReservationService.findBySendTimeBeforeAndSendTimeIsNotNull(now);
+//
+//        for (EmailReservation emailReservation : emailsToProcess) {
+//            multiService.createEmailFromReservation(emailReservation);
+//            emailReservationService.delete(emailReservation);
+//        }
+//    }
 }

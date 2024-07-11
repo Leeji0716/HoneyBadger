@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface EmailReceiverRepositoryCustom {
 
-    int markEmailAsRead(Long emailId, String receiverId);
+    Boolean markEmailAsRead(Long emailId, String receiverId);
 
     List <Email> findByReceiver(String receiverId);
 }
