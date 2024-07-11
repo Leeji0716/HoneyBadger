@@ -4,9 +4,10 @@ import { getEmail, getUser, mailCancel, readEmail } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
 import { kMaxLength } from "buffer";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-export default function Ye() {
-
+export default function Ye({ searchParam }: {  searchParam: any }) {
+console.log(searchParam?.emailId);
     interface EmailResponseDTO {
         id: number,
         title: string,
@@ -15,7 +16,7 @@ export default function Ye() {
         senderName: string,
         receiverIds: string[]
     }
-
+    const router = useRouter();
     const [email, setEmail] = useState(null as any);
     const [emailList, setEmailList] = useState([] as any);
     const [user, setUser] = useState(null as any);
@@ -33,7 +34,7 @@ export default function Ye() {
     }, [ACCESS_TOKEN])
 
     useEffect(() => {
-        getEmail().then(r => setEmailList(r)).catch(e => console.log(e))
+        getEmail(3).then(r => setEmailList(r)).catch(e => console.log(e))
     }, [])
     const truncateText = ({ text, maxLength }: { text: string, maxLength: number }) => {
         if (text.length <= maxLength) {
@@ -73,7 +74,7 @@ export default function Ye() {
                 <div className="h-[88%] overflow-y-scroll">
                     {emailList?.map((email: EmailResponseDTO, index: number) => <MailBox key={index} email={email} />)}
                     <DropDown open={open1 != null && open1?.id == email?.id} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button={"burger"+open1?.id}>
-                        <button onClick={() => console.log(open1?.id)}>수정</button>
+                    <button onClick={() => {router.push(`/email/EmailForm`); localStorage.setItem("email",JSON.stringify(email))}}>수정</button>
                         <button onClick={() => { mailCancel(open1.id)}}>삭제</button>
                     </DropDown>
                 </div>
