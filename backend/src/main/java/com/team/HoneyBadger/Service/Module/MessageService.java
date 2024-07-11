@@ -30,12 +30,12 @@ public class MessageService {
         messageRepository.delete(message);
     }
 
-    public List<MessageResponseDTO> getMessageList(List<Message> messageList) { //메세지 리스트 메세지리스폰스DTO로 변환
+    public List<MessageResponseDTO> getMessageList(List<Message> messageList) { //메세지 리스트 메세지 ResponseDTO 변환
         return messageList.stream()
-                .sorted((m1, m2) -> m2.getCreateDate().compareTo(m1.getCreateDate()))
                 .map(message -> new MessageResponseDTO(
                         message.getId(),
                         message.getMessage(),
+                        message.getSender().getUsername(),
                         message.getSender().getName(),
                         message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
                         message.getMessageType()

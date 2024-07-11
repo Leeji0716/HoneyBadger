@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Controller;
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Service.Module.EmailReservationService;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -36,6 +38,22 @@ public class EmailController {
                 attachments
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, MultipartFile file) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
+        if (tokenDTO.isOK()) try {
+            String fileName = multiService.fileUpload(tokenDTO.username(), file);
+            return ResponseEntity.status(HttpStatus.OK).body(fileName);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 업로드 실패");
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+
+        else return tokenDTO.getResponseEntity();
     }
 
 

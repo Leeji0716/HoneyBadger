@@ -398,12 +398,20 @@ public class MultiService {
         Message message = Message.builder().message(messageRequestDTO.message()).sender(siteUser).chatroom(chatroom).messageType(messageType).build();
 
 
-        return GetMessage (messageService.save (message));
+        return GetMessage(messageService.save (message));
     }
 
     private MessageResponseDTO GetMessage(Message message) {
+        Long sendTime = this.dateTimeTransfer(message.getCreateDate());
 
-        return MessageResponseDTO.builder().id(message.getId()).sendTime(message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()).username(message.getSender().getUsername()).message(message.getMessage()).messageType(message.getMessageType()).build();
+        return MessageResponseDTO.builder()
+                .id(message.getId())
+                .sendTime(sendTime)
+                .username(message.getSender().getUsername())
+                .name(message.getSender().getName())
+                .message(message.getMessage())
+                .messageType(message.getMessageType())
+                .build();
     }
 
     public void deleteMessage(Long messageId) {
@@ -441,11 +449,25 @@ public class MultiService {
         return fileName;
     }
 
+    public String fileUpload(String username, MultipartFile file) throws IOException {
+
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/chatroom/" + username + "/temp/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+
+        // 너굴맨이 해치우고 갔어요!
+        File dest = new File(path + fileName);
+
+        if (!dest.getParentFile ().exists ()) dest.getParentFile ().mkdirs ();
+        file.transferTo (dest);
+
+        return fileName;
+    }
+
     /*
      * MessageReservation or ChatReservation
      */
-    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO
-                                                                    messageReservationRequestDTO, String username) {
+    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
         MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendTime()).messageType(messageReservationRequestDTO.messageType()).build();
@@ -462,7 +484,15 @@ public class MultiService {
     }
 
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
-        return MessageReservationResponseDTO.builder().id(messageReservation.getId()).chatroomId(messageReservation.getChatroom().getId()).message(messageReservation.getMessage()).username(messageReservation.getSender().getUsername()).sendTime(messageReservation.getSendDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()).messageType(messageReservation.getMessageType()).build();
+        Long sendTime = this.dateTimeTransfer(messageReservation.getSendDate());
+        return MessageReservationResponseDTO.builder()
+                .id(messageReservation.getId())
+                .chatroomId(messageReservation.getChatroom().getId())
+                .message(messageReservation.getMessage())
+                .username(messageReservation.getSender().getUsername())
+                .sendDate(sendTime)
+                .messageType(messageReservation.getMessageType())
+                .build();
     }
 
 
