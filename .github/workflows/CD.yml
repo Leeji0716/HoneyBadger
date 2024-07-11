@@ -29,19 +29,57 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }} # pem키
+          password: ${{ secrets.KEY }} # pem키
           script: |
-            echo "${{secrets.BASH}}" > /home/ubuntu/honeybadger/build.bash
-            if [ -e "/home/ubuntu/honeybadger/sub" ]; then
-              sudo rm -rf /home/ubuntu/honeybadger/sub
-              sudo docker rm -f $(docker ps -aqf "name=^${{secrets.DOCKERHUB_REPO}}") # 컨테이너 찾아서 종료
-              sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
-              sudo docker run -d -p 3001:3000 -p 8081:8080 -v /home/ubuntu/honeybadger:/config --name ${{secrets.DOCKERHUB_REPO}} ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
-              sudo docker image prune -f
-            else
-              sudo mkdir /home/ubuntu/honeybadger/sub
-              sudo docker rm -f $(docker ps -aqf "name=^${{secrets.DOCKERHUB_REPO}}") # 컨테이너 찾아서 종료
-              sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
-              sudo docker run -d -p 3000:3000 -p 8080:8080 -v /home/ubuntu/honeybadger:/config --name ${{secrets.DOCKERHUB_REPO}} ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
-              sudo docker image prune -f
-            fi
+            whoami
+            sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest # 최신 도커 이미지 다운로드
+            # sub 시작
+            echo "sub start"
+            sudo docker rm -f $(sudo docker ps -aqf "name=^${{secrets.DOCKERHUB_REPO}}_sub") # 컨테이너 찾아서 종료
+            sudo docker run -d -p 3001:3000 -p 8081:8080 -v /HDD/starj0405/web/honeybadger/data:/HDD/starj0405/web/honeybadger/data -v /HDD/starj0405/web/honeybadger:/config --name "${{secrets.DOCKERHUB_REPO}}_sub" ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+            count=0
+            while true; do
+              if [[ $(curl -s localhost:8081/api/track/health) =~ "UP" ]]; then
+                # sub 실행 완료 및 main 시작
+                sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3000
+                sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3001
+                sudo iptables -t nat -A PREROUTING -p tcp --dport 8080 -j REDIRECT --to-port 8081
+                sudo docker rm -f $(sudo docker ps -aqf "name=^${{secrets.DOCKERHUB_REPO}}_main") # 컨테이너 찾아서 종료
+                sudo docker run -d -p 3000:3000 -p 8080:8080 -v /HDD/starj0405/web/honeybadger/data:/HDD/starj0405/web/honeybadger/data -v /HDD/starj0405/web/honeybadger:/config --name "${{secrets.DOCKERHUB_REPO}}_main" ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+                echo "sub finish main start"
+                break
+              else
+                # sub 실행 대기
+                count=$((count+1))
+                if [[ ${count} -gt 180 ]]; then
+                  echo "main timeout"
+                  break
+                else
+                  echo ${count}
+                  sleep 1
+                fi
+              fi
+            done
+            count=0
+            while true; do
+              if [[ $(curl -s localhost:8080/api/track/health) =~ "UP" ]]; then
+                # main 실행 완료 sub 종료
+                sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3001
+                sudo iptables -t nat -D PREROUTING -p tcp --dport 8080 -j REDIRECT --to-port 8081
+                sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3000
+                sudo docker rm -f $(sudo docker ps -aqf "name=^${{secrets.DOCKERHUB_REPO}}_sub") # 컨테이너 찾아서 종료        
+                echo "sub start"
+                sudo docker image prune -f
+                break
+              else
+                # main 실행 대기
+                count=$((count+1))
+                if [[ ${count} -gt 180 ]]; then
+                  echo "sub timeout"
+                  break
+                else
+                  echo ${count}
+                  sleep 1
+                fi
+              fi
+            done
