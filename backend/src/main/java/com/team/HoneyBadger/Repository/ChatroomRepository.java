@@ -12,4 +12,7 @@ import java.util.List;
 public interface ChatroomRepository extends JpaRepository<Chatroom, Long>, ChatroomRepositoryCustom {
 
     List<Chatroom> findChatroomsByUser(SiteUser user);
+
+    List<Chatroom> findChatroomsByUserAndKeyword(SiteUser user, String keyword);
+
 }

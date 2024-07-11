@@ -1,11 +1,9 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.DTO.ChatroomResponseDTO;
 import com.team.HoneyBadger.DTO.MessageRequestDTO;
 import com.team.HoneyBadger.DTO.MessageResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.Exception.DataNotFoundException;
-import com.team.HoneyBadger.HoneyBadgerApplication;
+import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,10 +14,8 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.List;
 
 
 @RestController
@@ -33,6 +29,34 @@ public class MessageController {
     public ResponseEntity<?> sendMessage(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
         MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO);
         return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
+    }
+
+    @MessageMapping("/read/{id}")
+    @SendTo("/api/sub/read/{id}")
+    public ResponseEntity<?> readMessages(@DestinationVariable Long id, String username) {
+        multiService.readMessage(id, username);
+        return ResponseEntity.status(HttpStatus.OK).body("OK");
+    }
+
+    @GetMapping("/update")
+    public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroom_id, @RequestHeader Long end) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            List<MessageResponseDTO> list = multiService.getMessageList(chatroom_id,end);
+            return ResponseEntity.status(HttpStatus.OK).body(list);
+        } else return tokenDTO.getResponseEntity();
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) { //채팅방 찾아오기
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            List<MessageResponseDTO> messageResponseDTOList = multiService.getMessageList(chatroomId);
+            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
     }
 
     @PostMapping("/upload")

@@ -9,7 +9,6 @@ export default function Home() {
         </div>
         <div className="w-8/12 flex items-center justify-center">
             <div className="h-11/12 w-11/12 mt-10 bg-white h-screen shadow">
-
             </div>
         </div>
     </Main>

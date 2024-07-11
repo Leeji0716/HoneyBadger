@@ -1,13 +1,12 @@
 package com.team.HoneyBadger.Service.Module;
 
-import com.team.HoneyBadger.Entity.*;
+import com.team.HoneyBadger.Entity.EmailReservation;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Repository.EmailRepository;
 import com.team.HoneyBadger.Repository.EmailReservationRepository;
 import com.team.HoneyBadger.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,18 +22,18 @@ public class EmailReservationService {
     private final UserRepository userRepository;
     private final EmailRepository emailRepository;
 
-    private void saveFile(MultipartFile file) {
+    public String saveFile(MultipartFile file) {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         File directory = new File(path);
         if (!directory.exists()) {
             directory.mkdirs();
         }
-
         try {
             String filePath = path + "/" + file.getOriginalFilename();
             System.out.println("Saving file to: " + filePath);
             file.transferTo(new File(filePath));
             System.out.println("File saved successfully");
+            return filePath;
         } catch (IOException e) {
             System.err.println("Failed to save file: " + e.getMessage());
             throw new RuntimeException("Failed to save file", e);
@@ -46,33 +45,24 @@ public class EmailReservationService {
         emailReservationRepository.deleteById(emailReservationId);
     }
 
-    @Transactional
-    public void createEmailFromReservation(EmailReservation emailReservation) {
-        Email email = new Email();
-        email.setTitle(emailReservation.getTitle());
-        email.setContent(emailReservation.getContent());
-        email.setSender(emailReservation.getSender());
-
-        for (String receiverUsername : emailReservation.getReceiverList()) {
-            SiteUser receiver = userRepository.findById(receiverUsername)
-                    .orElseThrow(() -> new RuntimeException("User not found with username: " + receiverUsername));
-            EmailReceiver emailReceiver = new EmailReceiver();
-            emailReceiver.setEmail(email);
-            emailReceiver.setReceiver(receiver);
-            email.getReceiverList().add(emailReceiver);
-        }
-
-        emailRepository.save(email);
+    public List<EmailReservation> findBySendTimeBeforeAndSendTimeIsNotNull(LocalDateTime now) {
+        return emailReservationRepository.findBySendTimeBeforeAndSendTimeIsNotNull(now);
     }
 
-    @Scheduled(cron = "0 0 */1 * * *")
-    public void processScheduledEmails() {
-        LocalDateTime now = LocalDateTime.now();
-        List<EmailReservation> emailsToProcess = emailReservationRepository.findBySendTimeBeforeAndSendTimeIsNotNull(now);
+    public void delete(EmailReservation emailReservation) {
+        emailReservationRepository.delete(emailReservation);
+    }
 
-        for (EmailReservation emailReservation : emailsToProcess) {
-            createEmailFromReservation(emailReservation);
-            emailReservationRepository.delete(emailReservation);
-        }
+    public EmailReservation getEmailReservation(Long reservationId) {
+        return emailReservationRepository.findById(reservationId).orElseThrow();
+    }
+
+    public void findByUsernameDelete(EmailReservation emailReservation, String username) {
+        List<String> emailReceiverList = emailReservation.getReceiverList();
+        for (String emailReceiver : emailReceiverList)
+            if (emailReceiver.equals(username)) {
+                emailReceiverList.remove(emailReceiver);
+                break;
+            }
     }
 }

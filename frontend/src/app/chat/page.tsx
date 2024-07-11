@@ -2,26 +2,35 @@
 import { useEffect, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
+import Modal from "../Global/Modal";
 import { Tooltip } from 'react-tooltip';
 
-import { getChat, getUser } from "../API/UserAPI";
-import { getDateTimeFormat } from "../Global/Method";
+import { chatExit, getChat, getUser, getChatDetail } from "../API/UserAPI";
+import { getChatDateTimeFormat } from "../Global/Method";
 import { getSocket } from "../API/SocketAPI";
 
 export default function Chat() {
-    interface messageRespnseDTO {
+    interface messageResponseDTO {
         id?: number,
         username: string,
         message: string,
         messageType: number,
-        sendTime: number
+        sendTime: number,
+        name: string
     }
 
     interface chatroomResponseDTO {
         id: number,
         name: string,
         users: string[]
-        messageResponseDTOList: messageRespnseDTO[]
+        messageResponseDTO: messageResponseDTO
+    }
+
+    interface chatDetailResponseDTO {
+        id: number,
+        name: string,
+        users: string[]
+        messageResponseDTOList: messageResponseDTO[]
     }
 
     const [open, setOpen] = useState(false);
@@ -32,36 +41,53 @@ export default function Chat() {
     const [chatrooms, setChatrooms] = useState([] as any);
     const [chatroom, setChatroom] = useState(null as any);
     const [user, setUser] = useState(null as any);
-    const [test, setTest] = useState<messageRespnseDTO[]>([]);
-    const [messageList, setMessageList] = useState<messageRespnseDTO[]>([]);
+    const [chatDetail, setChatDetail] = useState(null as any);
+    const [test, setTest] = useState<messageResponseDTO[]>([]);
+    const [messageList, setMessageList] = useState<messageResponseDTO[]>([]);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const [socket, setSocket] = useState(null as any);
     const [temp, setTemp] = useState(null as any);
     const [isReady, setReady] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    function handleOpenModal() {
+        setIsModalOpen(true);
+    }
+
+    function handleCloseModal() {
+        setIsModalOpen(false);
+    }
+
     useEffect(() => {
         if (ACCESS_TOKEN)
-            getUser().then(r => setUser(r)).catch(e => console.log(e));
+            getUser().then(r => {
+                setUser(r);
+                getChat().then(r => {
+                    // console.log(r);
+                    setChatrooms(r);
+                }).catch(e => console.log(e))
+            }).catch(e => console.log(e));
+        else
+            window.location.href = "/";
     }, [ACCESS_TOKEN])
-
-    console.log(chatroom);
-    // console.log(user.name);
 
     useEffect(() => {
         setSocket(getSocket([], () => setReady(true)));
-        getChat().then(r => {
-            // console.log(r);
-            setChatrooms(r);
-        }).catch(e => console.log(e))
     }, [])
-    useEffect(()=>{
-        if(temp){
-            setMessageList([...messageList,temp]);
+
+    useEffect(() => {
+        if (temp) {
+            setMessageList([...messageList, temp]);
             setTemp(null);
         }
-    },[temp])
+    }, [temp])
 
-    function ChatList({ Chatroom}: { Chatroom: chatroomResponseDTO }) {
+    function ChatList({ Chatroom, ChatDetail }: { Chatroom: chatroomResponseDTO, ChatDetail: chatDetailResponseDTO }) {
+        console.log(ChatDetail);
+        // console.log(chatroom);
+
         const joinMembers: number = Chatroom.users.length;
+        const lastMessage = Chatroom.messageResponseDTO;
         function getValue(confirm: number) {
             switch (joinMembers) {
                 case 1: return <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />;
@@ -83,7 +109,7 @@ export default function Chat() {
                     </div>
                 </div>
                 default:
-                    <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
+                    return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
                         <div className="w-[80px] h-[40px] flex">
                             <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
                             <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
@@ -97,18 +123,26 @@ export default function Chat() {
         }
         return <div className="flex hover:bg-gray-400 text-white rounded-md cursor-pointer" onClick={() => {
             if (isReady) {
-                if(chatroom){
+                if (chatroom) {
                     socket.unsubscribe("/api/sub/message/" + chatroom.chatroom?.id);
                 }
                 setChatroom(Chatroom);
                 // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
-                socket.subscribe( "/api/sub/message/" + Chatroom?.id,(e:any)=>{
-                    const message =  JSON.parse(e.body).body;
+                socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
+                    const message = JSON.parse(e.body).body;
                     // console.log(message); // Type -> 숫자로 변경
-                    const temp = {id:message?.id, message:message?.message, sendTime:message?.sendTime, username:message?.username, messageType:1} as messageRespnseDTO; // 위에꺼 확인해보고 지우세요
+                    const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, username: message?.username, messageType: 0 } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                     setTemp(temp);
                 });
-                setMessageList(Chatroom.messageResponseDTOList); // remove 
+                getChatDetail(Chatroom?.id).then(r => {
+                    // setMessageList(r);
+                    setMessageList(r?.messageResponseDTOList);
+                    const timer = setInterval(() => {
+                        document.getElementById((r?.length - 1).toString())?.scrollIntoView();
+                        clearInterval(timer);
+                    }, 100);
+                }).catch(e => console.log(e));
+
             }
         }}>
             {getValue(joinMembers)}
@@ -118,12 +152,12 @@ export default function Chat() {
                     <p className="text-black font-bold">{Chatroom?.name}</p>
                 </div>
                 <div className="flex justify-between mt-2">
-                    <p className="text-black text-sm">안녕하세요 저는 이렇게 어떻게 하아 이거 맞냐? 어디까지 길어지는 거예요?</p>
+                    <p className="text-black text-sm">{lastMessage?.message}</p>
                 </div>
             </div>
             <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
                 <div>
-                    <p className="text-gray-300 whitespace-nowrap">오후 1:03</p>
+                    <p className="text-gray-300 whitespace-nowrap">{getChatDateTimeFormat(lastMessage?.sendTime)}</p>
                 </div>
                 <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
                     <p className="text-white text-sm">1</p>
@@ -132,7 +166,7 @@ export default function Chat() {
         </div>
     }
 
-    function ChatDetil({ chatroom }: { chatroom: chatroomResponseDTO }) {
+    function ChatDetil({ chatDetail }: { chatDetail: chatroomResponseDTO }) {
         const joinMembers = Array.isArray(chatroom.users) ? chatroom.users.length : 0;
         const [message, setMessage] = useState('');
         // console.log("==========");
@@ -144,9 +178,12 @@ export default function Chat() {
                 <div className="text-black flex w-[50%]">
                     <img src="/pig.png" className="m-2 w-[70px] h-[70px] rounded-full" />
                     <div className="flex flex-col justify-center">
-                        <p className="text-black font-bold text-3xl mb-1">{chatroom?.name}</p>
+                        <div className="flex">
+                            <p className="text-black font-bold text-3xl mb-1">{chatroom?.name}</p>
+                            <button> 이름편집</button>
+                        </div>
                         <div className="flex items-center gap-1">
-                            <button>
+                            <button onClick={handleOpenModal}>
                                 <img src="/people.png" className="w-[30px] h-[30px]" />
                             </button>
                             <p className="flex items-end text-xl w-[30px] h-[30px] text-official-color">
@@ -155,6 +192,11 @@ export default function Chat() {
                         </div>
                     </div>
                 </div>
+                <Modal open={isModalOpen} onClose={handleCloseModal} escClose={true} outlineClose={true}>
+                    <div className="w-[900px], h-[800px]"> 이것은 리스트가 사람 리스트가 나올 모달입니다.
+                    </div>
+                </Modal>
+
                 <div className="mr-5 w-[50%] flex justify-end items-center">
                     <button className="hamburger1" id="burger" onClick={() => { setOpen1(!open1), setDrop(!drop) }}>
                         <span></span>
@@ -164,11 +206,29 @@ export default function Chat() {
                     <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="burger">
                         {/* <button onClick={() => setColor(1)}>단체</button>
                 <button onClick={() => setColor(2)}>개인</button> */}
-                        <button>나가기</button>
+                        <button onClick={() => {
+                            chatExit({ chatroomId: chatroom.id, username: user.username }).then((r) => {
+
+                                // setChatrooms(r);
+                                setChatroom(null);
+                            })
+                        }}>나가기</button>
                         <button>사진/동영상</button>
                         <button>파일</button>
                         <button></button>
                     </DropDown>
+                </div>
+            </div>
+            {/* 공지 */}
+            <div className="w-full flex justify-center">
+                <div className="official-color w-[59%] h-[70px] rounded-md flex items-center fixed z-50" style={{ opacity: 0.8 }}>
+                    <img src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="" />
+                    <p className="w-full text-white" style={{ opacity: 1 }}>
+                        공지 내용이 들어갈 부분입니다. 어디까지 길어질지 어디 한 번 해보자고 해보자는 거냐고 진짜 공지 내용이 들어갈 부분입니다. 어디까지 길어질지 어디 한 번 해보자고 해보자는 거냐고 진짜
+                    </p>
+                    <button className="h-full flex items-start mr-2 text-white text-3xl" style={{ opacity: 1 }}>
+                        ⨯
+                    </button>
                 </div>
             </div>
 
@@ -182,10 +242,10 @@ export default function Chat() {
                 {/* 채팅 */}
                 {messageList?.map((t, index) => <div key={index} className="w-full flex flex-col items-start m-1">
                     {
-                        t.username == user?.name ?
-                            <div className="flex w-full justify-end">
+                        t.username == user?.username ?
+                            <div className="flex w-full justify-end" id={index.toString()}>
                                 <div className="w-6/12 flex justify-end mr-2">
-                                    <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getDateTimeFormat(t?.sendTime)}</p>
+                                    <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
                                     <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
                                         <div className="mt-2 mb-2 ml-3 mr-3">
                                             {t?.message}
@@ -194,17 +254,17 @@ export default function Chat() {
                                 </div>
                             </div>
                             :
-                            <div className="flex w-6/12 ml-2 mb-3">
+                            <div className="flex w-6/12 ml-2 mb-3" id={index.toString()}>
                                 <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
                                 <div className="flex flex-col ml-2">
                                     <p className="text-black font-bold ml-2">
-                                        {t?.username}
+                                        {t?.name}
                                     </p>
                                     <div className="w-full flex">
                                         <p className="text-black ml-2">
                                             {t?.message}
                                         </p>
-                                        <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getDateTimeFormat(t?.sendTime)}</p>
+                                        <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -214,7 +274,21 @@ export default function Chat() {
             </div>
             <div className="flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[6/12] items-start">
                 <div className="h-[100px] m-2 w-[98%]">
-                    <textarea placeholder="내용을 입력하세요" className="bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)} />
+                    <textarea placeholder="내용을 입력하세요" className="bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
+
+                        onKeyDown={e => {
+                            console.log('Key pressed:', e.key);
+                            if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
+                                e.preventDefault(); // 폼 제출 방지
+                                if (isReady) {
+                                    socket.publish({
+                                        destination: "/api/pub/message/" + chatroom?.id,
+                                        body: JSON.stringify({ username: user?.username, message: message, messageType: 0 })
+                                    });
+                                    setMessage(''); // 메시지 전송 후 입력 필드 초기화
+                                }
+                            }
+                        }} />
                 </div>
 
                 {/* 툴팁 부분 */}
@@ -243,12 +317,12 @@ export default function Chat() {
                         </Tooltip>
 
                     </div>
-                    <button>
+                    <button id="sendMessage">
                         <img src="/send.png" className="send w-[40px] h-[40px] items-center justify-center m-1" onClick={() => {
                             if (isReady)
                                 socket.publish({
                                     destination: "/api/pub/message/" + chatroom?.id,
-                                    body: JSON.stringify({ username: user?.username, message: message, messageType: 1 })
+                                    body: JSON.stringify({ username: user?.username, message: message, messageType: 0 })
                                 });
                         }} />
                     </button>
@@ -289,11 +363,11 @@ export default function Chat() {
                             <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />
                             <div className="w-full m-2 flex flex-col">
                                 <div className="flex justify-between">
-                                    <p className="text-black font-bold">PAYCO</p>
+                                    <p className="text-black font-bold">{user?.name}</p>
 
                                 </div>
                                 <div className="flex flex-col mt-2">
-                                    <p className="text-black">paycio@gmail.com</p>
+                                    <p className="text-black">{user?.username}</p>
                                     <p className="text-black text-sm">:)</p>
                                 </div>
                             </div>
@@ -305,7 +379,7 @@ export default function Chat() {
                         </p>
                     </div>
                     <div className="w-full justify-end h-[590px] overflow-x-hidden overflow-y-scroll">
-                        {chatrooms?.map((chatroom: chatroomResponseDTO, index: number) => <ChatList key={index} Chatroom={chatroom} />)}
+                        {chatrooms?.map((chatroom: chatroomResponseDTO, index: number) => <ChatList key={index} Chatroom={chatroom} ChatDetail={chatDetail} />)}
                     </div>
                 </div>
             </div>
@@ -314,7 +388,7 @@ export default function Chat() {
         {/* 오른쪽 부분 */}
         <div className="w-8/12 flex items-center justify-center">
             <div className="h-11/12 w-11/12 mt-10 bg-white h-[95%] flex flex-col shadow">
-                {chatroom != null ? <ChatDetil chatroom={chatroom}/> : <></>}
+                {chatroom != null ? <ChatDetil chatDetail={chatDetail} /> : <></>}
             </div>
         </div>
     </Main>

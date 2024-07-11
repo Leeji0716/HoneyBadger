@@ -15,7 +15,7 @@ export default function Main(props: Readonly<pageInterface>) {
     <main id='main' className={"flex flex-col " + props.classname}>
       <Side open={open} onClose={() => setOpen(false)} escClose={true} outlineClose={true} className="w-[250px] h-screen">
         <div className="flex flex-col">
-          <a href="">채팅</a>
+          <a href="/chat">채팅</a>
           <a href="/email">메일</a>
           <a href="/email/EmailForm" onClick={()=>localStorage.removeItem('email')}>메일쓰기</a>
           <a href="">결재</a>
