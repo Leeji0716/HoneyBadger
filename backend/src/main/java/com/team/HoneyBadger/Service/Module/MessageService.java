@@ -1,7 +1,11 @@
 package com.team.HoneyBadger.Service.Module;
 
+import com.team.HoneyBadger.DTO.MessageRequestDTO;
 import com.team.HoneyBadger.DTO.MessageResponseDTO;
+import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.Message;
+import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Enum.MessageType;
 import com.team.HoneyBadger.Repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +23,8 @@ import java.util.stream.Collectors;
 public class MessageService {
     private final MessageRepository messageRepository;
 
-    public Message save(Message message) {
+    public Message save(String msg, SiteUser siteUser, Chatroom chatroom, MessageType messageType) {
+        Message message = Message.builder().message(msg).sender(siteUser).chatroom(chatroom).messageType(messageType).build();
         return messageRepository.save(message);
     }
 
@@ -27,8 +32,21 @@ public class MessageService {
         return messageRepository.findById(messageId).orElseThrow();
     }
 
+    public List<Message> getList(Long startId) {
+        return messageRepository.getList(startId);
+    }
+
+    public void updateRead(Message message, List<String> reads) {
+        message.setReadUsers(reads);
+        messageRepository.save(message);
+    }
+
     public void deleteMessage(Message message) {
         messageRepository.delete(message);
+    }
+
+    public List<Message> getUpdatedList(Long chatroom_id, Long end_id) {
+        return messageRepository.getMessageList(chatroom_id, end_id);
     }
 
     public List<MessageResponseDTO> getMessageList(List<Message> messageList) { //메세지 리스트 메세지 ResponseDTO 변환

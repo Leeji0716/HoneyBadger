@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/dist/stomp.min.js"></script>
+    <script>
+        // WebSocket 및 STOMP 클라이언트 설정
+        const socket = new SockJS('/api/ws-stomp'); // WebSocket endpoint 주소
+        const stompClient = Stomp.over(socket);
+
+        $(document).ready(function() {
+            connect(); // 페이지 로드 시 WebSocket 연결 시도
+        });
+
+        function connect() {
+            stompClient.connect({}, function(frame) {
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/sub/user/join/1', function(message) {
+                    console.log('Received message:', message.body);
+                    // 여기서 필요한 처리를 수행 (예: 메시지 표시)
+                });
+            }, function(error) {
+                console.log('Error connecting to WebSocket: ' + error);
+            });
+        }
+
+        function sendMessage() {
+            const message = {
+                // 전송할 메시지 내용
+                text: 'Hello, WebSocket!'
+            };
+            stompClient.send('/api/pub/user/join/1', {}, JSON.stringify(message)); // 메시지 전송
+        }
+    </script>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <button onclick="sendMessage()">Send Message</button>
+</body>
+</html>
