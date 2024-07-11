@@ -1,28 +1,31 @@
 'use client';
 
-import { getUser, reservationEmail, sendEmail } from "@/app/API/UserAPI";
+import { getUser, mailImage, mailUpdate, reservationEmail, sendEmail } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
 import { transferLocalTime } from "@/app/Global/Method";
 import QuillNoSSRWrapper from "@/app/Global/QuillNoSSRWrapper";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
 
 
-
 export default function EmailForm() {
+    // const searchParams = useSearchParams()
+    // console.log(searchParams.get("emailId"));
+    const [email, setEmail] = useState(null as any);
     const [A, setA] = useState("");
+    const [flag, setFlag] = useState(0);
     const [open, setOpen] = useState(false);
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
-    const [senderId, setSenderId] = useState("");
     const [receiverIds, setReceiverIds] = useState<string[]>([]);
     const [user, setUser] = useState(null as any);
     const [fileList, setFileList] = useState<File[]>([]);
     const [time, setTime] = useState<Date | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [tagList ,setTagList] = useState<string[]>([]);
+    const [image, setImage] = useState("");
 
     // const [email, setEmail] = useState<Email | null>(null);
     const quillInstance = useRef<ReactQuill>(null);
@@ -30,10 +33,20 @@ export default function EmailForm() {
 
     useEffect(() => { console.log(time) }, [time])
     useEffect(() => {
-        if (ACCESS_TOKEN)
+        if (ACCESS_TOKEN) {
             getUser().then(r => setUser(r)).catch(e => console.log(e));
+            if (localStorage.getItem('email')) {
+                const email = JSON.parse(localStorage.getItem('email') as string);
+                setEmail(email);
+                setReceiverIds(email?.receiverIds);
+                setTitle(email?.title);
+                setContent(email?.content);
+            }
+        }
+        else
+            window.location.href = "/";
     }, [ACCESS_TOKEN])
-
+    console.log(email);
     const imageHandler = () => {
         const input = document.createElement('input') as HTMLInputElement;
         input.setAttribute('type', 'file');
@@ -42,10 +55,12 @@ export default function EmailForm() {
 
         input.addEventListener('change', async () => {
             const file = input.files?.[0];
+
             try {
                 const formData = new FormData();
                 formData.append('file', file as any);
-                const imgUrl = ""; // url
+                const imgUrl = await mailImage(formData);
+                console.log(imgUrl);
                 const editor = (quillInstance?.current as any).getEditor();
                 const range = editor.getSelection();
                 editor.insertEmbed(range.index, 'image', imgUrl);
@@ -66,7 +81,7 @@ export default function EmailForm() {
                     [{ list: 'ordered' }, { list: 'bullet' }, { align: [] }],
                     ['image'],
                 ],
-                // handlers: { image: imageHandler },
+                handlers: { image: imageHandler },
             },
             clipboard: {
                 matchVisual: false,
@@ -81,25 +96,28 @@ export default function EmailForm() {
         </div>
     }
 
-    function ShowTag(index: number, name: string) {
-        return <div key={index}>
-            <button className="btn">{name}</button>
-        </div>
-    }
+    // function getEmail() {
+    //     return {content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: time, attachments: fileList} 
+    // }
+    
+    // // function test() {
+    // //     if(flag == 1) {
+    // //         mailUpdate({mailId:email.id, email : {content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: transferLocalTime(time === null ? "" : time), attachments: fileList}})
+    // //     } 
+    // //     else if(flag == 0) {
+    // //         sendEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, attachments: fileList }).then(r => window.location.href = "/email").catch(e => console.log(e))
+    // //     } 
+    // //     else {
+    // //         reservationEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: transferLocalTime(time), attachments: fileList }).then(r => window.location.href = "/email").catch(e => console.log(e))
+    // //     }
+    // // }
 
     return <Main>
         <div className="flex flex-col items-center gap-5 bg-white w-full p-6">
             <h2 className="font-bold">메일 쓰깅</h2>
             <div className="w-full border-b-2"></div>
             <div className="flex flex-row justify-center gap-3">
-                <button className="mail-hover w-[100px]" onClick={() => {
-                    receiverIds.length == 0 ? setError("받는 사람을 입력해 주세요") :
-
-                        time == undefined || null ?
-                            sendEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, tagList:tagList }).then(r => window.location.href = "/email").catch(e => console.log(e))
-                            :
-                            reservationEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: transferLocalTime(time), tagList:tagList }).then(r => window.location.href = "/email").catch(e => console.log(e))
-                }}>보내기</button>
+                {/* <button className="mail-hover w-[100px]" onClick={test}>보내기</button> */}
                 <button className="mail-hover w-[100px]" onClick={() => setOpen(!open)}>예약</button>
                 <DropDown open={open} onClose={() => setOpen(false)} className="mt-8" defaultDriection={Direcion.DOWN} width={200} height={200} button="button1">
                     <input type="datetime-local" name="" id="" onChange={(e) => {
@@ -112,32 +130,22 @@ export default function EmailForm() {
             </div>
             {error ? <p className="font-bold text-red-600">{error}</p> : <></>}
             <div className="flex justify-center gap-5 w-full">
-                <label htmlFor="" className="w-[5%]">받는 사람</label>
-                {receiverIds.length == 0 ? <></> : receiverIds.map((recever, index) => (ShowReciver(index, recever)))}
-                <input type="text" className="border-b-2 w-[70%]" onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                        const receiver: string[] = [...receiverIds];
-                        receiver.push(e.currentTarget.value);
-                        setReceiverIds(receiver);
-                        e.currentTarget.value = "";
-                    }
-                }} />
-            </div>
-            <div className="flex justify-center gap-5 w-full">
-                <label htmlFor="" className="w-[5%]">태그</label>
-                {tagList.length == 0 ? <></> : tagList.map((tag, index) => (ShowReciver(index, tag)))}
-                <input type="text" className="border-b-2 w-[70%]" onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                        const tag: string[] = [...tagList];
-                        tag.push(e.currentTarget.value);
-                        setTagList(tag);
-                        e.currentTarget.value = "";
-                    }
-                }} />
+                <label htmlFor="" className="w-[5%]  whitespace-nowrap">받는 사람</label>
+                <div className="w-[70%] flex border-solid border-b-2">
+                    {receiverIds.length == 0 ? <></> : receiverIds.map((recever, index) => (ShowReciver(index, recever)))}
+                    <input type="text" className="w-full whitespace-nowrap" onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            const receiver: string[] = [...receiverIds];
+                            receiver.push(e.currentTarget.value);
+                            setReceiverIds(receiver);
+                            e.currentTarget.value = "";
+                        }
+                    }} />
+                </div>
             </div>
             <div className="flex justify-center gap-5 w-full">
                 <label htmlFor="" className="w-[5%]">제목</label>
-                <input type="text" className="border-b-2 w-[70%]" onChange={(e) => {
+                <input type="text" className="border-b-2 w-[70%]" defaultValue={title} onChange={(e) => {
                     setTitle(e.target.value);
                 }} />
             </div>
@@ -163,6 +171,16 @@ export default function EmailForm() {
             </div>
             {/* <div dangerouslySetInnerHTML={{ __html: A }}></div> */}
         </div>
-    </Main>
+    </Main >
 
 }
+
+
+
+// const Test = () => {
+//     return (
+//         <button className="mail-hover w-[100px]" onClick={() => {
+
+//         }}>보내기</button>
+//     );
+// }

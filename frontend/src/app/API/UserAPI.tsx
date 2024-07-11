@@ -28,6 +28,7 @@ UserApi.interceptors.response.use((response) => {
         if (error.response.status === 401 && error.response.data == 'refresh') {
             await refreshAccessToken();
             return UserApi(originalRequest);
+
         } else if (error.response.status === 403 && error.response.data == 'logout') {
             localStorage.clear();
             window.location.href = '/';
@@ -65,7 +66,7 @@ interface SendEmail {
     senderId: string,
     receiverIds: string[],
     sendTime?: Date,
-    tagList: string[]
+    attachments?: File[]
 }
 
 interface chatroomResponseDTO{
@@ -77,8 +78,13 @@ export const updateUser = async (data: UpdateProps) => {
     const response = await UserApi.put('/api/user', data);
     return response.data;
 }
-export const getEmail = async () => {
-    const response = await UserApi.get('/api/email');
+export const getEmail = async (status:number) => {
+    const response = await UserApi.get('/api/email',{
+        headers:
+        {
+            status : status
+        }
+    });
     return response.data;
 }
 
@@ -91,6 +97,7 @@ export const getChat = async () => {
     const response = await UserApi.get('/api/chatroom/list');
     return response.data;
 }
+
 
 export const getChatDetail = async (chatroomId: number) => {
     const response = await UserApi.get('/api/chatroom', { headers: { chatroomId: chatroomId } });
@@ -121,6 +128,35 @@ export const mailCancel = async (mailId: number) => {
     });
     return response.data;
 }
+
+
+export const mailImage = async (formData: any) => {
+    const response = await UserApi.post('/api/email/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+}
+
+export const mailDelete = async (mailId: number) => {
+    const response = await UserApi.delete('/api/email/delete', {
+        headers: {
+            id: mailId
+        }
+    });
+    return response.data;
+}
+
+export const mailUpdate = async ({mailId,email}:{mailId: number,email: SendEmail}) => {
+    const response = await UserApi.put('/api/email/delete', email,{
+        headers: {
+            id: mailId
+        }
+    });
+    return response.data;
+}
+
 
 export const chatExit = async (data: { chatroomId: number, username: string }) => {
     const response = await UserApi.delete('/api/participant', { headers: data });
@@ -156,4 +192,5 @@ export const notification = async (accessToken: string, chatroomId: number, mess
         throw error;  
     }
 }
+
 
