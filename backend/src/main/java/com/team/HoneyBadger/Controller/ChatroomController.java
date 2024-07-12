@@ -104,7 +104,7 @@ public class ChatroomController {
     }
 
     @PutMapping("/notification") //채팅방 공지 설정
-    public ResponseEntity<?> notification(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId, @RequestHeader("messageId") Long messageId) {
+    public ResponseEntity<?> notification(@RequestHeader("Authorization") String accessToken, @RequestBody Long chatroomId, @RequestBody Long messageId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             MessageResponseDTO messageResponseDTO = multiService.notification(chatroomId, messageId);
