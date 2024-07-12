@@ -1,7 +1,7 @@
 package com.team.HoneyBadger;
 
 import com.team.HoneyBadger.Enum.OsType;
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import lombok.Getter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -3,12 +3,14 @@ package com.team.HoneyBadger.Service.Module;
 
 import com.team.HoneyBadger.DTO.SignupRequestDTO;
 import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,12 +33,24 @@ public class UserService {
                 .build());
     }
 
+    @Transactional
+    public void update(SiteUser user, String password) {
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+    }
+
     public boolean isMatch(String password1, String password2) {
         return passwordEncoder.matches(password1, password2);
     }
 
     public SiteUser get(String username) throws IllegalArgumentException {
         return this.userRepository.findById(username).orElseThrow(() -> new DataNotFoundException("user not found"));
+    }
+
+    public List<SiteUser> getUsernameAll(String username) {
+        return userRepository.findAll().stream()
+                .filter(u -> !u.getUsername().equals(username)) // username과 동일하지 않은 이름만 필터링
+                .toList();
     }
 }
 

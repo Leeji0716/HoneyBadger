@@ -1,9 +1,9 @@
 'use client';
 
-import { getUser, mailImage, mailUpdate, reservationEmail, sendEmail } from "@/app/API/UserAPI";
+import { emailFiles, getUser, mailImage, mailUpdate, reservationEmail, sendEmail } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
-import { transferLocalTime } from "@/app/Global/Method";
+import { eontransferLocalTime, transferLocalTime } from "@/app/Global/Method";
 import QuillNoSSRWrapper from "@/app/Global/QuillNoSSRWrapper";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -41,12 +41,13 @@ export default function EmailForm() {
                 setReceiverIds(email?.receiverIds);
                 setTitle(email?.title);
                 setContent(email?.content);
+                setFlag(2);
+                console.log("플래그값 : " + flag);
             }
         }
         else
             window.location.href = "/";
     }, [ACCESS_TOKEN])
-    console.log(email);
     const imageHandler = () => {
         const input = document.createElement('input') as HTMLInputElement;
         input.setAttribute('type', 'file');
@@ -70,7 +71,7 @@ export default function EmailForm() {
             }
         });
     };
-
+    // console.log(content);
     const modules = useMemo(
         () => ({
             toolbar: {
@@ -96,34 +97,44 @@ export default function EmailForm() {
         </div>
     }
 
-    // function getEmail() {
-    //     return {content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: time, attachments: fileList} 
-    // }
-    
-    // // function test() {
-    // //     if(flag == 1) {
-    // //         mailUpdate({mailId:email.id, email : {content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: transferLocalTime(time === null ? "" : time), attachments: fileList}})
-    // //     } 
-    // //     else if(flag == 0) {
-    // //         sendEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, attachments: fileList }).then(r => window.location.href = "/email").catch(e => console.log(e))
-    // //     } 
-    // //     else {
-    // //         reservationEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: transferLocalTime(time), attachments: fileList }).then(r => window.location.href = "/email").catch(e => console.log(e))
-    // //     }
-    // // }
+    function getEmail() {
+        return { content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: time, attachments: fileList }
+    }
+
+    function test() {
+        if (flag == 2) {
+            mailUpdate({ mailId: email.id, email: { content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: eontransferLocalTime(time), attachments: fileList } })
+        }
+        else if (flag == 0) {
+            if (fileList.length == 0) {
+                sendEmail({ content: content, title: title, receiverIds: receiverIds }).then(r => window.location.href = "/email").catch(e => console.log(e))
+            } else {
+                const form = new FormData();
+                for (const file of fileList)
+                    form.append('attachments', file);
+
+                sendEmail({ content: content, title: title, receiverIds: receiverIds }).then(r => emailFiles({ attachments: form, emailId: r})).then(r => window.location.href = "/email").catch(e => console.log(e)).catch(e => console.log(e))
+            }
+        }
+        else {
+            reservationEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: eontransferLocalTime(time), attachments: fileList }).then(r => window.location.href = "/email").catch(e => console.log(e))
+        }
+    }
 
     return <Main>
         <div className="flex flex-col items-center gap-5 bg-white w-full p-6">
             <h2 className="font-bold">메일 쓰깅</h2>
             <div className="w-full border-b-2"></div>
             <div className="flex flex-row justify-center gap-3">
-                {/* <button className="mail-hover w-[100px]" onClick={test}>보내기</button> */}
+                <button className="mail-hover w-[100px]" onClick={test}>보내기</button>
                 <button className="mail-hover w-[100px]" onClick={() => setOpen(!open)}>예약</button>
                 <DropDown open={open} onClose={() => setOpen(false)} className="mt-8" defaultDriection={Direcion.DOWN} width={200} height={200} button="button1">
                     <input type="datetime-local" name="" id="" onChange={(e) => {
                         const inputDateTimeString = e.target.value; // "YYYY-MM-DDTHH:mm" 형식의 문자열
                         const selectedDate = new Date(inputDateTimeString);
                         setTime(selectedDate);
+                        email == null ? setFlag(1) : setFlag(2);
+                        console.log("플래그값 : " + flag);
                     }} />
                 </DropDown>
                 <button className="mail-hover w-[100px]">임시저장</button>

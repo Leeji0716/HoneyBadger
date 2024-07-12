@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface EmailReservationRepositoryCustom {
     List<EmailReservation> findBySendTimeBeforeAndSendTimeIsNotNull(LocalDateTime now);
+    List<EmailReservation> findReservedEmailsByUserId(String userId);
 }

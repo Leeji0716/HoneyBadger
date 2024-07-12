@@ -1,6 +1,6 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
@@ -43,11 +43,11 @@ public class EmailReservationController {
             return tokenDTO.getResponseEntity();
     }
 
-    @PostMapping(value = "/schedule", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/schedule")
     public ResponseEntity<?> scheduleEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReservationRequestDTO emailReservationRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            EmailReservationResponseDTO emailReservationResponseDTO = multiService.reservationEmail(emailReservationRequestDTO, tokenDTO.username());
+            Long emailReservationResponseDTO = multiService.reservationEmail(emailReservationRequestDTO, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(emailReservationResponseDTO);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());

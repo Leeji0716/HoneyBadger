@@ -1,10 +1,9 @@
 package com.team.HoneyBadger.Service;
 
-import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
-import com.team.HoneyBadger.Config.Exception.UnauthorizedException;
+
+import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
-import com.team.HoneyBadger.Enum.EmailStatus;
 import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
 import com.team.HoneyBadger.HoneyBadgerApplication;
@@ -107,27 +106,88 @@ public class MultiService {
 
     public UserResponseDTO getProfile(String username) {
         SiteUser user = userService.get(username);
-        return getUserResponseDTo(user);
+        return getUserResponseDTO(user);
     }
 
-    private UserResponseDTO getUserResponseDTo(SiteUser user) {
+    private UserResponseDTO getUserResponseDTO(SiteUser user) {
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.USER_PROFILE.getValue(user.getUsername()));
         return UserResponseDTO.builder() //
                 .role(user.getRole().ordinal())//
                 .createDate(dateTimeTransfer(user.getCreateDate()))//
-                .modifyDate(dateTimeTransfer(user.getModifyDate()))//
+                .joinDate(dateTimeTransfer(user.getJoinDate()))//
                 .phoneNumber(user.getPhoneNumber())//
                 .username(user.getUsername())//
                 .name(user.getName()) //
-                .url(null) //
+                .url(_fileSystem.map(FileSystem::getV).orElse(null)) //
+                .department(getDepartmentDTO(user.getDepartment())) //
                 .build();
+    }
+
+    public UserResponseDTO updateProfile(String username, MultipartFile file) throws IOException {
+        if (file == null || !file.getContentType().contains("image")) throw new InvalidFileTypeException("not image");
+        String key = KeyPreset.USER_PROFILE.getValue(username);
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        Optional<FileSystem> _fileSystem = fileSystemService.get(key);
+        if (_fileSystem.isPresent()) {
+            FileSystem fileSystem = _fileSystem.get();
+            File preFile = new File(path + fileSystem.getV());
+            if (preFile.exists()) deleteFileWithFolder(preFile);
+        }
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/api/user/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        fileSystemService.save(key, fileName);
+        File dest = new File(path + fileName);
+        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+        file.transferTo(dest);
+        SiteUser user = userService.get(username);
+        return getUserResponseDTO(user);
+    }
+
+    public UserResponseDTO deleteProfile(String username) {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.USER_PROFILE.getValue(username));
+        if (_fileSystem.isPresent()) {
+            FileSystem fileSystem = _fileSystem.get();
+            File file = new File(path + fileSystem.getV());
+            if (file.exists()) deleteFileWithFolder(file);
+            fileSystemService.deleteByKey(fileSystem);
+        }
+        SiteUser user = userService.get(username);
+        return getUserResponseDTO(user);
+    }
+
+    public UserResponseDTO getUser(String username) {
+        return getUserResponseDTO(userService.get(username));
+    }
+
+    public List<UserResponseDTO> getAllUser(String username) {
+        return userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
+    }
+
+    public void changePassword(String username, PasswordChangeDTO passwordChangeDTO) {
+        SiteUser user = userService.get(username);
+        System.out.printf(passwordChangeDTO.prePassword() + " / " + passwordChangeDTO.newPassword() + " / " + user.getPassword());
+        if (!userService.isMatch(passwordChangeDTO.prePassword(), user.getPassword()))
+            throw new DataNotSameException("password");
+        userService.update(user, passwordChangeDTO.newPassword());
+    }
+
+    /*
+     * Department
+     */
+    private DepartmentResponseDTO getDepartmentDTO(Department department) {
+        if (department == null) return null;
+        return DepartmentResponseDTO.builder().name(department.getName()).parent(appendParent(department.getParent())).build();
+    }
+
+    private DepartmentResponseDTO appendParent(Department now) {
+        if (now.getParent() == null) return DepartmentResponseDTO.builder().name(now.getName()).build();
+        else return DepartmentResponseDTO.builder().name(now.getName()).parent(appendParent(now.getParent())).build();
     }
 
     /*
      * ChatRoom
      */
-    public ChatroomResponseDTO getChatRoom(Long chatroom_id) {
-        return getChatRoom(chatroomService.getChatRoomById(chatroom_id));
-    }
 
     @Transactional
     public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO) {
@@ -189,12 +249,6 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatroomResponseDTO getChatRoom(Long chatroomId) {
-        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        return getChatRoom(chatroom);
-    }
-
-    @Transactional
     public List<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword) {
         SiteUser siteUser = userService.get(username);
         List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
@@ -220,13 +274,25 @@ public class MultiService {
     private ChatroomResponseDTO getChatRoom(Chatroom chatroom) {
         List<String> users = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
         Message latestMessage = messageService.getLatesMessage(chatroom.getMessageList());
-        MessageResponseDTO messageResponseDTO;
+        MessageResponseDTO latestMessageDTO;
         if (latestMessage != null) {
-            messageResponseDTO = GetMessageDTO(latestMessage);
+            latestMessageDTO = GetMessageDTO(latestMessage);
         } else {
-            messageResponseDTO = null;
+            latestMessageDTO = null;
         }
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).messageResponseDTO(messageResponseDTO).build();
+        MessageResponseDTO notificationDTO;
+        if (chatroom.getNotification() != null) {
+            notificationDTO = GetMessageDTO(chatroom.getNotification());
+        } else {
+            notificationDTO = null;
+        }
+        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).build();
+    }
+
+    @Transactional
+    public ChatroomResponseDTO getChatRoomById(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return getChatRoom(chatroom);
     }
 
     @Transactional
@@ -256,7 +322,6 @@ public class MultiService {
         SiteUser siteUser = userService.get(username);
         Participant participant = participantService.get(siteUser, chatroom);
         chatroom.getParticipants().remove(participant);
-        participantService.delete(participant);
 
         chatroomService.save(chatroom);
         return getChatRoom(chatroom);
@@ -306,11 +371,12 @@ public class MultiService {
         return fileName;
     }
 
-    public EmailResponseDTO sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
+    public Long sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         SiteUser sender = userService.get(senderId);
         Email email = emailService.save(title, sender);
-        emailService.update(email, content.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
+        if (content != null)
+            emailService.update(email, content.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
         Optional<MultiKey> _key = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(senderId));
         if (_key.isPresent()) {
             MultiKey key = _key.get();
@@ -331,16 +397,25 @@ public class MultiService {
             SiteUser receiver = userService.get(receiverId);
             emailReceiverService.save(email, receiver);
         }
-        return getEmailDTO(email);
+        return email.getId();
     }
 
-    public List<EmailResponseDTO> getEmailsForUser(String username, EmailStatus status) {
-        List<Email> emails = switch (status) {
-            case SENDER -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
-            case RECEIVER -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
-            case RESERVATION -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
-        };
-        return emails.stream().map(this::getEmailDTO).toList();
+    public Object getEmailsForUser(String username, int statusIndex) {
+//        List<?> emails;
+//        SENDER, RECEIVER, RESERVATION
+        switch (statusIndex) {
+            case 0:
+                List<Email> SenderEmail = emailReceiverService.getSentEmailsForUser(username);
+                return SenderEmail.stream().map(this::getEmailDTO).collect(Collectors.toList());
+            case 1:
+                List<Email> ReceiverEmail = emailReceiverService.getReceivedEmailsForUser(username);
+                return ReceiverEmail.stream().map(this::getEmailDTO).collect(Collectors.toList());
+            case 2:
+                List<EmailReservation> ReservationEmail = emailReservationService.getReservedEmailsForUser(username);
+                return ReservationEmail.stream().map(this::getEmailReservationDTO).collect(Collectors.toList());
+            default:
+                throw new IllegalArgumentException("Invalid status index: " + statusIndex);
+        }
     }
 
     public Boolean markEmailAsRead(Long emailId, String receiverId) {
@@ -377,28 +452,14 @@ public class MultiService {
                         .stream() //
                         .map(er -> er.getReceiver().getUsername()) //
                         .toList()) //
-                .filePathList(filePathList) //
+                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
+                .files(filePathList) //
                 .build();
     }
 
     public EmailResponseDTO getEmailDTO(Long emailId) {
         Email email = emailService.getEmail(emailId);
         return getEmailDTO(email);
-    }
-
-    public String fileUpload(Long roomId, MultipartFile file) throws IOException {
-
-        String path = HoneyBadgerApplication.getOsType().getLoc();
-        UUID uuid = UUID.randomUUID();
-        String fileName = "/api/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
-
-        // 너굴맨이 해치우고 갔어요!
-        File dest = new File(path + fileName);
-
-        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
-        file.transferTo(dest);
-
-        return fileName;
     }
 
     /*
@@ -428,10 +489,10 @@ public class MultiService {
         emailReservationService.findByUsernameDelete(emailReservation, username);
     }
 
-    public EmailReservationResponseDTO reservationEmail(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
+    public Long reservationEmail(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
         SiteUser sender = userService.get(username);
         EmailReservation emailReservation = emailReservationService.save(emailReservationRequestDTO, sender);
-        return getEmailReservationDTO(emailReservation);
+        return emailReservation.getId();
     }
 
     private EmailReservationResponseDTO getEmailReservationDTO(EmailReservation reservation) {
@@ -521,19 +582,19 @@ public class MultiService {
 
             // 삭제된 메시지에 대한 응답을 생성합니다.
             System.out.println("Message deleted");
-             throw new RuntimeException("Message deleted");
+            throw new RuntimeException("Message deleted");
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
             System.out.println("Cannot delete message older than 5 minutes");
-             throw new RuntimeException("Cannot delete message older than 5 minutes");
+            throw new RuntimeException("Cannot delete message older than 5 minutes");
         }
     }
 
-    public String fileUpload(Long roomId, MultipartFile file) throws IOException {
+    public String fileUpload(Long chatroomId, MultipartFile file) throws IOException {
 
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
-        String fileName = "/api/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        String fileName = "/api/chatroom/" + chatroomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
         // 너굴맨이 해치우고 갔어요!
         File dest = new File(path + fileName);
@@ -611,21 +672,13 @@ public class MultiService {
 //    }
 
     /*
-     * Time
-     */
-
-    private Long dateTimeTransfer(LocalDateTime dateTime) {
-        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-    }
-
-    /*
      * MessageReservation or ChatReservation
      */
 
     public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
-        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendTime()).messageType(messageReservationRequestDTO.messageType()).build();
+        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendDate()).messageType(messageReservationRequestDTO.messageType()).build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
@@ -642,19 +695,41 @@ public class MultiService {
         messageReservationService.delete(messageReservation);
     }
 
-    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) {
-        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
-        if (messageReservation.getSender().getUsername().equals(username)) {
-            messageReservationService.update(messageReservation, messageReservationRequestDTO.message(), messageReservation.getSendDate());
+    public MessageReservationResponseDTO updateReservationMessage(Long id, MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException {
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(id);
+        if (messageReservation.getSender().getUsername().equals(username) && messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
+            messageReservationService.update(messageReservation, messageReservationRequestDTO);
         }
         return getMessageReservation(messageReservation);
     }
 
-    public MessageResponseDTO notification(Long chatroomId, Long messageId) {
-        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        Message message = messageService.getMessageById(messageId);
+    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO) {
+        Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
+        Message message = messageService.getMessageById(noticeRequestDTO.messageId());
         chatroomService.notification(chatroom, message);
 
-        return GetMessageDTO(message);
+        return getChatRoom(chatroom);
     }
+
+    /*
+     * Time
+     */
+
+    private Long dateTimeTransfer(LocalDateTime dateTime) {
+        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    /*
+     * File
+     */
+    public void deleteFileWithFolder(File file) {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                for (File list : file.listFiles())
+                    deleteFileWithFolder(list);
+            }
+            file.delete();
+        }
+    }
+
 }

@@ -1,16 +1,14 @@
 package com.team.HoneyBadger.Entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Getter
+@NoArgsConstructor
 @Setter
 public class Department {
     // 그룹
