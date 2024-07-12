@@ -127,7 +127,7 @@ export default function Email() {
                 <div className="h-[88%] overflow-y-scroll">
                     {emailList?.map((email: EmailResponseDTO, index: number) => <MailBox key={index} email={email} />)}
                     <DropDown open={open3 != null && open3?.id == email?.id} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button={"burger" + open3?.id}>
-                          {open3.sendTime == null ?      
+                          {open3?.sendTime == null ?      
                           <>
                         <button onClick={() => { mailDelete(open3.id) }}>삭제</button>
                         </>
