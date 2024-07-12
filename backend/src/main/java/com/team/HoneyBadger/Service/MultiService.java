@@ -1,8 +1,9 @@
 package com.team.HoneyBadger.Service;
 
-import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
-import com.team.HoneyBadger.Config.Exception.UnauthorizedException;
+
+import com.team.HoneyBadger.Exception.DataDuplicateException;
+import com.team.HoneyBadger.Exception.InvalidFileTypeException;
+import com.team.HoneyBadger.Exception.UnauthorizedException;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.KeyPreset;
@@ -111,6 +112,7 @@ public class MultiService {
     }
 
     private UserResponseDTO getUserResponseDTO(SiteUser user) {
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.USER_PROFILE.getValue(user.getUsername()));
         return UserResponseDTO.builder() //
                 .role(user.getRole().ordinal())//
                 .createDate(dateTimeTransfer(user.getCreateDate()))//
@@ -118,24 +120,55 @@ public class MultiService {
                 .phoneNumber(user.getPhoneNumber())//
                 .username(user.getUsername())//
                 .name(user.getName()) //
-                .url(null) //
+                .url(_fileSystem.map(FileSystem::getV).orElse(null)) //
                 .department(getDepartmentDTO(user.getDepartment())) //
                 .build();
     }
+
+    public UserResponseDTO updateProfile(String username, MultipartFile file) throws IOException {
+        if (file == null || !file.getContentType().contains("image")) throw new InvalidFileTypeException("not image");
+        String key = KeyPreset.USER_PROFILE.getValue(username);
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        Optional<FileSystem> _fileSystem = fileSystemService.get(key);
+        if (_fileSystem.isPresent()) {
+            FileSystem fileSystem = _fileSystem.get();
+            File preFile = new File(path + fileSystem.getV());
+            if (preFile.exists()) deleteFileWithFolder(preFile);
+        }
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/api/user/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        fileSystemService.save(key, fileName);
+        File dest = new File(path + fileName);
+        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+        file.transferTo(dest);
+        SiteUser user = userService.get(username);
+        return getUserResponseDTO(user);
+    }
+
+    public UserResponseDTO deleteProfile(String username) {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.USER_PROFILE.getValue(username));
+        if (_fileSystem.isPresent()) {
+            FileSystem fileSystem = _fileSystem.get();
+            File file = new File(path + fileSystem.getV());
+            if (file.exists()) deleteFileWithFolder(file);
+            fileSystemService.deleteByKey(fileSystem);
+        }
+        SiteUser user = userService.get(username);
+        return getUserResponseDTO(user);
+    }
+
     /*
      * Department
      */
     private DepartmentResponseDTO getDepartmentDTO(Department department) {
-        if (department == null)
-            return null;
+        if (department == null) return null;
         return DepartmentResponseDTO.builder().name(department.getName()).parent(appendParent(department.getParent())).build();
     }
 
     private DepartmentResponseDTO appendParent(Department now) {
-        if (now.getParent() == null)
-            return DepartmentResponseDTO.builder().name(now.getName()).build();
-        else
-            return DepartmentResponseDTO.builder().name(now.getName()).parent(appendParent(now.getParent())).build();
+        if (now.getParent() == null) return DepartmentResponseDTO.builder().name(now.getName()).build();
+        else return DepartmentResponseDTO.builder().name(now.getName()).parent(appendParent(now.getParent())).build();
     }
 
     /*
@@ -625,14 +658,6 @@ public class MultiService {
 //    }
 
     /*
-     * Time
-     */
-
-    private Long dateTimeTransfer(LocalDateTime dateTime) {
-        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-    }
-
-    /*
      * MessageReservation or ChatReservation
      */
 
@@ -686,5 +711,26 @@ public class MultiService {
 
     public List<UserResponseDTO> getAllUser(String username) {
         return  userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
+    }
+
+    /*
+     * Time
+     */
+
+    private Long dateTimeTransfer(LocalDateTime dateTime) {
+        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    /*
+     * File
+     */
+    public void deleteFileWithFolder(File file) {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                for (File list : file.listFiles())
+                    deleteFileWithFolder(list);
+            }
+            file.delete();
+        }
     }
 }
