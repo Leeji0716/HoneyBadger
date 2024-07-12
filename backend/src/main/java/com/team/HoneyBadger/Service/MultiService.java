@@ -238,6 +238,12 @@ public class MultiService {
     }
 
     @Transactional
+    public ChatroomResponseDTO getChatRoomById(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return getChatRoom(chatroom);
+    }
+
+    @Transactional
     public void deleteChatroom(Long chatroomId) {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         chatroomService.delete(chatroom);

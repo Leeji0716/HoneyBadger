@@ -41,7 +41,7 @@ public class ParticipantController {
     public ResponseEntity<?> updateChatRoom(@DestinationVariable Long chatroomId) {
         // 추가하기 then r=> updateChatRoom();
         try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoom(chatroomId);
+            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(chatroomId);
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
