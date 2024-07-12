@@ -318,8 +318,6 @@ public class MultiService {
             case RECEIVER -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
             case RESERVATION -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
         };
-
-
         return emails.stream().map(this::getEmailDTO).toList();
     }
 
@@ -360,7 +358,6 @@ public class MultiService {
                 .filePathList(filePathList) //
                 .build();
     }
-
 
     public EmailResponseDTO getEmailDTO(Long emailId) {
         Email email = emailService.getEmail(emailId);

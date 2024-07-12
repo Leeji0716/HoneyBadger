@@ -18,7 +18,6 @@ import java.util.List;
 public class EmailReservationController {
     private final MultiService multiService;
 
-
     @DeleteMapping("/reservation")
     public ResponseEntity<?> deleteScheduledEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long reservationId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
@@ -43,21 +42,6 @@ public class EmailReservationController {
         } else
             return tokenDTO.getResponseEntity();
     }
-
-    @PostMapping
-    public ResponseEntity<?> messageReservation(@RequestHeader("Authorization") String accessToken, @RequestBody MessageReservationRequestDTO messageReservationRequestDTO) {
-        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) try {
-            MessageReservationResponseDTO messageReservationResponseDTO = multiService.reservationMessage(messageReservationRequestDTO, tokenDTO.username());
-            return ResponseEntity.status(HttpStatus.OK).body(messageReservationResponseDTO);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-        }
-        else return tokenDTO.getResponseEntity();
-    }
-
 
     @PostMapping(value = "/schedule", consumes = {"multipart/form-data"})
     public ResponseEntity<?> scheduleEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReservationRequestDTO emailReservationRequestDTO) {
