@@ -108,19 +108,35 @@ public class MultiService {
 
     public UserResponseDTO getProfile(String username) {
         SiteUser user = userService.get(username);
-        return getUserResponseDTo(user);
+        return getUserResponseDTO(user);
     }
 
-    private UserResponseDTO getUserResponseDTo(SiteUser user) {
+    private UserResponseDTO getUserResponseDTO(SiteUser user) {
         return UserResponseDTO.builder() //
                 .role(user.getRole().ordinal())//
                 .createDate(dateTimeTransfer(user.getCreateDate()))//
-                .modifyDate(dateTimeTransfer(user.getModifyDate()))//
+                .joinDate(dateTimeTransfer(user.getJoinDate()))//
                 .phoneNumber(user.getPhoneNumber())//
                 .username(user.getUsername())//
                 .name(user.getName()) //
                 .url(null) //
+                .department(getDepartmentDTO(user.getDepartment())) //
                 .build();
+    }
+    /*
+     * Department
+     */
+    private DepartmentResponseDTO getDepartmentDTO(Department department) {
+        if (department == null)
+            return null;
+        return DepartmentResponseDTO.builder().name(department.getName()).parent(appendParent(department.getParent())).build();
+    }
+
+    private DepartmentResponseDTO appendParent(Department now) {
+        if (now.getParent() == null)
+            return DepartmentResponseDTO.builder().name(now.getName()).build();
+        else
+            return DepartmentResponseDTO.builder().name(now.getName()).parent(appendParent(now.getParent())).build();
     }
 
     /*
@@ -183,12 +199,6 @@ public class MultiService {
             participantService.save(user, chatroom);
         }
 
-        return getChatRoom(chatroom);
-    }
-
-    @Transactional
-    public ChatroomResponseDTO getChatRoom(Long chatroomId) {
-        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         return getChatRoom(chatroom);
     }
 
@@ -303,11 +313,12 @@ public class MultiService {
         return fileName;
     }
 
-    public EmailResponseDTO sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
+    public Long sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         SiteUser sender = userService.get(senderId);
         Email email = emailService.save(title, sender);
-        emailService.update(email, content.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
+        if (content != null)
+            emailService.update(email, content.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
         Optional<MultiKey> _key = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(senderId));
         if (_key.isPresent()) {
             MultiKey key = _key.get();
@@ -328,7 +339,7 @@ public class MultiService {
             SiteUser receiver = userService.get(receiverId);
             emailReceiverService.save(email, receiver);
         }
-        return getEmailDTO(email);
+        return email.getId();
     }
 
     public List<EmailResponseDTO> getEmailsForUser(String username, EmailStatus status) {

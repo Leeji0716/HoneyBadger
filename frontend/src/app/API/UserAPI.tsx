@@ -65,11 +65,17 @@ interface SendEmail {
     content: string,
     senderId: string,
     receiverIds: string[],
-    sendTime?: Date,
-    attachments?: File[]
+    sendTime?: Date | null,
+    attachments?: File[] | null
 }
 
-interface chatroomResponseDTO{
+interface SendEmail2 {
+    title: string,
+    content: string,
+    receiverIds: string[]
+}
+
+interface chatroomResponseDTO {
     name?: string,
     users: string[]
 }
@@ -78,17 +84,18 @@ export const updateUser = async (data: UpdateProps) => {
     const response = await UserApi.put('/api/user', data);
     return response.data;
 }
-export const getEmail = async (status:number) => {
-    const response = await UserApi.get('/api/email',{
+export const getEmail = async (status: number) => {
+    const response = await UserApi.get('/api/email/list', {
         headers:
         {
-            status : status
+            status: status
         }
     });
     return response.data;
 }
 
-export const sendEmail = async (data: SendEmail) => {
+export const sendEmail = async (data: SendEmail2) => {
+    console.log(data);
     const response = await UserApi.post('/api/email', data);
     return response.data;
 }
@@ -148,8 +155,8 @@ export const mailDelete = async (mailId: number) => {
     return response.data;
 }
 
-export const mailUpdate = async ({mailId,email}:{mailId: number,email: SendEmail}) => {
-    const response = await UserApi.put('/api/email/delete', email,{
+export const mailUpdate = async ({ mailId, email }: { mailId: number, email: SendEmail }) => {
+    const response = await UserApi.put('/api/email/delete', email, {
         headers: {
             id: mailId
         }
@@ -163,12 +170,12 @@ export const chatExit = async (data: { chatroomId: number, username: string }) =
     return response.data;
 }
 
-export const addUser = async ({chatroomId,username} : { chatroomId: number, username: string}) =>{
-    const data ={
+export const addUser = async ({ chatroomId, username }: { chatroomId: number, username: string }) => {
+    const data = {
         chatroomId: chatroomId,
-        username:username
+        username: username
     };
-    const response = await UserApi.post('/api/participant',data);
+    const response = await UserApi.post('/api/participant', data);
     return response.data;
 }
 
@@ -180,17 +187,27 @@ export const editChatroom = async ({ chatroomId, data }: { chatroomId: number, d
 export const notification = async (accessToken: string, chatroomId: number, messageId: number) => {
     const config = {
         headers: {
-            'Authorization': accessToken,  
-            'chatroomId': chatroomId,    
-            'MessageId': messageId         
+            'Authorization': accessToken,
+            'chatroomId': chatroomId,
+            'MessageId': messageId
         }
     };
     try {
         const response = await UserApi.put('/api/chatroom/notification', null, config);
-        return response.data; 
+        return response.data;
     } catch (error) {
-        throw error;  
+        throw error;
     }
 }
 
+export const emailFiles = async ({ attachments, emailId }: { attachments: FormData, emailId: number }) => {
+
+    const response = await UserApi.post('/api/email/files', attachments, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            email_id: emailId
+        }
+    });
+    return response.data;
+}
 

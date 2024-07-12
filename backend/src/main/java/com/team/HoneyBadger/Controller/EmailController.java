@@ -33,6 +33,23 @@ public class EmailController {
         else return tokenDTO.getResponseEntity();
     }
 
+
+    @PostMapping("/upload") //메세지 파일 업로드
+    public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, MultipartFile file) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
+        if (tokenDTO.isOK()) try {
+            String fileName = multiService.fileUpload(tokenDTO.username(), file);
+            return ResponseEntity.status(HttpStatus.OK).body(fileName);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 업로드 실패");
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+
+        else return tokenDTO.getResponseEntity();
+    }
+
     @PostMapping("/files")
     public ResponseEntity<?> saveFiles(@RequestHeader("Authorization") String accessToken, @RequestHeader("email_id") Long email_id, List<MultipartFile> attachments) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
@@ -61,14 +78,13 @@ public class EmailController {
     }
 
     @PostMapping
-    public ResponseEntity<?> sendEmail(@RequestHeader("Authorization") String accessToken, EmailRequestDTO emailRequestDTO, //@RequestBody로 받아야 함.
-                                       List<MultipartFile> attachments) { //파일은 다른 메서드로 분리해야 함.
+    public ResponseEntity<?> sendEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailRequestDTO emailRequestDTO) {
 
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             System.out.println("Received email send request");
-            EmailResponseDTO emailResponseDTO = multiService.sendEmail(emailRequestDTO.title(), emailRequestDTO.content(), tokenDTO.username(), emailRequestDTO.receiverIds());
-            return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
+          Long emailId = multiService.sendEmail(emailRequestDTO.title(), emailRequestDTO.content(), tokenDTO.username(), emailRequestDTO.receiverIds());
+            return ResponseEntity.status(HttpStatus.OK).body(emailId);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         } catch (IOException ex) {
