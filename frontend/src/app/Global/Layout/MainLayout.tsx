@@ -51,3 +51,7 @@ export default function Main(props: Readonly<pageInterface>) {
     </main>
   );
 }
+
+// 화이팅!!
+// 다들 힘내야 돼 우리는 할 수 있어 !!
+
