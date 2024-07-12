@@ -33,6 +33,23 @@ public class EmailController {
         else return tokenDTO.getResponseEntity();
     }
 
+
+    @PostMapping("/upload") //메세지 파일 업로드
+    public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, MultipartFile file) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
+        if (tokenDTO.isOK()) try {
+            String fileName = multiService.fileUpload(tokenDTO.username(), file);
+            return ResponseEntity.status(HttpStatus.OK).body(fileName);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 업로드 실패");
+        } catch (DataNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+
+        else return tokenDTO.getResponseEntity();
+    }
+
     @PostMapping("/files")
     public ResponseEntity<?> saveFiles(@RequestHeader("Authorization") String accessToken, @RequestHeader("email_id") Long email_id, List<MultipartFile> attachments) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
