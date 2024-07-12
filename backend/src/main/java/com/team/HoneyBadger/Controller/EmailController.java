@@ -79,7 +79,6 @@ public class EmailController {
 
     @PostMapping
     public ResponseEntity<?> sendEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailRequestDTO emailRequestDTO) {
-
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             System.out.println("Received email send request");

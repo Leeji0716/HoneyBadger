@@ -9,4 +9,8 @@ public interface EmailReceiverRepositoryCustom {
     Boolean markEmailAsRead(Long emailId, String receiverId);
 
     List <Email> findByReceiver(String receiverId);
+
+    List<Email> findSentEmailsByUserId(String userId);
+    List<Email> findReceivedEmailsByUserId(String userId);
+    List<Email> findReservedEmailsByUserId(String userId);
 }
