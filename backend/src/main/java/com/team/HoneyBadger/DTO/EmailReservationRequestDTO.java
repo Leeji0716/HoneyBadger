@@ -6,6 +6,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
-public record EmailReservationRequestDTO(String title, String content, List<String> receiverIds,
-                                         LocalDateTime sendTime) {
+public record EmailReservationRequestDTO(Long id, String title, String content, List<String> receiverIds,
+                                         LocalDateTime sendTime, List<String> files) {
 }
