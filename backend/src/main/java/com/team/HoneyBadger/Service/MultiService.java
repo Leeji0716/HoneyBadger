@@ -228,13 +228,19 @@ public class MultiService {
     private ChatroomResponseDTO getChatRoom(Chatroom chatroom) {
         List<String> users = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
         Message latestMessage = messageService.getLatesMessage(chatroom.getMessageList());
-        MessageResponseDTO messageResponseDTO;
+        MessageResponseDTO latestMessageDTO;
         if (latestMessage != null) {
-            messageResponseDTO = GetMessageDTO(latestMessage);
+            latestMessageDTO = GetMessageDTO(latestMessage);
         } else {
-            messageResponseDTO = null;
+            latestMessageDTO = null;
         }
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).messageResponseDTO(messageResponseDTO).build();
+        MessageResponseDTO notificationDTO;
+        if(chatroom.getNotification() != null){
+            notificationDTO = GetMessageDTO(chatroom.getNotification());
+        }else {
+            notificationDTO = null;
+        }
+        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessageDTO(latestMessageDTO).notificationDTO(notificationDTO).build();
     }
 
     @Transactional
@@ -658,12 +664,12 @@ public class MultiService {
         return getMessageReservation(messageReservation);
     }
 
-    public MessageResponseDTO notification(NoticeRequestDTO noticeRequestDTO) {
+    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO) {
         Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
         Message message = messageService.getMessageById(noticeRequestDTO.messageId());
         chatroomService.notification(chatroom, message);
 
-        return GetMessageDTO(message);
+        return getChatRoom(chatroom);
     }
 
     public UserResponseDTO getUser(String username) {
