@@ -2,13 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
-import { deleteProfileImage, getUser, putProfileImage } from "../API/UserAPI";
+import { deleteProfileImage, getUser, putProfileImage, updatePassword } from "../API/UserAPI";
 import { getDateKorean } from "../Global/Method";
+import Modal from "../Global/Modal";
 
 export default function HOME() {
     const [user, setUser] = useState(null as any);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const [hover, setHover] = useState(false);
+    const [open, setOpen] = useState(false);
+    const [error, setError] = useState('');
     const file = useRef(null as any);
     useEffect(() => {
         if (ACCESS_TOKEN)
@@ -72,7 +75,7 @@ export default function HOME() {
                             </tr>
                             <tr>
                                 <th className="fotn-bold">비밀번호</th>
-                                <td><button className="hover:underline hover:text-red-500 hover:font-bold">변경하기</button></td>
+                                <td><button className="hover:underline hover:text-red-500 hover:font-bold" onClick={() => setOpen(true)}>변경하기</button></td>
                             </tr>
                             <tr>
                                 <th className="fotn-bold">전화번호</th>
@@ -84,6 +87,41 @@ export default function HOME() {
                             </tr>
                         </tbody>
                     </table>
+                    <Modal open={open} onClose={() => setOpen(false)} escClose={true} outlineClose={true} className="w-[500px] h-[500px] flex flex-col items-center justify-center">
+                        <div className="h-[50px] w-[400px] text-center text-lg text-red-500">{error}</div>
+                        <input id="pre" type="password" placeholder="현재 비밀번호" className="input input-lg input-info" onKeyDown={e => { if (e.key == "Enter") document.getElementById('new1')?.focus() }} />
+                        <input id="new1" type="password" placeholder="새 비밀번호" className="input input-lg input-info my-5" onKeyDown={e => { if (e.key == "Enter") document.getElementById('new2')?.focus() }} />
+                        <input id="new2" type="password" placeholder="비밀번호 확인" className="input input-lg input-info" onKeyDown={e => { if (e.key == "Enter") document.getElementById('submit')?.click() }} />
+                        <div className="flex justify-between w-[150px] mt-10">
+                            <button id="submit" onClick={() => {
+                                const prePassword = (document.getElementById('pre') as HTMLInputElement)?.value;
+                                if (prePassword == '') {
+                                    setError('기존 비밀번호를 입력해주세요.');
+                                    return;
+                                }
+
+                                const newPassword = (document.getElementById('new1') as HTMLInputElement)?.value;
+                                if (newPassword == '') {
+                                    setError('새 비밀번호를 입력해주세요.');
+                                    return;
+                                }
+                                if (newPassword != (document.getElementById('new2') as HTMLInputElement)?.value) setError('비밀번호가 일치하지 않습니다.');
+                                else {
+                                    setError('');
+                                    updatePassword(prePassword, newPassword).then(() => {
+                                        localStorage.clear();
+                                        location.href = "/";
+                                    }).catch(e => {
+                                        if (e.response.status == 404 && e.response.data == "password") {
+                                            setError("기존 비밀번호가 일치하지 않습니다.");
+                                        } else
+                                            console.log(e);
+                                    })
+                                }
+                            }} className="btn btn-info text-white">확인</button>
+                            <button onClick={() => setOpen(false)} className="btn btn-info text-white">취소</button>
+                        </div>
+                    </Modal>
                 </div>
             </div>
         </div>

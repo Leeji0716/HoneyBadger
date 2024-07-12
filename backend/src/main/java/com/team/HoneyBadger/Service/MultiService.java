@@ -1,10 +1,7 @@
 package com.team.HoneyBadger.Service;
 
 
-import com.team.HoneyBadger.Exception.DataDuplicateException;
-import com.team.HoneyBadger.Exception.DataNotFoundException;
-import com.team.HoneyBadger.Exception.InvalidFileTypeException;
-import com.team.HoneyBadger.Exception.UnauthorizedException;
+import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.KeyPreset;
@@ -157,6 +154,22 @@ public class MultiService {
         }
         SiteUser user = userService.get(username);
         return getUserResponseDTO(user);
+    }
+
+    public UserResponseDTO getUser(String username) {
+        return getUserResponseDTO(userService.get(username));
+    }
+
+    public List<UserResponseDTO> getAllUser(String username) {
+        return userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
+    }
+
+    public void changePassword(String username, PasswordChangeDTO passwordChangeDTO) {
+        SiteUser user = userService.get(username);
+        System.out.printf(passwordChangeDTO.prePassword() + " / " + passwordChangeDTO.newPassword() + " / " + user.getPassword());
+        if (!userService.isMatch(passwordChangeDTO.prePassword(), user.getPassword()))
+            throw new DataNotSameException("password");
+        userService.update(user, passwordChangeDTO.newPassword());
     }
 
     /*
@@ -698,14 +711,6 @@ public class MultiService {
         return getChatRoom(chatroom);
     }
 
-    public UserResponseDTO getUser(String username) {
-        return getUserResponseDTO(userService.get(username));
-    }
-
-    public List<UserResponseDTO> getAllUser(String username) {
-        return userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
-    }
-
     /*
      * Time
      */
@@ -726,4 +731,5 @@ public class MultiService {
             file.delete();
         }
     }
+
 }
