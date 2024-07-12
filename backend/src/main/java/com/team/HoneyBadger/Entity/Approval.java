@@ -2,10 +2,7 @@ package com.team.HoneyBadger.Entity;
 
 import com.team.HoneyBadger.Enum.ApprovalStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
@@ -13,6 +10,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class Approval {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
