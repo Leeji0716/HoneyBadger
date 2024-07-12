@@ -1,9 +1,7 @@
 package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
-import com.team.HoneyBadger.DTO.EmailRequestDTO;
-import com.team.HoneyBadger.DTO.EmailResponseDTO;
-import com.team.HoneyBadger.DTO.TokenDTO;
+import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -90,10 +88,11 @@ public class EmailController {
         else return tokenDTO.getResponseEntity();
     }
 
-    @PostMapping("/read")
-    public ResponseEntity<?> markEmailAsRead(@RequestHeader Long emailId, @RequestHeader String receiverId) {
-        Boolean isRead = multiService.markEmailAsRead(emailId, receiverId);
-        return ResponseEntity.status(HttpStatus.OK).body(isRead);
+    @PutMapping("/read")
+    public ResponseEntity<?> markEmailAsRead(@RequestBody EmailReadRequestDTO emailReadRequestDTO) {
+        EmailReceiverResponseDTO emailReceiverResponseDTo = multiService.read(emailReadRequestDTO);
+//        Boolean isRead = multiService.markEmailAsRead(emailReadRequestDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(emailReceiverResponseDTo);
     }
 
     @DeleteMapping

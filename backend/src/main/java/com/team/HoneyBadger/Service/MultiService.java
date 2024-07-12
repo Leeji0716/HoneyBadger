@@ -371,9 +371,25 @@ public class MultiService {
         }
     }
 
-    public Boolean markEmailAsRead(Long emailId, String receiverId) {
-        Boolean isRead = emailReceiverService.markEmailAsRead(emailId, receiverId);
-        return isRead;
+//    public Boolean markEmailAsRead(EmailReadRequestDTO emailReadRequestDTO) {
+//        Boolean isRead = emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
+//        Email email = emailService.getEmail(emailReadRequestDTO.emailId());
+//        Optional<EmailReceiver> emailReceiver = emailReceiverService.getEmailReceiver(emailReadRequestDTO.emailId());
+//        emailReceiver.stat
+//        EmailResponseDTO emailResponseDTO = getEmailDTO(email);
+//        emailResponseDTO.isRead()
+//        return isRead;
+//    }
+
+    public EmailReceiverResponseDTO read(EmailReadRequestDTO emailReadRequestDTO) {
+        Boolean isRead = emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
+        EmailResponseDTO emailResponseDTO = getEmailDTO(emailReadRequestDTO.emailId());
+        EmailReceiverResponseDTO emailReceiverResponseDTO = EmailReceiverResponseDTO.builder()
+                .id(emailResponseDTO.id())
+                .status(isRead)
+                .emailResponseDTO(emailResponseDTO)
+                .build();
+        return emailReceiverResponseDTO;
     }
 
     @Transactional
@@ -687,4 +703,6 @@ public class MultiService {
     public List<UserResponseDTO> getAllUser(String username) {
         return  userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
     }
+
+
 }
