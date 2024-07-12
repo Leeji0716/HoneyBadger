@@ -61,8 +61,7 @@ public class EmailController {
     }
 
     @PostMapping
-    public ResponseEntity<?> sendEmail(@RequestHeader("Authorization") String accessToken, EmailRequestDTO emailRequestDTO, //@RequestBody로 받아야 함.
-                                       List<MultipartFile> attachments) { //파일은 다른 메서드로 분리해야 함.
+    public ResponseEntity<?> sendEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailRequestDTO emailRequestDTO) {
 
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
