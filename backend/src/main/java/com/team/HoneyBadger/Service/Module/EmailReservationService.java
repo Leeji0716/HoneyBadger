@@ -20,7 +20,14 @@ public class EmailReservationService {
 
 
     public EmailReservation save(EmailReservationRequestDTO reservationRequestDTO, SiteUser sender) {
-        return EmailReservation.builder().title(reservationRequestDTO.title()).content(reservationRequestDTO.content()).sender(sender).receiverList(reservationRequestDTO.receiverIds()).sendTime(reservationRequestDTO.sendTime()).build();
+
+        return emailReservationRepository.save(EmailReservation.builder()
+                .title(reservationRequestDTO.title())
+                .content(reservationRequestDTO.content())
+                .sender(sender)
+                .receiverList(reservationRequestDTO.receiverIds())
+                .sendTime(reservationRequestDTO.sendTime())
+                .build());
     }
 
     public String saveFile(MultipartFile file) {
