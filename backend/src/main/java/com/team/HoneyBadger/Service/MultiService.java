@@ -428,10 +428,10 @@ public class MultiService {
         emailReservationService.findByUsernameDelete(emailReservation, username);
     }
 
-    public EmailReservationResponseDTO reservationEmail(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
+    public Long reservationEmail(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
         SiteUser sender = userService.get(username);
         EmailReservation emailReservation = emailReservationService.save(emailReservationRequestDTO, sender);
-        return getEmailReservationDTO(emailReservation);
+        return emailReservation.getId();
     }
 
     private EmailReservationResponseDTO getEmailReservationDTO(EmailReservation reservation) {
