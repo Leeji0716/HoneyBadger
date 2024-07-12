@@ -1,12 +1,8 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.ChatroomResponseDTO;
-
-import com.team.HoneyBadger.Exception.DataDuplicateException;
-import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
 import com.team.HoneyBadger.DTO.TokenDTO;
-
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
