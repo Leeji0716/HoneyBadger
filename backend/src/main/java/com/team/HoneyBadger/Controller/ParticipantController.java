@@ -1,7 +1,7 @@
 package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.DTO.ChatroomResponseDTO;
-import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
+import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

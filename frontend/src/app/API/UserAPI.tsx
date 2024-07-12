@@ -210,3 +210,15 @@ export const emailFiles = async ({ attachments, emailId }: { attachments: File[]
     return response.data;
 }
 
+export const putProfileImage = async (form:FormData) => {
+    const response = await UserApi.put('/api/user/profile_image',form,{
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+}
+export const deleteProfileImage = async () => {
+    const response = await UserApi.delete('/api/user/profile_image');
+    return response.data;
+}

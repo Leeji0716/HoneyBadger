@@ -3,7 +3,7 @@ package com.team.HoneyBadger.Service.Module;
 
 import com.team.HoneyBadger.DTO.SignupRequestDTO;
 import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
