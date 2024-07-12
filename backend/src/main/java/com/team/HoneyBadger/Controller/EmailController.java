@@ -1,10 +1,9 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
 import com.team.HoneyBadger.DTO.EmailResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.Enum.EmailStatus;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,14 +24,13 @@ public class EmailController {
     public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken, @RequestHeader("status") int status) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            List<EmailResponseDTO> emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), EmailStatus.values()[status]);
+            Object emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status);
             return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTOList);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
-
 
     @PostMapping("/upload") //메세지 파일 업로드
     public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, MultipartFile file) {
@@ -79,7 +77,6 @@ public class EmailController {
 
     @PostMapping
     public ResponseEntity<?> sendEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailRequestDTO emailRequestDTO) {
-
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             System.out.println("Received email send request");

@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { getAPI } from './AxiosAPI';
 import { access } from 'fs';
+import exp from 'constants';
 
 
 export const UserApi = getAPI();
@@ -76,6 +77,11 @@ interface SendEmail2 {
 interface chatroomResponseDTO {
     name?: string,
     users: string[]
+}
+
+interface noticeRequestDTO{
+    chatroomId: number,
+    messageId: number
 }
 
 export const updateUser = async (data: UpdateProps) => {
@@ -177,29 +183,30 @@ export const addUser = async ({ chatroomId, username }: { chatroomId: number, us
     return response.data;
 }
 
-export const editChatroom = async ({ chatroomId, data }: { chatroomId: number, data: chatroomResponseDTO }) => {
-    const response = await UserApi.put('/api/chatroom/', data);
+export const editChatroom = async ({ chatroomId, chatroomResponseDTO }: { chatroomId: number, chatroomResponseDTO: chatroomResponseDTO }) => {
+    const response = await UserApi.put('/api/chatroom', chatroomResponseDTO, {
+        headers:
+        {
+            chatroomId:chatroomId
+        }
+});
     return response.data;
 }
 
-export const notification = async (accessToken: string, chatroomId: number, messageId: number) => {
-    const config = {
-        headers: {
-            'Authorization': accessToken,
-            'chatroomId': chatroomId,
-            'MessageId': messageId
-        }
-    };
-    try {
-        const response = await UserApi.put('/api/chatroom/notification', null, config);
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
+
+
+export const notification = async (data: noticeRequestDTO) => {
+    const response = await UserApi.put('/api/chatroom/notification', data);    
+    return response.data;
 }
 
-export const emailFiles = async ({ attachments, emailId }: { attachments: FormData, emailId: number }) => {
+export const getUsers = async () => {
+    const response = await UserApi.get('/api/user/usernames');
+    return response.data;
+}
 
+
+export const emailFiles = async ({ attachments, emailId }: { attachments: FormData, emailId: number }) => {
     const response = await UserApi.post('/api/email/files', attachments, {
         headers: {
             'Content-Type': 'multipart/form-data',
@@ -208,6 +215,7 @@ export const emailFiles = async ({ attachments, emailId }: { attachments: FormDa
     });
     return response.data;
 }
+
 
 export const reservationFiles = async ({ attachments, emailId }: { attachments: FormData, emailId: number }) => {
 
@@ -220,3 +228,20 @@ export const reservationFiles = async ({ attachments, emailId }: { attachments: 
     return response.data;
 }
 
+export const putProfileImage = async (form: FormData) => {
+    const response = await UserApi.put('/api/user/profile_image', form, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+}
+
+export const deleteProfileImage = async () => {
+    const response = await UserApi.delete('/api/user/profile_image');
+    return response.data;
+}
+export const updatePassword = async (prePassword: string, newPassword: string) => {
+    const response = await UserApi.put('/api/user', { prePassword: prePassword, newPassword: newPassword });
+    return response.data;
+}

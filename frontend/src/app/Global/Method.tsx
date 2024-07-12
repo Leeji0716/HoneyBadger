@@ -45,6 +45,10 @@ export function getDate(data: any) {
     const date = new Date(data);
     return date.getFullYear() + '.' + (date.getMonth() + 1) + '.' + date.getDate();
 }
+export function getDateKorean(data: any) {
+    const date = new Date(data);
+    return date.getFullYear() + '년 ' + (date.getMonth() + 1) + '월 ' + date.getDate()+"일";
+}
 export function getDateTime(data: any) {
     const date = new Date(data);
     return date.getFullYear() + "" + (date.getMonth() + 1) + "" + date.getDate() + "" + date.getHours() + "" + date.getMinutes();

@@ -28,7 +28,13 @@ public class EmailReceiverService {
         return isRead;
     }
 
-    public List<Email> getEmailsForUser(String userId) {
-        return emailReceiverRepository.findByReceiver(userId);
+    public List<Email> getSentEmailsForUser(String userId) {
+        return emailReceiverRepository.findSentEmailsByUserId(userId); // 사용자에 대해 보낸 이메일 목록을 반환하는 로직
     }
+
+    public List<Email> getReceivedEmailsForUser(String userId) {
+        return emailReceiverRepository.findReceivedEmailsByUserId(userId); // 사용자에 대해 받은 이메일 목록을 반환하는 로직
+    }
+
+
 }

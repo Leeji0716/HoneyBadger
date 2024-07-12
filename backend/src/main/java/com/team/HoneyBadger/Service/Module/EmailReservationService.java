@@ -20,7 +20,14 @@ public class EmailReservationService {
 
 
     public EmailReservation save(EmailReservationRequestDTO reservationRequestDTO, SiteUser sender) {
-        return EmailReservation.builder().title(reservationRequestDTO.title()).content(reservationRequestDTO.content()).sender(sender).receiverList(reservationRequestDTO.receiverIds()).sendTime(reservationRequestDTO.sendTime()).build();
+
+        return emailReservationRepository.save(EmailReservation.builder()
+                .title(reservationRequestDTO.title())
+                .content(reservationRequestDTO.content())
+                .sender(sender)
+                .receiverList(reservationRequestDTO.receiverIds())
+                .sendTime(reservationRequestDTO.sendTime())
+                .build());
     }
 
     public String saveFile(MultipartFile file) {
@@ -61,8 +68,10 @@ public class EmailReservationService {
         emailReservation.setReceiverList(emailReservationRequestDTO.receiverIds());
         emailReservation.setSendTime(emailReservationRequestDTO.sendTime());
 
-
-
         emailReservationRepository.save(emailReservation);
+    }
+
+    public List<EmailReservation> getReservedEmailsForUser(String userId) {
+        return emailReservationRepository.findReservedEmailsByUserId(userId); // 사용자에 대해 예약된 이메일 목록을 반환하는 로직
     }
 }
