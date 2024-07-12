@@ -12,5 +12,4 @@ public interface EmailReceiverRepositoryCustom {
 
     List<Email> findSentEmailsByUserId(String userId);
     List<Email> findReceivedEmailsByUserId(String userId);
-    List<Email> findReservedEmailsByUserId(String userId);
 }

@@ -5,7 +5,6 @@ import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Config.Exception.UnauthorizedException;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
-import com.team.HoneyBadger.Enum.EmailStatus;
 import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
 import com.team.HoneyBadger.HoneyBadgerApplication;
@@ -354,13 +353,22 @@ public class MultiService {
         return email.getId();
     }
 
-    public List<EmailResponseDTO> getEmailsForUser(String username, EmailStatus status) {
-        List<Email> emails = switch (status) {
-            case SENDER -> emailReceiverService.getSentEmailsForUser(username);
-            case RECEIVER -> emailReceiverService.getReceivedEmailsForUser(username);
-            case RESERVATION -> emailReceiverService.getReservedEmailsForUser(username);
-        };
-        return emails.stream().map(this::getEmailDTO).toList();
+    public Object getEmailsForUser(String username, int statusIndex) {
+//        List<?> emails;
+//        SENDER, RECEIVER, RESERVATION
+        switch (statusIndex) {
+            case 0:
+                List<Email> SenderEmail = emailReceiverService.getSentEmailsForUser(username);
+                return SenderEmail.stream().map(this::getEmailDTO).collect(Collectors.toList());
+            case 1:
+                List<Email> ReceiverEmail = emailReceiverService.getReceivedEmailsForUser(username);
+                return ReceiverEmail.stream().map(this::getEmailDTO).collect(Collectors.toList());
+            case 2:
+                List<EmailReservation> ReservationEmail = emailReservationService.getReservedEmailsForUser(username);
+                return ReservationEmail.stream().map(this::getEmailReservationDTO).collect(Collectors.toList());
+            default:
+                throw new IllegalArgumentException("Invalid status index: " + statusIndex);
+        }
     }
 
     public Boolean markEmailAsRead(Long emailId, String receiverId) {

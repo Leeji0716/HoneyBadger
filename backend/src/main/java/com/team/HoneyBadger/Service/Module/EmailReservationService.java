@@ -68,8 +68,10 @@ public class EmailReservationService {
         emailReservation.setReceiverList(emailReservationRequestDTO.receiverIds());
         emailReservation.setSendTime(emailReservationRequestDTO.sendTime());
 
-
-
         emailReservationRepository.save(emailReservation);
+    }
+
+    public List<EmailReservation> getReservedEmailsForUser(String userId) {
+        return emailReservationRepository.findReservedEmailsByUserId(userId); // 사용자에 대해 예약된 이메일 목록을 반환하는 로직
     }
 }

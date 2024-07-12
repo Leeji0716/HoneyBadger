@@ -1,10 +1,7 @@
 package com.team.HoneyBadger.Repository.Custom.Impl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.team.HoneyBadger.Entity.Email;
-import com.team.HoneyBadger.Entity.QEmail;
-import com.team.HoneyBadger.Entity.QEmailReceiver;
-import com.team.HoneyBadger.Entity.QEmailReservation;
+import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Repository.Custom.EmailReceiverRepositoryCustom;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -51,11 +48,4 @@ public class EmailReceiverRepositoryCustomImpl implements EmailReceiverRepositor
                 .fetch();
     }
 
-    @Override
-    public List<Email> findReservedEmailsByUserId(String userId) {
-        return jpaQueryFactory.selectFrom(qEmail)
-                .where(qEmail.sender.username.eq(userId)
-                        .and(qEmail.isScheduled.isTrue()))
-                .fetch();
-    }
 }

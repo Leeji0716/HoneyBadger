@@ -25,4 +25,10 @@ public class EmailReservationRepositoryImpl implements EmailReservationRepositor
                         .and(qEmailReservation.sendTime.isNotNull()))
                 .fetch();
     }
+
+    @Override
+    public List<EmailReservation> findReservedEmailsByUserId(String userId) {
+        return jpaQueryFactory.selectFrom(qEmailReservation)
+                .where(qEmailReservation.sender.username.eq(userId)).fetch();
+    }
 }
