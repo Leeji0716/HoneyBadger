@@ -372,6 +372,7 @@ public class MultiService {
                         .stream() //
                         .map(er -> er.getReceiver().getUsername()) //
                         .toList()) //
+                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
                 .filePathList(filePathList) //
                 .build();
     }
