@@ -1,6 +1,7 @@
 package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
+import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Config.Exception.UnauthorizedException;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
@@ -253,7 +254,6 @@ public class MultiService {
         SiteUser siteUser = userService.get(username);
         Participant participant = participantService.get(siteUser, chatroom);
         chatroom.getParticipants().remove(participant);
-        participantService.delete(participant);
 
         chatroomService.save(chatroom);
         return getChatRoom(chatroom);
@@ -503,19 +503,19 @@ public class MultiService {
 
             // 삭제된 메시지에 대한 응답을 생성합니다.
             System.out.println("Message deleted");
-             throw new RuntimeException("Message deleted");
+            throw new RuntimeException("Message deleted");
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
             System.out.println("Cannot delete message older than 5 minutes");
-             throw new RuntimeException("Cannot delete message older than 5 minutes");
+            throw new RuntimeException("Cannot delete message older than 5 minutes");
         }
     }
 
-    public String fileUpload(Long roomId, MultipartFile file) throws IOException {
+    public String fileUpload(Long chatroomId, MultipartFile file) throws IOException {
 
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
-        String fileName = "/api/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        String fileName = "/api/chatroom/" + chatroomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
         // 너굴맨이 해치우고 갔어요!
         File dest = new File(path + fileName);
@@ -607,7 +607,13 @@ public class MultiService {
     public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
-        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendTime()).messageType(messageReservationRequestDTO.messageType()).build();
+        MessageReservation messageReservation = MessageReservation.builder()
+                .chatroom(chatroom)
+                .message(messageReservationRequestDTO.message())
+                .sender(sender)
+                .sendDate(messageReservationRequestDTO.sendDate())
+                .messageType(messageReservationRequestDTO.messageType())
+                .build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
@@ -624,10 +630,12 @@ public class MultiService {
         messageReservationService.delete(messageReservation);
     }
 
-    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) {
-        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
-        if (messageReservation.getSender().getUsername().equals(username)) {
-            messageReservationService.update(messageReservation, messageReservationRequestDTO.message(), messageReservation.getSendDate());
+    public MessageReservationResponseDTO updateReservationMessage(Long id,
+                                                                  MessageReservationRequestDTO messageReservationRequestDTO,
+                                                                  String username) throws DataNotFoundException {
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(id);
+        if (messageReservation.getSender().getUsername().equals(username) && messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
+            messageReservationService.update(messageReservation, messageReservationRequestDTO);
         }
         return getMessageReservation(messageReservation);
     }
