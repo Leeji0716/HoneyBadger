@@ -26,6 +26,8 @@ public class QSiteUser extends EntityPathBase<SiteUser> {
 
     public final QDepartment department;
 
+    public final DateTimePath<java.time.LocalDateTime> joinDate = createDateTime("joinDate", java.time.LocalDateTime.class);
+
     public final DateTimePath<java.time.LocalDateTime> modifyDate = createDateTime("modifyDate", java.time.LocalDateTime.class);
 
     public final StringPath name = createString("name");
