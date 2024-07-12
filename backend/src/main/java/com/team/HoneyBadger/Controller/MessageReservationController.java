@@ -23,25 +23,25 @@ public class MessageReservationController {
             MessageReservationResponseDTO messageReservationResponseDTO = multiService.reservationMessage(messageReservationRequestDTO, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(messageReservationResponseDTO);
         } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
 
     @PutMapping
     public ResponseEntity<?> updateReservationMessage(@RequestHeader("Authorization") String accessToken,
-                                                      @RequestHeader Long reservationMessageId,
+                                                      @RequestHeader Long id,
                                                       @RequestBody MessageReservationRequestDTO messageReservationRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            MessageReservationResponseDTO messageReservationResponseDTO = multiService.updateReservationMessage(reservationMessageId, messageReservationRequestDTO, tokenDTO.username());
+            MessageReservationResponseDTO messageReservationResponseDTO = multiService.updateReservationMessage(id, messageReservationRequestDTO, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(messageReservationResponseDTO);
         } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
@@ -51,11 +51,11 @@ public class MessageReservationController {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             multiService.deleteReservationMessage(reservationMessageId);
-            return ResponseEntity.status(HttpStatus.OK).body(null);
+            return ResponseEntity.status(HttpStatus.OK).body("Reservation Message Delete Success");
         } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }

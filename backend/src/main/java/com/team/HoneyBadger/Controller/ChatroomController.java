@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chatroom")
 public class ChatroomController {
@@ -91,7 +91,7 @@ public class ChatroomController {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             multiService.deleteChatroom(chatroomId);
-            return ResponseEntity.status(HttpStatus.OK).body(null);
+            return ResponseEntity.status(HttpStatus.OK).body("DELETE SUCCESS");
             // throw new DataNotFoundException("not found chatroom");
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
@@ -104,10 +104,10 @@ public class ChatroomController {
     }
 
     @PutMapping("/notification") //채팅방 공지 설정
-    public ResponseEntity<?> notification(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader Long MessageId) {
+    public ResponseEntity<?> notification(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader Long messageId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            MessageResponseDTO messageResponseDTO = multiService.notification(chatroomId, MessageId);
+            MessageResponseDTO messageResponseDTO = multiService.notification(chatroomId, messageId);
             return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
