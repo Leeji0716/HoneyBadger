@@ -85,7 +85,7 @@ export const updateUser = async (data: UpdateProps) => {
     return response.data;
 }
 export const getEmail = async (status: number) => {
-    const response = await UserApi.get('/api/email', {
+    const response = await UserApi.get('/api/email/list', {
         headers:
         {
             status: status
@@ -95,6 +95,7 @@ export const getEmail = async (status: number) => {
 }
 
 export const sendEmail = async (data: SendEmail2) => {
+    console.log(data);
     const response = await UserApi.post('/api/email', data);
     return response.data;
 }
@@ -199,7 +200,7 @@ export const notification = async (accessToken: string, chatroomId: number, mess
     }
 }
 
-export const emailFiles = async ({ attachments, emailId }: { attachments: File[], emailId: number }) => {
+export const emailFiles = async ({ attachments, emailId }: { attachments: FormData, emailId: number }) => {
 
     const response = await UserApi.post('/api/email/files', attachments, {
         headers: {
