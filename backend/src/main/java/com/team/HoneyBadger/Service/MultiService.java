@@ -45,6 +45,8 @@ public class MultiService {
     private final EmailReservationService emailReservationService;
     private final FileSystemService fileSystemService;
     private final MultiKeyService multiKeyService;
+    private final LastReadMessageService lastReadMessageService;
+
 
     /**
      * Auth
@@ -123,6 +125,9 @@ public class MultiService {
     /*
      * ChatRoom
      */
+    public ChatroomResponseDTO getChatRoom(Long chatroom_id) {
+        return getChatRoom(chatroomService.getChatRoomById(chatroom_id));
+    }
 
     @Transactional
     public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO) {
@@ -190,9 +195,9 @@ public class MultiService {
     }
 
     @Transactional
-    public List<ChatroomResponseDTO> getChatRoomListByUser(String username) {
+    public List<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword) {
         SiteUser siteUser = userService.get(username);
-        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser);
+        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
         List<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
         for (Chatroom chatroom : chatroomList) {
             chatroomResponseDTOList.add(getChatRoom(chatroom));
@@ -201,10 +206,27 @@ public class MultiService {
     }
 
     @Transactional
+    public List<MessageResponseDTO> getMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getMessageList(chatroom.getMessageList());
+    }
+
+    @Transactional
+    public List<MessageResponseDTO> getMessageList(Long chatroomId, Long end) {
+        return messageService.getUpdatedList(chatroomId, end).stream().map(this::GetMessageDTO).toList();
+    }
+
+    @Transactional
     private ChatroomResponseDTO getChatRoom(Chatroom chatroom) {
         List<String> users = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
-        List<MessageResponseDTO> messageResponseDTOList = messageService.getMessageList(chatroom.getMessageList());
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).messageResponseDTOList(messageResponseDTOList).build();
+        Message latestMessage = messageService.getLatesMessage(chatroom.getMessageList());
+        MessageResponseDTO messageResponseDTO;
+        if (latestMessage != null) {
+            messageResponseDTO = GetMessageDTO(latestMessage);
+        } else {
+            messageResponseDTO = null;
+        }
+        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).messageResponseDTO(messageResponseDTO).build();
     }
 
     @Transactional
@@ -221,17 +243,17 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatroomResponseDTO plusParticipant(ParticipantRequestDTO participantRequestDTO) {
-        Chatroom chatroom = chatroomService.getChatRoomById(participantRequestDTO.chatroomId());
-        SiteUser siteUser = userService.get(participantRequestDTO.username());
+    public ChatroomResponseDTO plusParticipant(Long chatroomId, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        SiteUser siteUser = userService.get(username);
         participantService.save(siteUser, chatroom);
         return getChatRoom(chatroom);
     }
 
     @Transactional
-    public ChatroomResponseDTO minusParticipant(ParticipantRequestDTO participantRequestDTO) {
-        Chatroom chatroom = chatroomService.getChatRoomById(participantRequestDTO.chatroomId());
-        SiteUser siteUser = userService.get(participantRequestDTO.username());
+    public ChatroomResponseDTO minusParticipant(Long chatroomId, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        SiteUser siteUser = userService.get(username);
         Participant participant = participantService.get(siteUser, chatroom);
         chatroom.getParticipants().remove(participant);
         participantService.delete(participant);
@@ -479,14 +501,10 @@ public class MultiService {
         SiteUser siteUser = userService.get(messageRequestDTO.username());
         MessageType messageType = this.getMessageType(messageRequestDTO.messageType());
 
-
-        Message message = Message.builder().message(messageRequestDTO.message()).sender(siteUser).chatroom(chatroom).messageType(messageType).build();
-
-
-        return GetMessage(messageService.save(message));
+        return GetMessageDTO(messageService.save(messageRequestDTO.message(), siteUser, chatroom, messageType));
     }
 
-    private MessageResponseDTO GetMessage(Message message) {
+    private MessageResponseDTO GetMessageDTO(Message message) {
         Long sendTime = this.dateTimeTransfer(message.getCreateDate());
 
         return MessageResponseDTO.builder().id(message.getId()).sendTime(sendTime).username(message.getSender().getUsername()).name(message.getSender().getName()).message(message.getMessage()).messageType(message.getMessageType()).build();
@@ -512,8 +530,63 @@ public class MultiService {
         }
     }
 
+    public String fileUpload(Long roomId, MultipartFile file) throws IOException {
 
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/api/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
+        // 너굴맨이 해치우고 갔어요!
+        File dest = new File(path + fileName);
+
+        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+        file.transferTo(dest);
+
+        return fileName;
+    }
+
+    public void readMessage(Long chatroom_id, String username) {
+        SiteUser reader = userService.get(username);
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroom_id);
+        Optional<LastReadMessage> lastReadMessage = lastReadMessageService.get(reader, chatroom);
+        Long startId = lastReadMessage.map(LastReadMessage::getLastReadMessage).orElse(null);
+        for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) {
+            HashSet<String> sets = new HashSet<>(message.getReadUsers());
+            sets.add(reader.getUsername());
+            messageService.updateRead(message, sets.stream().toList());
+        }
+
+        //
+
+//        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
+    }
+
+    public void markMessageAsRead(Long chatroomId, List<String> user) {
+//        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+//
+//        for (Message message : chatroom.getMessageList()) {
+//            if (message != null && message.getReadUsers() != null) {
+//                List<String> readUsers = message.getReadUsers();
+//
+//                for (String username : user) {
+//                    if (readUsers.contains(username)) {
+//                        messageService.save(message);
+//
+//                        // 모든 사용자가 읽었는지 확인
+//                        if (readUsers.isEmpty()) {
+//                            // 모든 사용자가 읽었을 때 처리할 로직 추가
+//                            // 예시로는 읽음 숫자를 없애는 등의 처리를 할 수 있음
+//                            message.setReadUsers(null); // 예시로 읽음 사용자 초기화
+//                            messageService.save(message);
+//                        }
+//                    }
+//                }
+//            } else {
+//                throw new RuntimeException("Message not found");
+//            }
+//        }
+//        Message message = messageService.getMessageById(readReceipt.messageId());
+    }
 
     /*
      * Time
@@ -554,4 +627,26 @@ public class MultiService {
         }
         return getMessageReservation(messageReservation);
     }
+
+    public MessageResponseDTO notification(Long chatroomId, Long messageId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        Message message = messageService.getMessageById(messageId);
+        chatroomService.notification(chatroom, message);
+
+        return GetMessageDTO(message);
+    }
+
+    public void addUserToChatRoom(Long chatRoomId, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatRoomId);
+        SiteUser user = userService.get(username);
+        List<Message> messageList = chatroom.getMessageList();
+        for (Message message : messageList) {
+            if (!message.getReadUsers().isEmpty() && message.getReadUsers().contains(user.getUsername())) {
+                message.getReadUsers().remove(user.getUsername());
+            }
+        }
+
+    }
+
+
 }

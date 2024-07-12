@@ -15,9 +15,9 @@ export default function Main(props: Readonly<pageInterface>) {
     <main id='main' className={"flex flex-col " + props.classname}>
       <Side open={open} onClose={() => setOpen(false)} escClose={true} outlineClose={true} className="w-[250px] h-screen">
         <div className="flex flex-col">
-          <a href="">채팅</a>
+          <a href="/chat">채팅</a>
           <a href="/email">메일</a>
-          <a href="/email/EmailForm">메일쓰기</a>
+          <a href="/email/EmailForm" onClick={()=>localStorage.removeItem('email')}>메일쓰기</a>
           <a href="">결재</a>
         </div>
       </Side>
@@ -28,7 +28,7 @@ export default function Main(props: Readonly<pageInterface>) {
           <span></span>
           <span></span>
         </button>
-        <p className="text-white m-3">HoneyBadger</p>
+        <p className="text-white m-3 cursor-pointer" onClick={()=>location.href="/main"}>HoneyBadger</p>
         <div className="flex flex-row border-2 border-white rounded-md ml-60">
           <img src="/search.png" className="w-[30px] h-[30px] m-1" alt="검색 사진" />
           <input type="text" placeholder="search" className="bolder-0 outline-none bg-white text-black" />
@@ -51,3 +51,5 @@ export default function Main(props: Readonly<pageInterface>) {
     </main>
   );
 }
+
+// 화이팅!!
