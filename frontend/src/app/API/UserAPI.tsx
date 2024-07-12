@@ -63,10 +63,8 @@ interface UpdateProps {
 interface SendEmail {
     title: string,
     content: string,
-    senderId: string,
     receiverIds: string[],
-    sendTime?: Date | null,
-    attachments?: File[] | null
+    sendTime?: Date | null
 }
 
 interface SendEmail2 {
@@ -112,7 +110,7 @@ export const getChatDetail = async (chatroomId: number) => {
 }
 
 export const reservationEmail = async (data: SendEmail) => {
-    const response = await UserApi.post('/api/email/schedule', data);
+    const response = await UserApi.post('/api/emailReservation/schedule', data);
     return response.data;
 }
 
@@ -203,6 +201,17 @@ export const notification = async (accessToken: string, chatroomId: number, mess
 export const emailFiles = async ({ attachments, emailId }: { attachments: FormData, emailId: number }) => {
 
     const response = await UserApi.post('/api/email/files', attachments, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            email_id: emailId
+        }
+    });
+    return response.data;
+}
+
+export const reservationFiles = async ({ attachments, emailId }: { attachments: FormData, emailId: number }) => {
+
+    const response = await UserApi.post('/api/emailReservation/files', attachments, {
         headers: {
             'Content-Type': 'multipart/form-data',
             email_id: emailId
