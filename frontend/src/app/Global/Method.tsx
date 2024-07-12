@@ -62,6 +62,15 @@ export function transferLocalTime(date: Date) {
 
 }
 
+export function eontransferLocalTime(date: Date | null) {
+    if(date != null){
+    return new Date(date.getTime() + 9 * 1000 * 60 * 60);
+    }else{
+        return null;
+    }
+
+}
+
 export function getChatDateTimeFormat(data: any) {
     const date = new Date(data);
     const now = new Date();
