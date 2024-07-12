@@ -17,13 +17,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
 public class UserController {
 
     private final MultiService multiService;
-    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<?> signup(@RequestBody SignupRequestDTO signupRequestDTO) {
@@ -54,7 +55,7 @@ public class UserController {
         TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
             try {
-                SiteUser siteUser = userService.get(username);
+                UserResponseDTO siteUser = multiService.getUser(username);
                 return ResponseEntity.status(HttpStatus.OK).body(siteUser);
             } catch (DataDuplicateException ex) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
@@ -89,4 +90,16 @@ public class UserController {
         } else return tokenDTO.getResponseEntity();
     }
 
+    @GetMapping("/usernames") //로그인한 유저를 제외한 모든 유저 리스트 --> 나중에 수정 필요함.
+    public ResponseEntity<?> getUsersAll(@RequestHeader("Authorization") String accessToken) {
+        TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            try {
+                List<UserResponseDTO> usernames = multiService.getAllUser(tokenDTO.username());
+                return ResponseEntity.status(HttpStatus.OK).body(usernames);
+            } catch (DataDuplicateException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            }
+        } else return tokenDTO.getResponseEntity();
+    }
 }

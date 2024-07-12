@@ -28,8 +28,6 @@ public class Email {
     private SiteUser sender;
     @OneToMany(mappedBy = "email", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<EmailReceiver> receiverList;
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    private EmailTag tag;
 
     private LocalDateTime createDate;
 

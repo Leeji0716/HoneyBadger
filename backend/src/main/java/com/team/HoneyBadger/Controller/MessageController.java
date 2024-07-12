@@ -57,23 +57,34 @@ public class MessageController {
     @GetMapping("/update") //메세지 읽음 처리 업데이트
     public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader Long startId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) {
+        if (tokenDTO.isOK()) try {
             List<MessageResponseDTO> list = multiService.getMessageList(chatroomId, startId);
             return ResponseEntity.status(HttpStatus.OK).body(list);
-        } else return tokenDTO.getResponseEntity();
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
     }
 
     @PostMapping("/upload") //메세지 파일 업로드
-    public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, @RequestHeader("room_id") Long roomId, MultipartFile file) {
+    public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, MultipartFile file) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
+        if (file.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
+        }
         if (tokenDTO.isOK()) try {
-            String fileName = multiService.fileUpload(roomId, file);
+            String fileName = multiService.fileUpload(chatroomId, file);
             return ResponseEntity.status(HttpStatus.OK).body(fileName);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 업로드 실패");
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IOException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
         }
 
         else return tokenDTO.getResponseEntity();
@@ -84,11 +95,13 @@ public class MessageController {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             multiService.deleteMessage(messageId);
-            return ResponseEntity.status(HttpStatus.OK).body(null);
+            return ResponseEntity.status(HttpStatus.OK).body("Message DELETE SUCCESS");
         } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
         }
 
         else return tokenDTO.getResponseEntity();

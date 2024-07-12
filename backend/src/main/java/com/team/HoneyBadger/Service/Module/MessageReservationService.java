@@ -1,5 +1,6 @@
 package com.team.HoneyBadger.Service.Module;
 
+import com.team.HoneyBadger.DTO.MessageReservationRequestDTO;
 import com.team.HoneyBadger.Entity.MessageReservation;
 import com.team.HoneyBadger.Repository.MessageReservationRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +26,15 @@ public class MessageReservationService {
         messageReservationRepository.delete(messageReservation);
     }
 
-    public MessageReservation getMessageReservation(Long reservationMessageId) {
-        return messageReservationRepository.findById(reservationMessageId).orElseThrow();
+    public MessageReservation getMessageReservation(Long id) {
+        return messageReservationRepository.findById(id).orElseThrow();
     }
 
-    public void update(MessageReservation messageReservation, String message, LocalDateTime sendDate) {
-        messageReservation.setMessage(message);
-        messageReservation.setSendDate(sendDate);
+    public void update(MessageReservation messageReservation, MessageReservationRequestDTO messageReservationRequestDTO) {
+        messageReservation.setMessage(messageReservationRequestDTO.message());
+        messageReservation.setSendDate(messageReservationRequestDTO.sendDate());
+        messageReservation.setMessageType(messageReservation.getMessageType());
+        messageReservation.setModifyDate(LocalDateTime.now());
 
         messageReservationRepository.save(messageReservation);
     }
