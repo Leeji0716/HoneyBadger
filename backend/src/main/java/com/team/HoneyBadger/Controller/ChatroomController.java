@@ -33,6 +33,18 @@ public class ChatroomController {
         else return tokenDTO.getResponseEntity();
     }
 
+    @GetMapping
+    public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) { //채팅방 찾아오기
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            List<MessageResponseDTO> messageResponseDTOList = multiService.getMessageList(chatroomId);
+            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
     @PostMapping
     public ResponseEntity<?> create(@RequestHeader("Authorization") String accessToken, @RequestBody ChatroomRequestDTO chatroomRequestDTO) { //채팅방 만들기 (최초 생성 : 채팅방 이름, 참여자 이름 String)
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
