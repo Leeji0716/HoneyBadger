@@ -240,7 +240,7 @@ public class MultiService {
         }else {
             notificationDTO = null;
         }
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessageDTO(latestMessageDTO).notificationDTO(notificationDTO).build();
+        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).build();
     }
 
     @Transactional
