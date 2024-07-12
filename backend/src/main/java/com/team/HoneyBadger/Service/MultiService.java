@@ -304,7 +304,8 @@ public class MultiService {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         SiteUser sender = userService.get(senderId);
         Email email = emailService.save(title, sender);
-        emailService.update(email, content.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
+        if (content != null)
+            emailService.update(email, content.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
         Optional<MultiKey> _key = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(senderId));
         if (_key.isPresent()) {
             MultiKey key = _key.get();
@@ -515,11 +516,11 @@ public class MultiService {
 
             // 삭제된 메시지에 대한 응답을 생성합니다.
             System.out.println("Message deleted");
-             throw new RuntimeException("Message deleted");
+            throw new RuntimeException("Message deleted");
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
             System.out.println("Cannot delete message older than 5 minutes");
-             throw new RuntimeException("Cannot delete message older than 5 minutes");
+            throw new RuntimeException("Cannot delete message older than 5 minutes");
         }
     }
 
