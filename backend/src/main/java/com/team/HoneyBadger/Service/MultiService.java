@@ -2,6 +2,7 @@ package com.team.HoneyBadger.Service;
 
 
 import com.team.HoneyBadger.Exception.DataDuplicateException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.InvalidFileTypeException;
 import com.team.HoneyBadger.Exception.UnauthorizedException;
 import com.team.HoneyBadger.DTO.*;
@@ -267,9 +268,9 @@ public class MultiService {
             latestMessageDTO = null;
         }
         MessageResponseDTO notificationDTO;
-        if(chatroom.getNotification() != null){
+        if (chatroom.getNotification() != null) {
             notificationDTO = GetMessageDTO(chatroom.getNotification());
-        }else {
+        } else {
             notificationDTO = null;
         }
         return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).build();
@@ -664,13 +665,7 @@ public class MultiService {
     public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
-        MessageReservation messageReservation = MessageReservation.builder()
-                .chatroom(chatroom)
-                .message(messageReservationRequestDTO.message())
-                .sender(sender)
-                .sendDate(messageReservationRequestDTO.sendDate())
-                .messageType(messageReservationRequestDTO.messageType())
-                .build();
+        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendDate()).messageType(messageReservationRequestDTO.messageType()).build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
@@ -687,9 +682,7 @@ public class MultiService {
         messageReservationService.delete(messageReservation);
     }
 
-    public MessageReservationResponseDTO updateReservationMessage(Long id,
-                                                                  MessageReservationRequestDTO messageReservationRequestDTO,
-                                                                  String username) throws DataNotFoundException {
+    public MessageReservationResponseDTO updateReservationMessage(Long id, MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(id);
         if (messageReservation.getSender().getUsername().equals(username) && messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
             messageReservationService.update(messageReservation, messageReservationRequestDTO);
@@ -706,11 +699,11 @@ public class MultiService {
     }
 
     public UserResponseDTO getUser(String username) {
-        return getUserResponseDTO( userService.get(username));
+        return getUserResponseDTO(userService.get(username));
     }
 
     public List<UserResponseDTO> getAllUser(String username) {
-        return  userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
+        return userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
     }
 
     /*
