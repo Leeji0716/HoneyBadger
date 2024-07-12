@@ -3,7 +3,7 @@ package com.team.HoneyBadger.Controller;
 import com.team.HoneyBadger.DTO.MessageRequestDTO;
 import com.team.HoneyBadger.DTO.MessageResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

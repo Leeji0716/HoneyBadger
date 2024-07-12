@@ -1,8 +1,7 @@
 package com.team.HoneyBadger.Service;
 
-import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
-import com.team.HoneyBadger.Config.Exception.UnauthorizedException;
+
+import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.KeyPreset;
@@ -111,6 +110,7 @@ public class MultiService {
     }
 
     private UserResponseDTO getUserResponseDTO(SiteUser user) {
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.USER_PROFILE.getValue(user.getUsername()));
         return UserResponseDTO.builder() //
                 .role(user.getRole().ordinal())//
                 .createDate(dateTimeTransfer(user.getCreateDate()))//
@@ -118,24 +118,71 @@ public class MultiService {
                 .phoneNumber(user.getPhoneNumber())//
                 .username(user.getUsername())//
                 .name(user.getName()) //
-                .url(null) //
+                .url(_fileSystem.map(FileSystem::getV).orElse(null)) //
                 .department(getDepartmentDTO(user.getDepartment())) //
                 .build();
     }
+
+    public UserResponseDTO updateProfile(String username, MultipartFile file) throws IOException {
+        if (file == null || !file.getContentType().contains("image")) throw new InvalidFileTypeException("not image");
+        String key = KeyPreset.USER_PROFILE.getValue(username);
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        Optional<FileSystem> _fileSystem = fileSystemService.get(key);
+        if (_fileSystem.isPresent()) {
+            FileSystem fileSystem = _fileSystem.get();
+            File preFile = new File(path + fileSystem.getV());
+            if (preFile.exists()) deleteFileWithFolder(preFile);
+        }
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/api/user/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        fileSystemService.save(key, fileName);
+        File dest = new File(path + fileName);
+        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+        file.transferTo(dest);
+        SiteUser user = userService.get(username);
+        return getUserResponseDTO(user);
+    }
+
+    public UserResponseDTO deleteProfile(String username) {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.USER_PROFILE.getValue(username));
+        if (_fileSystem.isPresent()) {
+            FileSystem fileSystem = _fileSystem.get();
+            File file = new File(path + fileSystem.getV());
+            if (file.exists()) deleteFileWithFolder(file);
+            fileSystemService.deleteByKey(fileSystem);
+        }
+        SiteUser user = userService.get(username);
+        return getUserResponseDTO(user);
+    }
+
+    public UserResponseDTO getUser(String username) {
+        return getUserResponseDTO(userService.get(username));
+    }
+
+    public List<UserResponseDTO> getAllUser(String username) {
+        return userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
+    }
+
+    public void changePassword(String username, PasswordChangeDTO passwordChangeDTO) {
+        SiteUser user = userService.get(username);
+        System.out.printf(passwordChangeDTO.prePassword() + " / " + passwordChangeDTO.newPassword() + " / " + user.getPassword());
+        if (!userService.isMatch(passwordChangeDTO.prePassword(), user.getPassword()))
+            throw new DataNotSameException("password");
+        userService.update(user, passwordChangeDTO.newPassword());
+    }
+
     /*
      * Department
      */
     private DepartmentResponseDTO getDepartmentDTO(Department department) {
-        if (department == null)
-            return null;
+        if (department == null) return null;
         return DepartmentResponseDTO.builder().name(department.getName()).parent(appendParent(department.getParent())).build();
     }
 
     private DepartmentResponseDTO appendParent(Department now) {
-        if (now.getParent() == null)
-            return DepartmentResponseDTO.builder().name(now.getName()).build();
-        else
-            return DepartmentResponseDTO.builder().name(now.getName()).parent(appendParent(now.getParent())).build();
+        if (now.getParent() == null) return DepartmentResponseDTO.builder().name(now.getName()).build();
+        else return DepartmentResponseDTO.builder().name(now.getName()).parent(appendParent(now.getParent())).build();
     }
 
     /*
@@ -234,9 +281,9 @@ public class MultiService {
             latestMessageDTO = null;
         }
         MessageResponseDTO notificationDTO;
-        if(chatroom.getNotification() != null){
+        if (chatroom.getNotification() != null) {
             notificationDTO = GetMessageDTO(chatroom.getNotification());
-        }else {
+        } else {
             notificationDTO = null;
         }
         return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).build();
@@ -641,27 +688,13 @@ public class MultiService {
 //    }
 
     /*
-     * Time
-     */
-
-    private Long dateTimeTransfer(LocalDateTime dateTime) {
-        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-    }
-
-    /*
      * MessageReservation or ChatReservation
      */
 
     public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
-        MessageReservation messageReservation = MessageReservation.builder()
-                .chatroom(chatroom)
-                .message(messageReservationRequestDTO.message())
-                .sender(sender)
-                .sendDate(messageReservationRequestDTO.sendDate())
-                .messageType(messageReservationRequestDTO.messageType())
-                .build();
+        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendDate()).messageType(messageReservationRequestDTO.messageType()).build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
@@ -678,9 +711,7 @@ public class MultiService {
         messageReservationService.delete(messageReservation);
     }
 
-    public MessageReservationResponseDTO updateReservationMessage(Long id,
-                                                                  MessageReservationRequestDTO messageReservationRequestDTO,
-                                                                  String username) throws DataNotFoundException {
+    public MessageReservationResponseDTO updateReservationMessage(Long id, MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(id);
         if (messageReservation.getSender().getUsername().equals(username) && messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
             messageReservationService.update(messageReservation, messageReservationRequestDTO);
@@ -696,13 +727,24 @@ public class MultiService {
         return getChatRoom(chatroom);
     }
 
-    public UserResponseDTO getUser(String username) {
-        return getUserResponseDTO( userService.get(username));
+    /*
+     * Time
+     */
+
+    private Long dateTimeTransfer(LocalDateTime dateTime) {
+        return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
-    public List<UserResponseDTO> getAllUser(String username) {
-        return  userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
+    /*
+     * File
+     */
+    public void deleteFileWithFolder(File file) {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                for (File list : file.listFiles())
+                    deleteFileWithFolder(list);
+            }
+            file.delete();
+        }
     }
-
-
 }

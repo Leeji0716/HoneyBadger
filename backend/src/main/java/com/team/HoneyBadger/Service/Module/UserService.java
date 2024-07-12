@@ -3,7 +3,7 @@ package com.team.HoneyBadger.Service.Module;
 
 import com.team.HoneyBadger.DTO.SignupRequestDTO;
 import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +31,12 @@ public class UserService {
 //                .birthday(signupRequestDTO.getBirthday())
 //                .phoneNumber(signupRequestDTO.getPhoneNumber())
                 .build());
+    }
+
+    @Transactional
+    public void update(SiteUser user, String password) {
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
     }
 
     public boolean isMatch(String password1, String password2) {
