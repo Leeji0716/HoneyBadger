@@ -75,6 +75,11 @@ export function eontransferLocalTime(date: Date | null) {
 
 }
 
+export function eongetDateTimeFormat(data: any) {
+    const date = new Date(data);
+    return date;
+}
+
 export function getChatDateTimeFormat(data: any) {
     const date = new Date(data);
     const now = new Date();
