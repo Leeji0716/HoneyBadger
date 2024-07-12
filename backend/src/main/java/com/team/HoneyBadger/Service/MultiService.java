@@ -406,7 +406,7 @@ public class MultiService {
                         .map(er -> er.getReceiver().getUsername()) //
                         .toList()) //
                 .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
-                .filePathList(filePathList) //
+                .files(filePathList) //
                 .build();
     }
 

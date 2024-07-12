@@ -32,7 +32,6 @@ public class EmailController {
         else return tokenDTO.getResponseEntity();
     }
 
-
     @PostMapping("/upload") //메세지 파일 업로드
     public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, MultipartFile file) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
