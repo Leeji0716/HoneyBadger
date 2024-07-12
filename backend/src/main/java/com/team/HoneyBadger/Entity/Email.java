@@ -31,8 +31,6 @@ public class Email {
 
     private LocalDateTime createDate;
 
-    private Boolean isScheduled;  // 예약된 이메일을 나타내는 필드 추가
-
     @Builder
     public Email(String title, String content, SiteUser sender) {
         this.title = title;

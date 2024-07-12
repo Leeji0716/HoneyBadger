@@ -4,7 +4,6 @@ import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
 import com.team.HoneyBadger.DTO.EmailResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.Enum.EmailStatus;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,7 +24,7 @@ public class EmailController {
     public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken, @RequestHeader("status") int status) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            List<EmailResponseDTO> emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), EmailStatus.values()[status]);
+            Object emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status);
             return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTOList);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
