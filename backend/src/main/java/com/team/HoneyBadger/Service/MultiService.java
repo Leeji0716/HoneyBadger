@@ -189,12 +189,6 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatroomResponseDTO getChatRoom(Long chatroomId) {
-        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        return getChatRoom(chatroom);
-    }
-
-    @Transactional
     public List<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword) {
         SiteUser siteUser = userService.get(username);
         List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
@@ -529,20 +523,6 @@ public class MultiService {
         }
     }
 
-    public String fileUpload(Long roomId, MultipartFile file) throws IOException {
-
-        String path = HoneyBadgerApplication.getOsType().getLoc();
-        UUID uuid = UUID.randomUUID();
-        String fileName = "/api/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
-
-        // 너굴맨이 해치우고 갔어요!
-        File dest = new File(path + fileName);
-
-        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
-        file.transferTo(dest);
-
-        return fileName;
-    }
 
     public String fileUpload(String username, MultipartFile file) throws IOException {
 
