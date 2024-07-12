@@ -350,9 +350,9 @@ public class MultiService {
 
     public List<EmailResponseDTO> getEmailsForUser(String username, EmailStatus status) {
         List<Email> emails = switch (status) {
-            case SENDER -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
-            case RECEIVER -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
-            case RESERVATION -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
+            case SENDER -> emailReceiverService.getSentEmailsForUser(username);
+            case RECEIVER -> emailReceiverService.getReceivedEmailsForUser(username);
+            case RESERVATION -> emailReceiverService.getReservedEmailsForUser(username);
         };
         return emails.stream().map(this::getEmailDTO).toList();
     }
