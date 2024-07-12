@@ -23,6 +23,7 @@ public class SiteUser {
     @Column(length = 11)
     private String phoneNumber;
 
+    private LocalDateTime joinDate;
     private LocalDateTime createDate;
     private LocalDateTime modifyDate;
 

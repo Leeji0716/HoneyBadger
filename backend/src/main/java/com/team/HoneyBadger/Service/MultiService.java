@@ -107,19 +107,35 @@ public class MultiService {
 
     public UserResponseDTO getProfile(String username) {
         SiteUser user = userService.get(username);
-        return getUserResponseDTo(user);
+        return getUserResponseDTO(user);
     }
 
-    private UserResponseDTO getUserResponseDTo(SiteUser user) {
+    private UserResponseDTO getUserResponseDTO(SiteUser user) {
         return UserResponseDTO.builder() //
                 .role(user.getRole().ordinal())//
                 .createDate(dateTimeTransfer(user.getCreateDate()))//
-                .modifyDate(dateTimeTransfer(user.getModifyDate()))//
+                .joinDate(dateTimeTransfer(user.getJoinDate()))//
                 .phoneNumber(user.getPhoneNumber())//
                 .username(user.getUsername())//
                 .name(user.getName()) //
                 .url(null) //
+                .department(getDepartmentDTO(user.getDepartment())) //
                 .build();
+    }
+    /*
+     * Department
+     */
+    private DepartmentResponseDTO getDepartmentDTO(Department department) {
+        if (department == null)
+            return null;
+        return DepartmentResponseDTO.builder().name(department.getName()).parent(appendParent(department.getParent())).build();
+    }
+
+    private DepartmentResponseDTO appendParent(Department now) {
+        if (now.getParent() == null)
+            return DepartmentResponseDTO.builder().name(now.getName()).build();
+        else
+            return DepartmentResponseDTO.builder().name(now.getName()).parent(appendParent(now.getParent())).build();
     }
 
     /*
