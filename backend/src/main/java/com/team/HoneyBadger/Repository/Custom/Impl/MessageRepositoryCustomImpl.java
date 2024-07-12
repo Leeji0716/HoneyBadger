@@ -14,8 +14,8 @@ public class MessageRepositoryCustomImpl implements MessageRepositoryCustom {
     QMessage qMessage = QMessage.message1;
 
     @Override
-    public List<Message> getMessageList(Long chatroom_id, Long end_id) {
-        return jpaQueryFactory.selectFrom(qMessage).where(qMessage.chatroom.id.eq(chatroom_id).and(qMessage.id.gt(end_id).or(qMessage.id.eq(end_id)))).fetch();
+    public List<Message> getMessageList(Long chatroomId, Long startId) {
+        return jpaQueryFactory.selectFrom(qMessage).where(qMessage.chatroom.id.eq(chatroomId).and(qMessage.id.gt(startId).or(qMessage.id.eq(startId)))).fetch();
     }
 
     @Override

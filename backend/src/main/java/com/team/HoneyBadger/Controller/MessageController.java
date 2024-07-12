@@ -25,29 +25,45 @@ public class MessageController {
     private final MultiService multiService;
 
     @MessageMapping("/message/{id}")
-    @SendTo("/api/sub/message/{id}")
+    @SendTo("/api/sub/message/{id}") //메세지 보내기
     public ResponseEntity<?> sendMessage(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
-        MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
+        try {
+            MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+        }
     }
 
     @MessageMapping("/read/{id}")
-    @SendTo("/api/sub/read/{id}")
+    @SendTo("/api/sub/read/{id}") //메세지 읽기
     public ResponseEntity<?> readMessages(@DestinationVariable Long id, String username) {
-        multiService.readMessage(id, username);
-        return ResponseEntity.status(HttpStatus.OK).body("OK");
+        try {
+            multiService.readMessage(id, username);
+            return ResponseEntity.status(HttpStatus.OK).body("OK");
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+        }
     }
 
-    @GetMapping("/update")
-    public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroom_id, @RequestHeader Long end) {
+    @GetMapping("/update") //메세지 읽음 처리 업데이트
+    public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader Long startId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
-            List<MessageResponseDTO> list = multiService.getMessageList(chatroom_id,end);
+            List<MessageResponseDTO> list = multiService.getMessageList(chatroomId, startId);
             return ResponseEntity.status(HttpStatus.OK).body(list);
         } else return tokenDTO.getResponseEntity();
     }
 
-    @PostMapping("/upload")
+    @PostMapping("/upload") //메세지 파일 업로드
     public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, @RequestHeader("room_id") Long roomId, MultipartFile file) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
@@ -63,7 +79,7 @@ public class MessageController {
         else return tokenDTO.getResponseEntity();
     }
 
-    @DeleteMapping
+    @DeleteMapping //메세지 삭제
     public ResponseEntity<?> deleteMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long messageId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {

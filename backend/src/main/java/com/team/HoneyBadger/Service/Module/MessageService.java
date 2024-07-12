@@ -45,8 +45,8 @@ public class MessageService {
         messageRepository.delete(message);
     }
 
-    public List<Message> getUpdatedList(Long chatroom_id, Long end_id) {
-        return messageRepository.getMessageList(chatroom_id, end_id);
+    public List<Message> getUpdatedList(Long chatroomId, Long startId) {
+        return messageRepository.getMessageList(chatroomId, startId);
     }
 
     public List<MessageResponseDTO> getMessageList(List<Message> messageList) { //메세지 리스트 메세지 ResponseDTO 변환
