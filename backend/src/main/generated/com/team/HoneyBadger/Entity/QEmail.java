@@ -24,13 +24,13 @@ public class QEmail extends EntityPathBase<Email> {
 
     public final StringPath content = createString("content");
 
+    public final DateTimePath<java.time.LocalDateTime> createDate = createDateTime("createDate", java.time.LocalDateTime.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final ListPath<EmailReceiver, QEmailReceiver> receiverList = this.<EmailReceiver, QEmailReceiver>createList("receiverList", EmailReceiver.class, QEmailReceiver.class, PathInits.DIRECT2);
 
     public final QSiteUser sender;
-
-    public final DateTimePath<java.time.LocalDateTime> sendTime = createDateTime("sendTime", java.time.LocalDateTime.class);
 
     public final StringPath title = createString("title");
 

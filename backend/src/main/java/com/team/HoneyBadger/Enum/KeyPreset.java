@@ -1,12 +1,12 @@
 package com.team.HoneyBadger.Enum;
 
 public enum KeyPreset {
-    EMAIL_FILE_, EMAIL_MULTI
+    USER_PROFILE, USER_TEMP, USER_TEMP_MULTI, EMAIL_MULTI, EMAIL, EMAIL_ORIGIN, EMAIL_RESERVATION_MULTI, EMAIL_RESERVATION, EMAIL_RESERVATION_ORIGIN
     //
     ;
 
     public String getValue(String var) {
-        return this.name() + var.toUpperCase();
+        return this.name() + "_" + var.toUpperCase();
     }
 
 }
