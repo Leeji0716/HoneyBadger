@@ -36,7 +36,7 @@ jobs:
             # sub 시작
             echo "sub start"
             sudo docker rm -f $(sudo docker ps -aqf "name=^${{secrets.DOCKERHUB_REPO}}_sub") # 컨테이너 찾아서 종료
-            sudo docker run -d -p 3001:3000 -p 8081:8080 -v /HDD/starj0405/web/honeybadger/data:/home/ubuntu/honeybadger/data -v /HDD/starj0405/web/honeybadger:/config --name "${{secrets.DOCKERHUB_REPO}}_sub" ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+            sudo docker run -d -p 3001:3000 -p 8081:8080 -v /HDD/starj0405/web/honeybadger/data:/home/ubuntu/honeybadger/data -v /HDD/starj0405/web/honeybadger/config:/config --name "${{secrets.DOCKERHUB_REPO}}_sub" ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
             count=0
             while true; do
               if [[ $(curl -s localhost:8081/api/track/health) =~ "UP" ]]; then
@@ -45,7 +45,7 @@ jobs:
                 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3001
                 sudo iptables -t nat -A PREROUTING -p tcp --dport 8080 -j REDIRECT --to-port 8081
                 sudo docker rm -f $(sudo docker ps -aqf "name=^${{secrets.DOCKERHUB_REPO}}_main") # 컨테이너 찾아서 종료
-                sudo docker run -d -p 3000:3000 -p 8080:8080 -v /HDD/starj0405/web/honeybadger/data:/home/ubuntu/honeybadger/data -v /HDD/starj0405/web/honeybadger:/config --name "${{secrets.DOCKERHUB_REPO}}_main" ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
+                sudo docker run -d -p 3000:3000 -p 8080:8080 -v /HDD/starj0405/web/honeybadger/data:/home/ubuntu/honeybadger/data -v /HDD/starj0405/web/honeybadger/config:/config --name "${{secrets.DOCKERHUB_REPO}}_main" ${{secrets.DOCKERHUB_USERNAME}}/${{secrets.DOCKERHUB_REPO}}:latest
                 echo "sub finish main start"
                 break
               else
