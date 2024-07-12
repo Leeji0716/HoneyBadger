@@ -104,10 +104,10 @@ public class ChatroomController {
     }
 
     @PutMapping("/notification") //채팅방 공지 설정
-    public ResponseEntity<?> notification(@RequestHeader("Authorization") String accessToken, @RequestBody Long chatroomId, @RequestBody Long messageId) {
+    public ResponseEntity<?> notification(@RequestHeader("Authorization") String accessToken, @RequestBody NoticeRequestDTO noticeRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            MessageResponseDTO messageResponseDTO = multiService.notification(chatroomId, messageId);
+            MessageResponseDTO messageResponseDTO = multiService.notification(noticeRequestDTO);
             return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());

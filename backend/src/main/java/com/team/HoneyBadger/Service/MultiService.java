@@ -658,11 +658,19 @@ public class MultiService {
         return getMessageReservation(messageReservation);
     }
 
-    public MessageResponseDTO notification(Long chatroomId, Long messageId) {
-        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        Message message = messageService.getMessageById(messageId);
+    public MessageResponseDTO notification(NoticeRequestDTO noticeRequestDTO) {
+        Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
+        Message message = messageService.getMessageById(noticeRequestDTO.messageId());
         chatroomService.notification(chatroom, message);
 
         return GetMessageDTO(message);
+    }
+
+    public UserResponseDTO getUser(String username) {
+        return getUserResponseDTO( userService.get(username));
+    }
+
+    public List<UserResponseDTO> getAllUser(String username) {
+        return  userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
     }
 }
