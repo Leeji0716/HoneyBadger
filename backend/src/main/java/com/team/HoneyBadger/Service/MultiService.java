@@ -1,8 +1,11 @@
 package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
+import com.team.HoneyBadger.Config.Exception.UnauthorizedException;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
+import com.team.HoneyBadger.Enum.EmailStatus;
+import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
@@ -17,6 +20,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -36,7 +43,10 @@ public class MultiService {
     private final MessageService messageService;
     private final MessageReservationService messageReservationService;
     private final EmailReservationService emailReservationService;
+    private final FileSystemService fileSystemService;
+    private final MultiKeyService multiKeyService;
     private final LastReadMessageService lastReadMessageService;
+
 
     /**
      * Auth
@@ -179,6 +189,12 @@ public class MultiService {
     }
 
     @Transactional
+    public ChatroomResponseDTO getChatRoom(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return getChatRoom(chatroom);
+    }
+
+    @Transactional
     public List<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword) {
         SiteUser siteUser = userService.get(username);
         List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
@@ -249,94 +265,82 @@ public class MultiService {
     /*
      * Email
      */
-    public Email sendEmail(String title, String content, String senderId, List<String> receiverIds, LocalDateTime sendTime, List<MultipartFile> attachments) {
+    public void emailFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        String keyValue = KeyPreset.EMAIL_MULTI.getValue(email_id.toString());
+        MultiKey key = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
+        List<String> list = new ArrayList<>();
+        for (MultipartFile file : files) {
+            UUID uuid = UUID.randomUUID();
+            String fileName = "/api/email/" + email_id.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+
+            String fileKey = KeyPreset.EMAIL.getValue(email_id.toString() + "_" + list.size());
+            fileSystemService.save(fileKey, fileName);
+            fileSystemService.save(KeyPreset.EMAIL_ORIGIN.getValue(fileKey), file.getOriginalFilename());
+            list.add(fileKey);
+
+            File dest = new File(path + fileName);
+            if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+            file.transferTo(dest);
+        }
+        multiKeyService.updateAll(key, list);
+    }
+
+    public String emailContentUpload(String username, MultipartFile file) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/api/user/" + username + "/temp/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+
+        // 멀티키
+        String keyString = KeyPreset.USER_TEMP_MULTI.getValue(username);
+        Optional<MultiKey> _key = multiKeyService.get(keyString);
+        MultiKey key = _key.orElseGet(() -> multiKeyService.save(keyString));
+
+        // 파일 저장
+        FileSystem fileSystem = fileSystemService.save(KeyPreset.USER_TEMP.getValue(key.getKeyValues().size() + ""), fileName);
+        multiKeyService.updateOne(key, fileSystem.getK());
+
+        File dest = new File(path + fileName);
+        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+        file.transferTo(dest);
+        return fileName;
+    }
+
+    public EmailResponseDTO sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
         SiteUser sender = userService.get(senderId);
-        Email email = emailService.save(title, content, sender, sendTime);
-
-
+        Email email = emailService.save(title, sender);
+        emailService.update(email, content.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
+        Optional<MultiKey> _key = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(senderId));
+        if (_key.isPresent()) {
+            MultiKey key = _key.get();
+            for (String k : key.getKeyValues()) {
+                Optional<FileSystem> _fileSystem = fileSystemService.get(k);
+                if (_fileSystem.isPresent()) {
+                    FileSystem fileSystem = _fileSystem.get();
+                    String value = path + fileSystem.getV();
+                    Path prePath = Paths.get(value);
+                    Path newPath = Paths.get(value.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
+                    Files.move(prePath, newPath, StandardCopyOption.REPLACE_EXISTING);
+                    fileSystemService.deleteByKey(fileSystem);
+                }
+            }
+            multiKeyService.delete(key);
+        }
         for (String receiverId : receiverIds) {
             SiteUser receiver = userService.get(receiverId);
             emailReceiverService.save(email, receiver);
         }
-
-        // 첨부 파일 저장
-        if (attachments != null && !attachments.isEmpty()) {
-            for (MultipartFile file : attachments) {
-                saveFile(file);
-            }
-        }
-
-        return email;
+        return getEmailDTO(email);
     }
 
-//    @Transactional
-//    public void scheduleEmail(String title, String content, SiteUser sender, List<String> receivers, LocalDateTime sendTime, List<MultipartFile> attachments) {
-//        EmailReservation emailReservation = new EmailReservation();
-//        emailReservation.setTitle(title);
-//        emailReservation.setContent(content);
-//        emailReservation.setSender(sender);
-//        emailReservation.setSendTime(sendTime);
-//        emailReservation.setReceiverList(receivers);
-//
-//        // 첨부 파일 저장
-//        if (attachments != null && !attachments.isEmpty()) {
-//            for (MultipartFile file : attachments) {
-//                saveFile(file);
-//            }
-//        }
-//
-//        emailReservationRepository.save(emailReservation);
-//    }
-
-    private void saveFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            System.out.println("Empty file received, skipping...");
-            return;
-        }
-
-        String path = HoneyBadgerApplication.getOsType().getLoc();
-        File directory = new File(path);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        try {
-            String filePath = path + "/" + file.getOriginalFilename();
-            System.out.println("Saving file to: " + filePath);
-            file.transferTo(new File(filePath));
-            System.out.println("File saved successfully");
-        } catch (IOException e) {
-            System.err.println("Failed to save file: " + e.getMessage());
-            throw new RuntimeException("Failed to save file", e);
-        }
-    }
-
-
-    public List<EmailResponseDTO> getEmailsForUser(String username, int is) {
-        List<EmailResponseDTO> list = new ArrayList<>();
-        List<Email> emails = List.of();
-        if (is == 1) {
-            emails = emailReceiverService.getEmailsForUser(username); //구분 해야 함
-        } else if (is == 2) {
-            emails = emailReceiverService.getEmailsForUser(username); //구분 해야 함
-        }
-
-
-        for (Email email : emails) {
-            List<String> receivers = new ArrayList<>();
-            for (EmailReceiver receiver : email.getReceiverList()) {
-                receivers.add(receiver.getReceiver().getUsername());
-            }
-            list.add(EmailResponseDTO.builder().id(email.getId()).title(email.getTitle()).content(email.getContent()).senderId(email.getSender().getUsername()).senderName(email.getSender().getUsername()).receiverIds(receivers).build());
-
-        }
-        return list;
-    }
-
-    private EmailResponseDTO GetEmail(Email email) {
-        Long sendTime = this.dateTimeTransfer(email.getSendTime());
-        List<String> receiverList = email.getReceiverList().stream().map(reciver -> reciver.getReceiver().getUsername()).toList();
-        return EmailResponseDTO.builder().id(email.getId()).title(email.getTitle()).content(email.getContent()).senderName(email.getSender().getName()).senderId(email.getSender().getUsername()).senderTime(sendTime).receiverIds(receiverList).build();
+    public List<EmailResponseDTO> getEmailsForUser(String username, EmailStatus status) {
+        List<Email> emails = switch (status) {
+            case SENDER -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
+            case RECEIVER -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
+            case RESERVATION -> emailReceiverService.getEmailsForUser(username); //구분 해야 함
+        };
+        return emails.stream().map(this::getEmailDTO).toList();
     }
 
     public Boolean markEmailAsRead(Long emailId, String receiverId) {
@@ -350,29 +354,73 @@ public class MultiService {
         emailService.findByUsernameDelete(email, username);
     }
 
-    public EmailResponseDTO createEmail(String username, EmailRequestDTO emailRequestDTO, List<MultipartFile> attachments) {
-        SiteUser sender = userService.get(username);
-        Email email = emailService.create(sender, emailRequestDTO);
+    private EmailResponseDTO getEmailDTO(Email email) {
+        List<FileResponseDTO> filePathList = new ArrayList<>();
+        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
+        if (_multiKey.isPresent()) //
+            for (String key : _multiKey.get().getKeyValues()) {
+                FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
+                fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
+                fileSystemService.get(KeyPreset.EMAIL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
+                builder.key(key); // key
+                filePathList.add(builder.build());
+            }
 
-        //유저 이름으로 된 리스트를 유저 객체에 담기 (receiverList)
-        for (String user : emailRequestDTO.receiverIds()) {
-            SiteUser reciver = userService.get(user);
-            emailReceiverService.save(email, reciver);
-        }
-        List<String> filePathList = new ArrayList<>();
-        //파일 경로 리스트 담기 (filePathList)
-        for (MultipartFile file : attachments) {
-            String filePath = emailReservationService.saveFile(file);
-            filePathList.add(filePath);
-        }
-        return getEamil(email, filePathList);
+        return EmailResponseDTO //
+                .builder() //
+                .id(email.getId()) //
+                .title(email.getTitle()) //
+                .content(email.getContent()) //
+                .senderId(email.getSender().getUsername()) //
+                .senderName(email.getSender().getUsername()) //
+                .receiverIds(email.getReceiverList() //
+                        .stream() //
+                        .map(er -> er.getReceiver().getUsername()) //
+                        .toList()) //
+                .filePathList(filePathList) //
+                .build();
     }
 
-    private EmailResponseDTO getEamil(Email email, List<String> filePathList) {
-        List<String> receiverList = email.getReceiverList().stream().map(reciver -> reciver.getReceiver().getUsername()).toList();
-        Long sendTime = this.dateTimeTransfer(email.getSendTime());
+    public EmailResponseDTO getEmailDTO(Long emailId) {
+        Email email = emailService.getEmail(emailId);
+        return getEmailDTO(email);
+    }
 
-        return EmailResponseDTO.builder().id(email.getId()).senderName(email.getSender().getName()).title(email.getTitle()).content(email.getContent()).receiverIds(receiverList).senderId(email.getSender().getUsername()).senderTime(sendTime).filePathList(filePathList).build();
+    public String fileUpload(Long roomId, MultipartFile file) throws IOException {
+
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/api/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+
+        // 너굴맨이 해치우고 갔어요!
+        File dest = new File(path + fileName);
+
+        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+        file.transferTo(dest);
+
+        return fileName;
+    }
+
+    /*
+     * Email Reservation
+     */
+    public void emailReservationFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(email_id.toString());
+        MultiKey key = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
+        List<String> list = key.getKeyValues();
+        for (MultipartFile file : files) {
+            UUID uuid = UUID.randomUUID();
+            String fileName = "/api/user/email/" + email_id.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+            String fileKey = KeyPreset.EMAIL_RESERVATION.getValue(email_id.toString() + "_" + list.size());
+            fileSystemService.save(fileKey, fileName);
+            fileSystemService.save(KeyPreset.EMAIL_RESERVATION_ORIGIN.getValue(fileKey), file.getOriginalFilename());
+            list.add(fileKey);
+            File dest = new File(path + fileName);
+            if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+            file.transferTo(dest);
+        }
+        multiKeyService.updateAll(key, list);
     }
 
     public void deleteEmailReservation(Long reservationId, String username) {
@@ -380,33 +428,52 @@ public class MultiService {
         emailReservationService.findByUsernameDelete(emailReservation, username);
     }
 
-    public EmailResponseDTO getEmail(Long emailId) {
-        Email email = emailService.getEmail(emailId);
-        return GetEmail(email);
+    public EmailReservationResponseDTO reservationEmail(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
+        SiteUser sender = userService.get(username);
+        EmailReservation emailReservation = emailReservationService.save(emailReservationRequestDTO, sender);
+        return getEmailReservationDTO(emailReservation);
     }
 
-//    @Transactional
-//    public void createEmailFromReservation(EmailReservation emailReservation) {
-//        Email email = new Email();
-//        email.setTitle(emailReservation.getTitle());
-//        email.setContent(emailReservation.getContent());
-//        email.setSender(emailReservation.getSender());
-//
-//        for (String receiverUsername : emailReservation.getReceiverList()) {
-//            SiteUser receiver = userRepository.findById(receiverUsername)
-//                    .orElseThrow(() -> new RuntimeException("User not found with username: " + receiverUsername));
-//            EmailReceiver emailReceiver = new EmailReceiver();
-//            emailReceiver.setEmail(email);
-//            emailReceiver.setReceiver(receiver);
-//            email.getReceiverList().add(emailReceiver);
-//        }
-//
-//        emailRepository.save(email);
-//    }
+    private EmailReservationResponseDTO getEmailReservationDTO(EmailReservation reservation) {
+        List<FileResponseDTO> fileslist = new ArrayList<>();
+        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_RESERVATION_MULTI.getValue(reservation.getId().toString()));
+        if (_multiKey.isPresent()) for (String key : _multiKey.get().getKeyValues()) {
+            FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
+            fileSystemService.get(key).ifPresent(file -> builder.value(file.getV()));
+            fileSystemService.get(KeyPreset.EMAIL_RESERVATION_ORIGIN.getValue(key)).ifPresent(file -> builder.original_name(file.getV()));
+            builder.key(key);
+            fileslist.add(builder.build());
+        }
+        return EmailReservationResponseDTO.builder().title(reservation.getTitle()).content(reservation.getContent()).id(reservation.getId()).receiverIds(reservation.getReceiverList()).senderTime(this.dateTimeTransfer(reservation.getSendTime())).files(fileslist).build();
+    }
 
+    public EmailReservationResponseDTO updateEmailReservation(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
+        // 요청 DTO에서 ID를 사용하여 이메일 예약을 검색
+        EmailReservation emailReservation = emailReservationService.getEmailReservation(emailReservationRequestDTO.id());
+        // 예약의 발신자, 현재 사용자 username 일치 확인
+        if (emailReservation != null && emailReservation.getSender().getUsername().equals(username)) {
+            String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(emailReservationRequestDTO.id().toString());
+            MultiKey multiKey = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
+            List<String> values = new ArrayList<>();
+            for (String key : emailReservationRequestDTO.files()) {
+                Optional<FileSystem> _fileSystem = fileSystemService.get(key);
+                _fileSystem.ifPresent(fileSystem -> values.add(fileSystem.getV()));
+            }
+            for (String key : multiKey.getKeyValues()) {
+                Optional<FileSystem> _fileSystem = fileSystemService.get(key);
+                _fileSystem.ifPresent(fileSystemService::deleteByKey);
+            }
+            multiKeyService.updateAll(multiKey, values);
+            emailReservationService.update(emailReservation, emailReservationRequestDTO);
+            return getEmailReservationDTO(emailReservation);
+        } else {
+            throw new UnauthorizedException("You are not authorized to update this reservation.");
+        }
+    }
     /*
      * Message or Chat
      */
+
     private MessageType getMessageType(int MessageTypeInt) {
         MessageType messageType;
         switch (MessageTypeInt) {
@@ -432,6 +499,7 @@ public class MultiService {
         Chatroom chatroom = chatroomService.getChatRoomById(id);
         SiteUser siteUser = userService.get(messageRequestDTO.username());
         MessageType messageType = this.getMessageType(messageRequestDTO.messageType());
+
         return GetMessageDTO(messageService.save(messageRequestDTO.message(), siteUser, chatroom, messageType));
     }
 
@@ -545,6 +613,7 @@ public class MultiService {
     /*
      * Time
      */
+
     private Long dateTimeTransfer(LocalDateTime dateTime) {
         return dateTime == null ? 0 : dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
@@ -552,6 +621,7 @@ public class MultiService {
     /*
      * MessageReservation or ChatReservation
      */
+
     public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
@@ -577,7 +647,6 @@ public class MultiService {
         if (messageReservation.getSender().getUsername().equals(username)) {
             messageReservationService.update(messageReservation, messageReservationRequestDTO.message(), messageReservation.getSendDate());
         }
-
         return getMessageReservation(messageReservation);
     }
 

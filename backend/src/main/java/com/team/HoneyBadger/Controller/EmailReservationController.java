@@ -1,7 +1,7 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.DTO.EmailRequestDTO;
-import com.team.HoneyBadger.DTO.TokenDTO;
+import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -17,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmailReservationController {
     private final MultiService multiService;
-
 
     @DeleteMapping("/reservation")
     public ResponseEntity<?> deleteScheduledEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long reservationId) {
@@ -31,27 +30,45 @@ public class EmailReservationController {
     }
 
     @PostMapping("/files")
-    public ResponseEntity<?> saveFiles(List<MultipartFile> attachments) {
-
-        List<String> urls = new ArrayList<>(); // 저장 -> url 담아서 반환
-
-        return ResponseEntity.status(HttpStatus.OK).body(urls);
+    public ResponseEntity<?> saveFiles(@RequestHeader("Authorization") String accessToken, @RequestHeader("email_id") Long email_id, List<MultipartFile> attachments) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            try {
+                multiService.emailFilesUpload(email_id, attachments);
+                return ResponseEntity.status(HttpStatus.OK).body("okay");
+            } catch (IOException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("files not uploaded");
+            }
+        } else
+            return tokenDTO.getResponseEntity();
     }
 
     @PostMapping(value = "/schedule", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> scheduleEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailRequestDTO emailDTO) {
+    public ResponseEntity<?> scheduleEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReservationRequestDTO emailReservationRequestDTO) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            EmailReservationResponseDTO emailReservationResponseDTO = multiService.reservationEmail(emailReservationRequestDTO, tokenDTO.username());
+            return ResponseEntity.status(HttpStatus.OK).body(emailReservationResponseDTO);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
+    @PutMapping
+    public ResponseEntity<?> updateEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReservationRequestDTO emailReservationRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
-//            SiteUser sender = multiService.getUserByUsername(tokenDTO.username());
-//            multiService.scheduleEmail(
-//                    emailDTO.title(),
-//                    emailDTO.content(),
-//                    sender,
-//                    emailDTO.receiverIds(),
-//                    emailDTO.sendTime(),
-//                    attachments
-//            );
-            return ResponseEntity.status(HttpStatus.CREATED).body(null);
+            try {
+                EmailReservationResponseDTO emailReservationResponseDTO = multiService.updateEmailReservation(emailReservationRequestDTO, tokenDTO.username());
+                return ResponseEntity.status(HttpStatus.OK).body(emailReservationResponseDTO);
+            } catch (DataNotFoundException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            } catch (RuntimeException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+            }
         } else {
             return tokenDTO.getResponseEntity();
         }

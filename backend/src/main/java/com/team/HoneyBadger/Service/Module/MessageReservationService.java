@@ -17,8 +17,6 @@ public class MessageReservationService {
         return messageReservationRepository.save(messageReservation);
     }
 
-
-
     public List<MessageReservation> getMessageReservationFromDate(LocalDateTime nowDate) {
         return messageReservationRepository.findBySendDate(nowDate);
     }

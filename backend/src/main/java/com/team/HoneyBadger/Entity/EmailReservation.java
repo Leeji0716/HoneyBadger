@@ -25,24 +25,20 @@ public class EmailReservation {
     private String content;
     @ManyToOne(fetch = FetchType.EAGER)
     private SiteUser sender;
-    @ElementCollection
+
     private List<String> receiverList;
     private LocalDateTime sendTime;
-
-    @ElementCollection
-    @CollectionTable(name = "email_attachments", joinColumns = @JoinColumn(name = "email_reservation_id"))
-    @Column(name = "file_path")
-    private List<String> attachmentPaths;
 
     private LocalDateTime createTime;
 
     @Builder
-    public EmailReservation(String title, String content, SiteUser sender, LocalDateTime sendTime) {
+    public EmailReservation(String title, String content, SiteUser sender, LocalDateTime sendTime, List<String> receiverList) {
         this.title = title;
         this.content = content;
         this.sender = sender;
         this.sendTime = sendTime;
         this.receiverList = new ArrayList<>();
         this.createTime = LocalDateTime.now();
+        this.receiverList = receiverList;
     }
 }
