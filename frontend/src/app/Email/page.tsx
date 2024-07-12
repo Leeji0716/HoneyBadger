@@ -17,7 +17,9 @@ export default function Email() {
         content: string,
         senderId: string, // 나중에 변경예정
         senderName: string,
-        receiverIds: string[]
+        senderTime : number,
+        receiverIds: string[],
+        filePathList: string[]
     }
 
     const [open, setOpen] = useState(false);
@@ -31,7 +33,7 @@ export default function Email() {
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const maxLength = 30;
     const router = useRouter();
-    console.log(user);
+    
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
@@ -52,6 +54,9 @@ export default function Email() {
         return text.substring(0, maxLength) + '...';
     };
 
+    useEffect(() => {
+        console.log(emailList);
+    },[emailList])
 
     //console.log(user);
     function MailBox({ email }: { email: EmailResponseDTO }) {

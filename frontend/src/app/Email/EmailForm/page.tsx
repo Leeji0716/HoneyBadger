@@ -42,13 +42,12 @@ export default function EmailForm() {
                 setTitle(email?.title);
                 setContent(email?.content);
                 setFlag(2);
-                console.log("플래그값 : "+flag);
+                console.log("플래그값 : " + flag);
             }
         }
         else
             window.location.href = "/";
     }, [ACCESS_TOKEN])
-    console.log(email);
     const imageHandler = () => {
         const input = document.createElement('input') as HTMLInputElement;
         input.setAttribute('type', 'file');
@@ -72,7 +71,7 @@ export default function EmailForm() {
             }
         });
     };
-
+    // console.log(content);
     const modules = useMemo(
         () => ({
             toolbar: {
@@ -99,20 +98,24 @@ export default function EmailForm() {
     }
 
     function getEmail() {
-        return {content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: time, attachments: fileList} 
+        return { content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: time, attachments: fileList }
     }
-    
+
     function test() {
-        if(flag == 2) {
-            mailUpdate({mailId:email.id, email : {content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: eontransferLocalTime(time), attachments: fileList}})
-        } 
-        else if(flag == 0) {
-            if(fileList == null){
-            sendEmail({ content: content, title: title, receiverIds: receiverIds, }).then(r => window.location.href = "/email").catch(e => console.log(e))
-            }else{
-            sendEmail({ content: content, title: title, receiverIds: receiverIds, }).then(r => emailFiles({attachments:fileList,emailId:r}).catch(e => console.log(e))).catch(e => console.log(e))
+        if (flag == 2) {
+            mailUpdate({ mailId: email.id, email: { content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: eontransferLocalTime(time), attachments: fileList } })
+        }
+        else if (flag == 0) {
+            if (fileList.length == 0) {
+                sendEmail({ content: content, title: title, receiverIds: receiverIds }).then(r => window.location.href = "/email").catch(e => console.log(e))
+            } else {
+                const form = new FormData();
+                for (const file of fileList)
+                    form.append('attachments', file);
+
+                sendEmail({ content: content, title: title, receiverIds: receiverIds }).then(r => emailFiles({ attachments: form, emailId: r})).then(r => window.location.href = "/email").catch(e => console.log(e)).catch(e => console.log(e))
             }
-        } 
+        }
         else {
             reservationEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: eontransferLocalTime(time), attachments: fileList }).then(r => window.location.href = "/email").catch(e => console.log(e))
         }
@@ -131,7 +134,7 @@ export default function EmailForm() {
                         const selectedDate = new Date(inputDateTimeString);
                         setTime(selectedDate);
                         email == null ? setFlag(1) : setFlag(2);
-                        console.log("플래그값 : "+flag);
+                        console.log("플래그값 : " + flag);
                     }} />
                 </DropDown>
                 <button className="mail-hover w-[100px]">임시저장</button>
