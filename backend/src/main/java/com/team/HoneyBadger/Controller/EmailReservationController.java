@@ -43,7 +43,7 @@ public class EmailReservationController {
             return tokenDTO.getResponseEntity();
     }
 
-    @PostMapping(value = "/schedule", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/schedule")
     public ResponseEntity<?> scheduleEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReservationRequestDTO emailReservationRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
