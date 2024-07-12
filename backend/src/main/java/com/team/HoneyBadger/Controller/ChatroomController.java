@@ -107,8 +107,8 @@ public class ChatroomController {
     public ResponseEntity<?> notification(@RequestHeader("Authorization") String accessToken, @RequestBody NoticeRequestDTO noticeRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            MessageResponseDTO messageResponseDTO = multiService.notification(noticeRequestDTO);
-            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
+            ChatroomResponseDTO chatroomResponseDTO = multiService.notification(noticeRequestDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO); //chatroom 리턴
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
