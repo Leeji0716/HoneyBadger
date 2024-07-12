@@ -300,7 +300,7 @@ public class MultiService {
         return fileName;
     }
 
-    public EmailResponseDTO sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
+    public Long sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         SiteUser sender = userService.get(senderId);
         Email email = emailService.save(title, sender);
@@ -326,7 +326,7 @@ public class MultiService {
             SiteUser receiver = userService.get(receiverId);
             emailReceiverService.save(email, receiver);
         }
-        return getEmailDTO(email);
+        return email.getId();
     }
 
     public List<EmailResponseDTO> getEmailsForUser(String username, EmailStatus status) {
