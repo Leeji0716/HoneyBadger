@@ -125,9 +125,6 @@ public class MultiService {
     /*
      * ChatRoom
      */
-    public ChatroomResponseDTO getChatRoom(Long chatroom_id) {
-        return getChatRoom(chatroomService.getChatRoomById(chatroom_id));
-    }
 
     @Transactional
     public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO) {
@@ -384,21 +381,6 @@ public class MultiService {
     public EmailResponseDTO getEmailDTO(Long emailId) {
         Email email = emailService.getEmail(emailId);
         return getEmailDTO(email);
-    }
-
-    public String fileUpload(Long roomId, MultipartFile file) throws IOException {
-
-        String path = HoneyBadgerApplication.getOsType().getLoc();
-        UUID uuid = UUID.randomUUID();
-        String fileName = "/api/chatroom/" + roomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
-
-        // 너굴맨이 해치우고 갔어요!
-        File dest = new File(path + fileName);
-
-        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
-        file.transferTo(dest);
-
-        return fileName;
     }
 
     /*
