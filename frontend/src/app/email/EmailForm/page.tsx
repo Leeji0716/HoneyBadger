@@ -153,7 +153,7 @@ export default function EmailForm() {
         return extension;
     }
 
-    return <Main>
+    return <Main user={user}>
         <div className="flex flex-col items-center gap-5 bg-white w-full p-6">
             <h2 className="font-bold">메일 쓰깅</h2>
             <div className="w-full border-b-2"></div>
