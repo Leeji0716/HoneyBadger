@@ -1,3 +1,5 @@
+import html2canvas from "html2canvas-pro";
+
 export function Move(id: string) {
     document.getElementById(id)?.focus();
 }
@@ -123,42 +125,50 @@ export function getRole(role: number) {
     }
 }
 export function CardFront({ user }: { user: any }) {
-    return <div className="border border-black w-[400px] h-[200px] flex flex-col">
+    return <div className="border border-black w-[400px] h-[200px] flex flex-col cursor-pointer" onClick={(e) => {
+        html2canvas(e.currentTarget as HTMLInputElement).then(canvas => {
+            var el = document.createElement("a");
+            el.href = canvas.toDataURL("image/png");
+            el.download = '명함 앞면.png';
+            el.click();
+            // document.body.append(canvas)
+        });
+    }}>
         <div className="flex h-[150px] mt-auto">
             <div className="mx-auto flex flex-col">
                 <div className="flex flex-col mt-4">
-                    <label className="font-bold text-[#8fbee9]">HoneyBadger</label>
-                    <label className="text-xxs text-center text-gray-500">Don't hold back. Be brave</label>
+                    <label className="font-bold text-[#8fbee9] cursor-pointer">HoneyBadger</label>
+                    <label className="text-xxs text-center text-gray-500 cursor-pointer">Don't hold back. Be brave</label>
                 </div>
                 <div className="mt-auto flex flex-col h-[60px]">
                     <div className="flex  items-center my-auto">
                         <img src='/_phone.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs">{PhoneString(user?.phoneNumber)}</label>
+                        <label className="text-xxs cursor-pointer">{PhoneString(user?.phoneNumber)}</label>
                     </div>
                     <div className="flex items-center my-auto">
                         <img src='/_call.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs">1312</label>
+                        <label className="text-xxs cursor-pointer">1312</label>
                     </div>
                     <div className="flex items-center my-auto">
                         <img src='/_mail.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs">{user?.username}@honeybadger.com</label>
+                        <label className="text-xxs cursor-pointer">{user?.username}@honeybadger.com</label>
                     </div>
                 </div>
             </div>
             <div className="mx-auto flex flex-col">
                 <div className="flex flex-col mt-4">
-                    <label className="font-bold text-[#8fbee9]">{user?.name}</label>
-                    <label className="text-xs text-gray-500">{getRole(user?.role)}</label>
+                    <label className="font-bold text-[#8fbee9] cursor-pointer">{user?.name}</label>
+                    <label className="text-xs text-gray-500 cursor-pointer">{getRole(user?.role)}</label>
                 </div>
 
                 <div className="mt-auto flex flex-col h-[60px]">
                     <div className="flex items-center my-auto">
                         <img src='/_web.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs">www.벌꿀오소리.메인.한국</label>
+                        <label className="text-xxs cursor-pointer">www.벌꿀오소리.메인.한국</label>
                     </div>
                     <div className="flex items-center my-auto">
                         <img src='/_location.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs">대전광역시 서구 둔산로 52 3층</label>
+                        <label className="text-xxs cursor-pointer">대전광역시 서구 둔산로 52 3층</label>
                     </div>
                 </div>
             </div>
@@ -167,12 +177,20 @@ export function CardFront({ user }: { user: any }) {
     </div>
 }
 export function CardBack() {
-    return <div className="border bg-[#8fbee9] border-black w-[400px] h-[200px] flex flex-col items-center justify-center relative">
+    return <div className="border bg-[#8fbee9] border-black w-[400px] h-[200px] flex flex-col items-center justify-center relative cursor-pointer" onClick={(e) => {
+        html2canvas(e.currentTarget as HTMLInputElement).then(canvas => {
+            var el = document.createElement("a");
+            el.href = canvas.toDataURL("image/png");
+            el.download = '명함 뒷면.png';
+            el.click();
+            // document.body.append(canvas)
+        });
+    }}>
         <div className="flex">
             <img src='/_logo.png' className="w-[75px] h-[50px] mr-2 bg-yellow-500 rounded-full p-2" />
             <div className="flex flex-col">
-                <label className="font-bold text-white text-lg">HoneyBadger</label>
-                <label className="text-xxs text-center text-gray-300">Don't hold back. Be brave</label>
+                <label className="font-bold text-white text-lg cursor-pointer">HoneyBadger</label>
+                <label className="text-xxs text-center text-gray-300 cursor-pointer">Don't hold back. Be brave</label>
             </div>
         </div>
         <div className="bottom-[16px] absolute text-white text-xs">SEO | Web Devlopement | App Development </div>
