@@ -20,7 +20,6 @@ public class EmailReservationService {
 
 
     public EmailReservation save(EmailReservationRequestDTO reservationRequestDTO, SiteUser sender) {
-
         return emailReservationRepository.save(EmailReservation.builder()
                 .title(reservationRequestDTO.title())
                 .content(reservationRequestDTO.content())
@@ -50,16 +49,6 @@ public class EmailReservationService {
 
     public EmailReservation getEmailReservation(Long reservationId) {
         return emailReservationRepository.findById(reservationId).orElseThrow();
-    }
-
-
-    public void findByUsernameDelete(EmailReservation emailReservation, String username) {
-        List<String> emailReceiverList = emailReservation.getReceiverList();
-        for (String emailReceiver : emailReceiverList)
-            if (emailReceiver.equals(username)) {
-                emailReceiverList.remove(emailReceiver);
-                break;
-            }
     }
 
     public void update(EmailReservation emailReservation, EmailReservationRequestDTO emailReservationRequestDTO) {

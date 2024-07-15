@@ -1,7 +1,5 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.Exception.DataNotFoundException;
-import com.team.HoneyBadger.Enum.EmailStatus;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Service.MultiService;
@@ -32,7 +30,7 @@ public class EmailController {
         else return tokenDTO.getResponseEntity();
     }
 
-    @PostMapping("/upload") //메세지 파일 업로드
+    @PostMapping("/upload") //이메일 파일 업로드
     public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, MultipartFile file) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
@@ -92,21 +90,9 @@ public class EmailController {
 
     @PutMapping("/read")
     public ResponseEntity<?> markEmailAsRead(@RequestBody EmailReadRequestDTO emailReadRequestDTO, String username) {
-        EmailReceiverResponseDTO emailReceiverResponseDTo = multiService.read(emailReadRequestDTO, username);
-//        Boolean isRead = multiService.markEmailAsRead(emailReadRequestDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(emailReceiverResponseDTo);
+        EmailReceiverResponseDTO emailReceiverResponseDTO = multiService.read(emailReadRequestDTO, username);
+        return ResponseEntity.status(HttpStatus.OK).body(emailReceiverResponseDTO);
     }
-
-//    @DeleteMapping
-//    public ResponseEntity<?> deleteEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long emailId) {
-//        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-//        if (tokenDTO.isOK()) try {
-//            multiService.deleteEmail(emailId, tokenDTO.username());
-//            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
-//        } else {
-//            return tokenDTO.getResponseEntity();
-//        }
-//    }
 
     @DeleteMapping //메세지 삭제
     public ResponseEntity<?> deleteEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long emailId) {

@@ -14,6 +14,5 @@ public record EmailResponseDTO(Long id,
                                List<String> receiverIds,
                                List<FileResponseDTO> files,
                                boolean status,
-                               // 추가할 receivers 필드
                                List<EmailReceiverResponseDTO> receivers) {
 }
