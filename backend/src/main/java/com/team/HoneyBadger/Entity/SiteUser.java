@@ -14,7 +14,7 @@ public class SiteUser {
     // 사용자
     @Id
     @Column(length = 24)
-//    @Setter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private String username;
     private String name;
     private Role role;

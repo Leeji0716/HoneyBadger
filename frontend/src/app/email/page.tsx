@@ -36,7 +36,7 @@ export default function Email() {
     const [email, setEmail] = useState(null as any);
     const [open3, setOpen3] = useState(null as any);
     const [discernment, setDiscernment] = useState(false);
-    const [status,setStatus] = useState(0);
+    const [status, setStatus] = useState(0);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const maxLength = 30;
     const router = useRouter();
@@ -60,15 +60,15 @@ export default function Email() {
         }
         return text?.substring(0, maxLength) + '...';
     };
-    
+
     useEffect(() => {
         console.log(emailList);
     }, [emailList])
 
-    const sliceText = (text:string) => {
-        const slice:string[] = text.split(".");
-        const extension:string = slice[slice.length - 1];
-        
+    const sliceText = (text: string) => {
+        const slice: string[] = text.split(".");
+        const extension: string = slice[slice.length - 1];
+
         return extension;
     }
 
@@ -121,7 +121,7 @@ export default function Email() {
                     {email.files.length != 0 ?
                         email.files.map((f: MailFile, index: number) => <li key={index}>
                             <div className="flex mb-4 border-solid border-2 border-gray-200 p-4 gap-6">
-                                <img src={"/" + sliceText(f.original_name)+".PNG"} alt="" />
+                                <img src={"/" + sliceText(f.original_name) + ".PNG"} alt="" />
                                 <a href={f.value}>{f.original_name}</a>
                             </div>
                         </li>)
@@ -137,8 +137,8 @@ export default function Email() {
     }
 
     return <Main user={user}>
-        <div className="w-4/12 flex items-center justify-center">
-            <div className="h-11/12 w-11/12 mt-10 bg-white h-screen shadow p-2">
+        <div className="w-4/12 flex items-center justify-center pt-10 pb-4">
+            <div className="h-full w-11/12 bg-white shadow p-2">
                 <div className="w-full h-30 flex flex-row gap-20 ">
                     <button id="button1" onClick={() => { open1 == false ? "" : setOpen1(!open1); setStatus(1); getEmail(1).then(r => setEmailList(r)).catch(e => console.log(e)); setOpen(!open) }}>받은 메일</button>
                     <DropDown open={open} onClose={() => setOpen(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button1">
@@ -154,10 +154,10 @@ export default function Email() {
                     </DropDown>
                     <button className="" onClick={() => { open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2).then(r => setEmailList(r)).catch(e => console.log(e)) }}>예약 메일</button>
                 </div>
-                <div className="h-[88%] overflow-y-scroll">
+                <div className="h-[800px] overflow-y-scroll">
                     {emailList?.map((email: EmailResponseDTO, index: number) => <MailBox key={index} email={email} />)}
                     <DropDown open={open3 != null && open3?.id == email?.id} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button={"burger" + open3?.id}>
-                        {status != 2?
+                        {status != 2 ?
                             <>
                                 <button onClick={() => { mailDelete(open3.id) }}>삭제</button>
                             </>
@@ -170,15 +170,12 @@ export default function Email() {
                         }
                     </DropDown>
                 </div>
-
             </div>
         </div>
-        <div className="w-8/12 flex items-center justify-center">
-            <div className="h-11/12 w-11/12 mt-10 bg-white h-screen shadow p-4">
+        <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
+            <div className="h-full w-11/12 bg-white shadow p-4">
                 {email != null ? <MailDetail /> : <></>}
             </div>
-        </div>
-        <div>
         </div>
     </Main>
 }

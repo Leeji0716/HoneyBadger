@@ -1,21 +1,39 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Login } from "./API/AuthAPI";
+import { getUser } from "./API/UserAPI";
 
 // { params, searchParam }: { params: any, searchParam: any }
 export default function Home() {
   const [username, setUsername] = useState<string>();
   const [password, setPassword] = useState<string>();
+  const [error, setError] = useState('');
+  const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
+  useEffect(() => {
+    if (ACCESS_TOKEN)
+      getUser().then(() => location.href = "/main").catch(e => console.log(e));
+  }, [ACCESS_TOKEN])
 
   function Sumbit() {
-    if (username && password)
-      Login({ username: username, password: password }).then(r => {
-        localStorage.clear();
-        localStorage.setItem('tokenType', r.tokenType);
-        localStorage.setItem('accessToken', r.accessToken);
-        localStorage.setItem('refreshToken', r.refreshToken);
-        window.location.href = '/main';
-      }).catch(e => console.log(e))
+    if (!username)
+      return setError("아이디를 입력해주세요.");
+    if (!password)
+      return setError("비밀번호를 입력해주세요.");
+    Login({ username: username, password: password }).then(r => {
+      localStorage.clear();
+      localStorage.setItem('tokenType', r.tokenType);
+      localStorage.setItem('accessToken', r.accessToken);
+      localStorage.setItem('refreshToken', r.refreshToken);
+      window.location.href = '/main';
+    }).catch(e => {
+      console.log(e.response.data.message)
+      if (e.response.status == 404 && e.response.data.message == "entity not found")
+        return setError('없는 아이디입니다.');
+      else if (e.response.status == 404 && e.response.data == "password")
+        return setError('잘못된 비밀번호입니다.');
+      else
+        console.log(e)
+    })
   }
   return <main >
     <div className="flex justify-center items-center flex-col h-screen w-screen bg-white">
@@ -24,26 +42,26 @@ export default function Home() {
       <img src="/logo.png" className="w-[200px] h-[200px] mb-8" alt="로고" />
 
       {/* 로그인 */}
-      <div className="text-5xl mb-10 font-bold">
+      <div className="text-5xl mb-6 font-bold">
         <p>L O G I N</p>
       </div>
-
+      <label className="h-[24px] text-red-500">{error}</label>
       {/* 이메일 */}
       <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] mb-2">
         <img src="/mail.png" className="w-[30px] h-[30px] m-1" alt="메일 사진" />
-        <input type="text" placeholder="id" className="bolder-0 outline-none bg-white text-black" onChange={e => setUsername(e.target.value)} autoFocus/>
+        <input type="text" placeholder="id" className="bolder-0 outline-none bg-white text-black" onChange={e => setUsername(e.target.value)} onKeyDown={e => { if (e.key == "Enter") document.getElementById('login')?.click() }} autoFocus />
       </div>
 
       {/* 비밀번호 */}
       <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] mb-8" >
         <img src="/password.png" className="w-[30px] h-[30px] m-1" alt="비밀번호 사진" />
-        <input type="password" placeholder="password" className="bolder-0 outline-none bg-white text-black" onChange={e => setPassword(e.target.value)} 
-        
-        // 엔터로 로그인 할 수 있게 하는 부분
-        onKeyDown={e=>{
-          if(e.key=="Enter")
+        <input type="password" placeholder="password" className="bolder-0 outline-none bg-white text-black" onChange={e => setPassword(e.target.value)}
+
+          // 엔터로 로그인 할 수 있게 하는 부분
+          onKeyDown={e => {
+            if (e.key == "Enter")
               document.getElementById('login')?.click();
-        }} />
+          }} />
       </div>
 
       {/* 버튼 */}
