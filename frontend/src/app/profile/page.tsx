@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import { deleteProfileImage, getUser, putProfileImage, updatePassword } from "../API/UserAPI";
-import { getDateKorean, PhoneString } from "../Global/Method";
+import { CardBack, CardFront, getDateKorean, getRole } from "../Global/Method";
 import Modal from "../Global/Modal";
 
 export default function HOME() {
@@ -17,24 +17,6 @@ export default function HOME() {
         if (ACCESS_TOKEN)
             getUser().then(r => setUser(r)).catch(e => console.log(e));
     }, [ACCESS_TOKEN])
-
-    function getRole(role: number) {
-        switch (role) {
-            case 0: return "사장"
-            case 1: return "부사장"
-            case 2: return "전무"
-            case 3: return "상무"
-            case 4: return "이사"
-            case 5: return "사외 이사"
-            case 6: return "고문"
-            case 7: return "감사"
-            case 8: return "부장"
-            case 9: return "과장"
-            case 10: return "대리"
-            case 11: return "주임"
-            case 12: return "직원"
-        }
-    }
 
     return <Main>
         <div className="w-full flex items-center justify-center p-10">
@@ -124,58 +106,8 @@ export default function HOME() {
                     </Modal>
                 </div>
                 <div className="my-auto flex w-[850px] justify-between">
-                    <div className="border border-black w-[400px] h-[200px] flex flex-col">
-                        <div className="flex h-[150px] mt-auto">
-                            <div className="mx-auto flex flex-col">
-                                <div className="flex flex-col mt-4">
-                                    <label className="font-bold text-[#8fbee9]">HoneyBadger</label>
-                                    <label className="text-xxs text-center text-gray-500">Don't hold back. Be brave</label>
-                                </div>
-                                <div className="mt-auto flex flex-col h-[60px]">
-                                    <div className="flex  items-center my-auto">
-                                        <img src='/_phone.png' className="w-[20px] h-[20px] mr-2" />
-                                        <label className="text-xxs">{PhoneString(user?.phoneNumber)}</label>
-                                    </div>
-                                    <div className="flex items-center my-auto">
-                                        <img src='/_call.png' className="w-[20px] h-[20px] mr-2" />
-                                        <label className="text-xxs">1312</label>
-                                    </div>
-                                    <div className="flex items-center my-auto">
-                                        <img src='/_mail.png' className="w-[20px] h-[20px] mr-2" />
-                                        <label className="text-xxs">{user?.username}@honeybadger.com</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="mx-auto flex flex-col">
-                                <div className="flex flex-col mt-4">
-                                    <label className="font-bold text-[#8fbee9]">{user?.name}</label>
-                                    <label className="text-xs text-gray-500">{getRole(user?.role)}</label>
-                                </div>
-
-                                <div className="mt-auto flex flex-col h-[60px]">
-                                    <div className="flex items-center my-auto">
-                                        <img src='/_web.png' className="w-[20px] h-[20px] mr-2" />
-                                        <label className="text-xxs">www.벌꿀오소리.메인.한국</label>
-                                    </div>
-                                    <div className="flex items-center my-auto">
-                                        <img src='/_location.png' className="w-[20px] h-[20px] mr-2" />
-                                        <label className="text-xxs">대전광역시 서구 둔산로 52 3층</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="w-full h-[20px] bg-[#8fbee9] mt-auto"></div>
-                    </div>
-                    <div className="border bg-[#8fbee9] border-black w-[400px] h-[200px] flex flex-col items-center justify-center relative">
-                        <div className="flex">
-                            <img src='/_logo.png' className="w-[75px] h-[50px] mr-2 bg-yellow-500 rounded-full p-2"/>
-                            <div className="flex flex-col">
-                                <label className="font-bold text-white text-lg">HoneyBadger</label>
-                                <label className="text-xxs text-center text-gray-300">Don't hold back. Be brave</label>
-                            </div>
-                        </div>
-                        <div className="bottom-[16px] absolute text-white text-xs">SEO | Web Devlopement | App Development </div>
-                    </div>
+                    <CardFront user={user} />
+                    <CardBack />
                 </div>
             </div>
         </div>
