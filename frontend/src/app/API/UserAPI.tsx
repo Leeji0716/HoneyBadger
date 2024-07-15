@@ -80,7 +80,13 @@ interface emailReservationUpdate {
     content: string,
     receiverIds: string[],
     sendTime?: Date | null,
-    files : string[]
+    files : MailFile[]
+}
+
+interface MailFile {
+    key: string,
+    original_name: string,
+    value: string
 }
 
 interface chatroomResponseDTO {
@@ -133,9 +139,9 @@ export const readEmail = async ({ emailId, readerId }: { emailId: number, reader
 
     const data = {
         emailId: emailId,
-        readerId: readerId
+        receiverId: readerId
     };
-    const response = await UserApi.post('/api/email/read', data);
+    const response = await UserApi.put('/api/email/read', data);
     return response.data;
 }
 

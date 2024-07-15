@@ -25,7 +25,8 @@ export default function Email() {
         senderName: string,
         senderTime: number,
         receiverIds: string[],
-        files: MailFile[]
+        files: MailFile[],
+        status: boolean
     }
 
     const [open, setOpen] = useState(false);
@@ -37,6 +38,7 @@ export default function Email() {
     const [open3, setOpen3] = useState(null as any);
     const [discernment, setDiscernment] = useState(false);
     const [status,setStatus] = useState(0);
+    const [sort, setSort] = useState(0);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const maxLength = 30;
     const router = useRouter();
@@ -49,6 +51,7 @@ export default function Email() {
                     console.log("---------------.");
                     console.log(r);
                     setEmailList(r);
+                    setSort(1);
                 }).catch(e => console.log(e))
             }).catch(e => console.log(e));
     }, [ACCESS_TOKEN])
@@ -73,8 +76,8 @@ export default function Email() {
     }
 
     function MailBox({ email }: { email: EmailResponseDTO }) {
-        return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300" onClick={() => { setEmail(email), readEmail({ emailId: email.id, readerId: user.username }).then(r => console.log(r)).catch(e => console.log(e)) }}>
-            <div className="h-full w-[6px] official-color mr-2"></div>
+        return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300" onClick={() => { setEmail(email); if(email.status == false){readEmail({ emailId: email.id, readerId: user.username }).then(r => getEmail(sort).then(r => setEmailList(r)).catch(e => console.log(e))).catch(e => console.log(e))}}}>
+            {email.status == true ? <div className="h-full w-[6px] official-color mr-2"></div> : <></>}
             <div className="w-[60px] h-full flex items-center">
                 <img className="rounded-full w-[40px] h-[40px]" src="/hui.jpg" alt="후잉~" />
             </div>
@@ -140,19 +143,19 @@ export default function Email() {
         <div className="w-4/12 flex items-center justify-center">
             <div className="h-11/12 w-11/12 mt-10 bg-white h-screen shadow p-2">
                 <div className="w-full h-30 flex flex-row gap-20 ">
-                    <button id="button1" onClick={() => { open1 == false ? "" : setOpen1(!open1); setStatus(1); getEmail(1).then(r => setEmailList(r)).catch(e => console.log(e)); setOpen(!open) }}>받은 메일</button>
+                    <button id="button1" onClick={() => { open1 == false ? "" : setOpen1(!open1); setStatus(1); getEmail(1).then(r =>{setSort(1); setEmailList(r)}).catch(e => console.log(e)); setOpen(!open) }}>받은 메일</button>
                     <DropDown open={open} onClose={() => setOpen(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button1">
                         <button className="bg-white">중요</button>
                         <button className="bg-white">태그</button>
                         <button className="bg-white">태그</button>
                     </DropDown>
-                    <button id="button2" className="" onClick={() => { open == false ? "" : setOpen(!open); setStatus(0); getEmail(0).then(r => setEmailList(r)).catch(e => console.log(e)); setOpen1(!open1) }}>보낸 메일</button>
+                    <button id="button2" className="" onClick={() => { open == false ? "" : setOpen(!open); setStatus(0); getEmail(0).then(r => {setSort(0), setEmailList(r)}).catch(e => console.log(e)); setOpen1(!open1) }}>보낸 메일</button>
                     <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button2">
                         <button>중요</button>
                         <button>태그</button>
                         <button>태그</button>
                     </DropDown>
-                    <button className="" onClick={() => { open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2).then(r => setEmailList(r)).catch(e => console.log(e)) }}>예약 메일</button>
+                    <button className="" onClick={() => { open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2).then(r =>{setSort(2); setEmailList(r)}).catch(e => console.log(e)) }}>예약 메일</button>
                 </div>
                 <div className="h-[88%] overflow-y-scroll">
                     {emailList?.map((email: EmailResponseDTO, index: number) => <MailBox key={index} email={email} />)}

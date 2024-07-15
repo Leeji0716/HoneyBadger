@@ -28,7 +28,7 @@ export default function EmailForm() {
     const [senderTime, setSenderTime] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [image, setImage] = useState("");
-    const [files, setFiles] = useState<string[]>([]);
+    const [files, setFiles] = useState<MailFile[]>([]);
     const [id, setId] = useState(0);
 
     interface MailFile {
@@ -118,8 +118,11 @@ export default function EmailForm() {
         if (flag == 2) {
             if (fileList.length == 0) {
                 mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).catch(e => console.log(e));
-            }else{
-                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).then(r => console.log(r)).catch(e => console.log(e));
+            } else {
+                const form = new FormData();
+                for (const file of fileList)
+                    form.append('attachments', file);
+                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).then(r => reservationFiles({ attachments: form, emailId: email.id }).then(r => window.location.href = "/email").catch(e => console.log(e))).catch(e => console.log(e));
             }
         }
         else if (flag == 0) {
@@ -194,16 +197,6 @@ export default function EmailForm() {
             </div>
             <div className="flex justify-center w-full gap-5">
                 <label htmlFor="" className="w-[5%]">파일첨부</label>
-                {files.length != 0 ?
-                    email.files.map((f: MailFile, index: number) => <li key={index}>
-                        <div className="flex mb-4 border-solid border-2 border-gray-200 p-4 gap-6">
-                            <img src={"/" + sliceText(f.original_name) + ".PNG"} alt="" />
-                            <a href={f.value}>{f.original_name}</a>
-                        </div>
-                    </li>)
-                    :
-                    <></>
-                }
                 <input type="file" multiple className="border-b-2 w-[70%]" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                     if (event.target.files) {
                         const filesArray = Array.from(event.target.files);
@@ -211,7 +204,22 @@ export default function EmailForm() {
                     }
                 }} />
             </div>
-            {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}><li>{f.name}</li></ul>) : <></>}
+            <div className="w-[1000px] h-[150px]  overflow-y-scroll">
+                {files.length != 0 ? files.map((f: MailFile, index: number) => <ul key={index}>
+                    <div className="flex border-solid border-2 border-gray-200 p-4">
+                        <button className="mr-2" onClick={() => { const removeFile = [...files]; removeFile.splice(index, 1); setFiles(removeFile); }}>X</button>
+                        <img src={"/" + sliceText(f.original_name) + ".PNG"} alt="" />
+                        <p>{f.original_name}</p>
+                    </div>
+                </ul>) : <></>}
+                {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}>
+                    <div className="flex border-solid border-2 border-gray-200 p-4">
+                        <button className="mr-2" onClick={() => { const removeFile = [...fileList]; removeFile.splice(index, 1); setFileList(removeFile); }}>X</button>
+                        <img src={"/" + sliceText(f.name) + ".PNG"} alt="" />
+                        <p>{f.name}</p>
+                    </div>
+                </ul>) : <></>}
+            </div>
             <div className="w-full flex justify-center h-[500px]">
                 <QuillNoSSRWrapper
                     forwardedRef={quillInstance}
