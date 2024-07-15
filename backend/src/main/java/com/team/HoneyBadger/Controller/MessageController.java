@@ -77,7 +77,8 @@ public class MessageController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
         }
         if (tokenDTO.isOK()) try {
-            String fileName = multiService.fileUpload(chatroomId, file);
+            String fileName = multiService.
+                    fileUpload(chatroomId, file);
             return ResponseEntity.status(HttpStatus.OK).body(fileName);
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
