@@ -68,10 +68,19 @@ interface SendEmail {
     sendTime?: Date | null
 }
 
-interface SendEmail2 {
+interface CreateEmail {
     title: string,
     content: string,
     receiverIds: string[]
+}
+
+interface emailReservationUpdate {
+    id : number,
+    title: string,
+    content: string,
+    receiverIds: string[],
+    sendTime?: Date | null,
+    files : string[]
 }
 
 interface chatroomResponseDTO {
@@ -98,7 +107,7 @@ export const getEmail = async (status: number) => {
     return response.data;
 }
 
-export const sendEmail = async (data: SendEmail2) => {
+export const sendEmail = async (data: CreateEmail) => {
     console.log(data);
     const response = await UserApi.post('/api/email', data);
     return response.data;
@@ -159,12 +168,8 @@ export const mailDelete = async (mailId: number) => {
     return response.data;
 }
 
-export const mailUpdate = async ({ mailId, email }: { mailId: number, email: SendEmail }) => {
-    const response = await UserApi.put('/api/email/delete', email, {
-        headers: {
-            id: mailId
-        }
-    });
+export const mailUpdate = async (email: emailReservationUpdate ) => {
+    const response = await UserApi.put('/api/emailReservation', email);
     return response.data;
 }
 
