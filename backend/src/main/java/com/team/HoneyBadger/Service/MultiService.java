@@ -1,8 +1,8 @@
 package com.team.HoneyBadger.Service;
 
-import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
-import com.team.HoneyBadger.Config.Exception.UnauthorizedException;
+import com.team.HoneyBadger.Exception.DataDuplicateException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.UnauthorizedException;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.EmailStatus;
@@ -123,6 +123,7 @@ public class MultiService {
                 .department(getDepartmentDTO(user.getDepartment())) //
                 .build();
     }
+
     /*
      * Department
      */
@@ -144,17 +145,17 @@ public class MultiService {
      */
 
     @Transactional
-    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO) {
+    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) {
         ChatroomResponseDTO chatroomResponseDTO;
         int userCount = chatroomRequestDTO.users().size();
         // 1:1 채팅 처리
         if (userCount == 2) {
             chatroomResponseDTO = this.existence(chatroomRequestDTO); // 기존 채팅방 확인
             if (chatroomResponseDTO == null) { // 기존 채팅방이 없으면 새로 생성
-                chatroomResponseDTO = createChatroom(chatroomRequestDTO);
+                chatroomResponseDTO = createChatroom(chatroomRequestDTO, loginUser);
             }
         } else if (userCount >= 3) { // 단체 채팅방 처리
-            chatroomResponseDTO = createChatroom(chatroomRequestDTO);
+            chatroomResponseDTO = createChatroom(chatroomRequestDTO, loginUser);
         } else {
             return null;
         }
@@ -190,7 +191,7 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatroomResponseDTO createChatroom(ChatroomRequestDTO chatroomRequestDTO) {
+    public ChatroomResponseDTO createChatroom(ChatroomRequestDTO chatroomRequestDTO, String loginUser) {
         // Chatroom 생성
         Chatroom chatroom = chatroomService.create(chatroomRequestDTO.name());
         // Participant 생성 및 저장
@@ -199,7 +200,7 @@ public class MultiService {
             participantService.save(user, chatroom);
         }
 
-        return getChatRoom(chatroom);
+        return getChatRoom(chatroom, loginUser);
     }
 
     @Transactional
@@ -208,7 +209,7 @@ public class MultiService {
         List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
         List<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
         for (Chatroom chatroom : chatroomList) {
-            chatroomResponseDTOList.add(getChatRoom(chatroom));
+            chatroomResponseDTOList.add(getChatRoom(chatroom, username));
         }
         return chatroomResponseDTOList;
     }
@@ -220,33 +221,80 @@ public class MultiService {
     }
 
     @Transactional
-    public List<MessageResponseDTO> getMessageList(Long chatroomId, Long startId) {
-        return messageService.getUpdatedList(chatroomId, startId).stream().map(this::GetMessageDTO).toList();
+    public List<MessageResponseDTO> updateMessageList(String username, Long chatroomId) {
+        SiteUser user = userService.get(username);
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
+
+        List<Message> updatedMessages;
+        if (lastReadMessage != null) { // 특정 채팅방에서 유저의 startId 이후의 업데이트된 메시지 목록을 가져옴
+            updatedMessages = messageService.getUpdatedList(chatroomId, lastReadMessage.getLastReadMessage());
+        }else { // 특정 채팅방의 메세지 목록을 가져옴
+            updatedMessages = chatroom.getMessageList();
+        }
+
+        Message lastMessage = updatedMessages.get(updatedMessages.size() - 1);
+        Long lastMessageId = lastMessage.getId();
+
+        this.saveLastMessage(user, chatroom, lastMessageId);
+
+        return updatedMessages.stream().map(this::GetMessageDTO).toList();
+    }
+
+    private void saveLastMessage(SiteUser user, Chatroom chatroom, Long lastReadMessageId){
+        LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
+        if (lastReadMessage == null){
+            lastReadMessageService.create(user, chatroom, lastReadMessageId);
+        }else {
+            lastReadMessageService.updateMessage(lastReadMessage, lastReadMessageId);
+        }
     }
 
     @Transactional
-    private ChatroomResponseDTO getChatRoom(Chatroom chatroom) {
+    private ChatroomResponseDTO getChatRoom(Chatroom chatroom, String username) {
         List<String> users = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
         Message latestMessage = messageService.getLatesMessage(chatroom.getMessageList());
+
+        //마지막 메세지
         MessageResponseDTO latestMessageDTO;
         if (latestMessage != null) {
             latestMessageDTO = GetMessageDTO(latestMessage);
         } else {
             latestMessageDTO = null;
         }
+
+        //공지
         MessageResponseDTO notificationDTO;
-        if(chatroom.getNotification() != null){
+        if (chatroom.getNotification() != null) {
             notificationDTO = GetMessageDTO(chatroom.getNotification());
-        }else {
+        } else {
             notificationDTO = null;
         }
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).build();
+
+
+        SiteUser user = userService.get(username);
+
+        LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
+        int alarmcnt;
+        if (lastReadMessage == null){
+            if (!chatroom.getMessageList().isEmpty()){
+                lastReadMessage = lastReadMessageService.create(user, chatroom, chatroom.getMessageList().get(0).getId());
+                alarmcnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage()) + 1;
+            }else {
+                alarmcnt = 0;
+            }
+        }else {
+            alarmcnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
+        }
+
+
+        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).alarmCount(alarmcnt).build();
     }
 
     @Transactional
-    public ChatroomResponseDTO getChatRoomById(Long chatroomId) {
+    public ChatroomResponseDTO getChatRoomById(Long chatroomId, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        return getChatRoom(chatroom);
+        return getChatRoom(chatroom, username);
     }
 
     @Transactional
@@ -256,29 +304,29 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO) {
+    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         chatroom = chatroomService.updateChatroom(chatroom, chatroomRequestDTO.name());
-        return getChatRoom(chatroom);
+        return getChatRoom(chatroom, username);
     }
 
     @Transactional
-    public ChatroomResponseDTO plusParticipant(Long chatroomId, String username) {
+    public ChatroomResponseDTO plusParticipant(Long chatroomId, String username, String loginUser) {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         SiteUser siteUser = userService.get(username);
         participantService.save(siteUser, chatroom);
-        return getChatRoom(chatroom);
+        return getChatRoom(chatroom, loginUser);
     }
 
     @Transactional
-    public ChatroomResponseDTO minusParticipant(Long chatroomId, String username) {
+    public ChatroomResponseDTO minusParticipant(Long chatroomId, String username, String loginUser) {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         SiteUser siteUser = userService.get(username);
         Participant participant = participantService.get(siteUser, chatroom);
         chatroom.getParticipants().remove(participant);
 
         chatroomService.save(chatroom);
-        return getChatRoom(chatroom);
+        return getChatRoom(chatroom, loginUser);
     }
 
     /*
@@ -480,6 +528,7 @@ public class MultiService {
      * Message or Chat
      */
 
+    @Transactional
     private MessageType getMessageType(int MessageTypeInt) {
         MessageType messageType;
         switch (MessageTypeInt) {
@@ -500,7 +549,7 @@ public class MultiService {
         }
     }
 
-
+    @Transactional
     public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO) {
         Chatroom chatroom = chatroomService.getChatRoomById(id);
         SiteUser siteUser = userService.get(messageRequestDTO.username());
@@ -509,12 +558,14 @@ public class MultiService {
         return GetMessageDTO(messageService.save(messageRequestDTO.message(), siteUser, chatroom, messageType));
     }
 
+    @Transactional
     private MessageResponseDTO GetMessageDTO(Message message) {
         Long sendTime = this.dateTimeTransfer(message.getCreateDate());
 
         return MessageResponseDTO.builder().id(message.getId()).sendTime(sendTime).username(message.getSender().getUsername()).name(message.getSender().getName()).message(message.getMessage()).messageType(message.getMessageType()).build();
     }
 
+    @Transactional
     public void deleteMessage(Long messageId) {
         Message message = messageService.getMessageById(messageId);
         LocalDateTime now = LocalDateTime.now();
@@ -527,7 +578,7 @@ public class MultiService {
 
             // 삭제된 메시지에 대한 응답을 생성합니다.
             System.out.println("Message deleted");
-            throw new RuntimeException("Message deleted");
+//            throw new RuntimeException("Message deleted");
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
             System.out.println("Cannot delete message older than 5 minutes");
@@ -535,6 +586,7 @@ public class MultiService {
         }
     }
 
+    @Transactional
     public String fileUpload(Long chatroomId, MultipartFile file) throws IOException {
 
         String path = HoneyBadgerApplication.getOsType().getLoc();
@@ -550,6 +602,7 @@ public class MultiService {
         return fileName;
     }
 
+    @Transactional
     public String fileUpload(String username, MultipartFile file) throws IOException {
 
         String path = HoneyBadgerApplication.getOsType().getLoc();
@@ -564,57 +617,21 @@ public class MultiService {
         return fileName;
     }
 
-    public void readMessage(Long chatroomId, String username) {
+    @Transactional
+    public void readMessage(Long chatroomId, String username) { //메세지 읽기 & 채팅방 접속
         SiteUser reader = userService.get(username);
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        Optional<LastReadMessage> lastReadMessage = lastReadMessageService.get(reader, chatroom);
-        Long startId = lastReadMessage.map(LastReadMessage::getLastReadMessage).orElse(null);
-        for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) {
+
+        LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
+        Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
+
+        for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
             HashSet<String> sets = new HashSet<>(message.getReadUsers());
             sets.add(reader.getUsername());
             messageService.updateRead(message, sets.stream().toList());
         }
 //        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
     }
-
-//    public void markMessageAsRead(Long chatroomId, List<String> user) {
-//        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-//
-//        for (Message message : chatroom.getMessageList()) {
-//            if (message != null && message.getReadUsers() != null) {
-//                List<String> readUsers = message.getReadUsers();
-//
-//                for (String username : user) {
-//                    if (readUsers.contains(username)) {
-//                        messageService.save(message);
-//
-//                        // 모든 사용자가 읽었는지 확인
-//                        if (readUsers.isEmpty()) {
-//                            // 모든 사용자가 읽었을 때 처리할 로직 추가
-//                            // 예시로는 읽음 숫자를 없애는 등의 처리를 할 수 있음
-//                            message.setReadUsers(null); // 예시로 읽음 사용자 초기화
-//                            messageService.save(message);
-//                        }
-//                    }
-//                }
-//            } else {
-//                throw new RuntimeException("Message not found");
-//            }
-//        }
-//        Message message = messageService.getMessageById(readReceipt.messageId());
-//    }
-
-//    public void addUserToChatRoom(Long chatRoomId, String username) {
-//        Chatroom chatroom = chatroomService.getChatRoomById(chatRoomId);
-//        SiteUser user = userService.get(username);
-//        List<Message> messageList = chatroom.getMessageList();
-//        for (Message message : messageList) {
-//            if (!message.getReadUsers().isEmpty() && message.getReadUsers().contains(user.getUsername())) {
-//                message.getReadUsers().remove(user.getUsername());
-//            }
-//        }
-//
-//    }
 
     /*
      * Time
@@ -628,6 +645,7 @@ public class MultiService {
      * MessageReservation or ChatReservation
      */
 
+    @Transactional
     public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
@@ -643,17 +661,20 @@ public class MultiService {
         return getMessageReservation(messageReservation);
     }
 
+    @Transactional
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
         Long sendTime = this.dateTimeTransfer(messageReservation.getSendDate());
         return MessageReservationResponseDTO.builder().id(messageReservation.getId()).chatroomId(messageReservation.getChatroom().getId()).message(messageReservation.getMessage()).username(messageReservation.getSender().getUsername()).sendDate(sendTime).messageType(messageReservation.getMessageType()).build();
     }
 
 
+    @Transactional
     public void deleteReservationMessage(Long reservationMessageId) {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
         messageReservationService.delete(messageReservation);
     }
 
+    @Transactional
     public MessageReservationResponseDTO updateReservationMessage(Long id,
                                                                   MessageReservationRequestDTO messageReservationRequestDTO,
                                                                   String username) throws DataNotFoundException {
@@ -664,19 +685,28 @@ public class MultiService {
         return getMessageReservation(messageReservation);
     }
 
-    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO) {
+    @Transactional
+    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) {
         Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
         Message message = messageService.getMessageById(noticeRequestDTO.messageId());
         chatroomService.notification(chatroom, message);
 
-        return getChatRoom(chatroom);
+        return getChatRoom(chatroom, username);
     }
 
+    @Transactional
     public UserResponseDTO getUser(String username) {
-        return getUserResponseDTO( userService.get(username));
+        return getUserResponseDTO(userService.get(username));
     }
 
+    @Transactional
     public List<UserResponseDTO> getAllUser(String username) {
-        return  userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
+        return userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
+    }
+
+    @Transactional
+    public int alarmCount(Long chatroomId, Long endId) {
+        List<Message> messageList = messageService.getUpdatedList(chatroomId, endId);
+        return messageList.size()-1;
     }
 }

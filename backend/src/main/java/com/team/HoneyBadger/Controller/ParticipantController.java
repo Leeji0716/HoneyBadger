@@ -1,17 +1,12 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.ChatroomResponseDTO;
-import com.team.HoneyBadger.Config.Exception.DataDuplicateException;
 import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,7 +19,7 @@ public class ParticipantController {
     public ResponseEntity<?> plusParticipant(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader String username) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.plusParticipant(chatroomId, username);
+            ChatroomResponseDTO chatroomResponseDTO = multiService.plusParticipant(chatroomId, username, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
@@ -36,23 +31,11 @@ public class ParticipantController {
         else return tokenDTO.getResponseEntity();
     }
 
-    @MessageMapping("/updateChatroom/{id}")
-    @SendTo("/api/sub/updateChatroom/{id}")
-    public ResponseEntity<?> updateChatRoom(@DestinationVariable Long chatroomId) {
-        // 추가하기 then r=> updateChatRoom();
-        try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(chatroomId);
-            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
-        }
-    }
-
     @DeleteMapping //채팅방에 유저 차감
     public ResponseEntity<?> minusParticipant(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader String username) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.minusParticipant(chatroomId, username);
+            ChatroomResponseDTO chatroomResponseDTO = multiService.minusParticipant(chatroomId, username, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());

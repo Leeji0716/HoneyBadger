@@ -1,4 +1,4 @@
-package com.team.HoneyBadger.Config.Exception;
+package com.team.HoneyBadger.Exception;
 
 public class UnauthorizedException extends RuntimeException {
     public UnauthorizedException(String message) {

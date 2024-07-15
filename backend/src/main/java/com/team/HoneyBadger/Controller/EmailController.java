@@ -1,6 +1,6 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.Config.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.EmailRequestDTO;
 import com.team.HoneyBadger.DTO.EmailResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
