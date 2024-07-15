@@ -465,21 +465,16 @@ public class MultiService {
         }
     }
 
-    public EmailReceiverResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
+    public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
         Boolean isRead = emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
 
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
-        List<EmailResponseDTO> emailResponseDTOs = email.getReceiverList().stream()
-                .map(er -> getEmailDTO(email, er.getReceiver().getUsername()))
-                .collect(Collectors.toList());
 
-        EmailReceiverResponseDTO emailReceiverResponseDTO = EmailReceiverResponseDTO.builder()
-                .id(email.getId())
-                .status(isRead)
-                .emailResponseDTOs(emailResponseDTOs) // 변경된 필드
-                .build();
+        EmailResponseDTO emailResponseDTO = getEmailDTO(email, username);
 
-        return emailReceiverResponseDTO;
+
+
+        return emailResponseDTO;
     }
 
 
@@ -489,44 +484,10 @@ public class MultiService {
         emailService.findByUsernameDelete(email, username);
     }
 
-//    private EmailResponseDTO getEmailDTO(Email email, String username) {
-//        List<FileResponseDTO> filePathList = new ArrayList<>();
-//        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
-//        if (_multiKey.isPresent()) //
-//            for (String key : _multiKey.get().getKeyValues()) {
-//                FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
-//                fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
-//                fileSystemService.get(KeyPreset.EMAIL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
-//                builder.key(key); // key
-//                filePathList.add(builder.build());
-//            }
-//
-//        SiteUser user = userService.get(username);
-//        EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
-//        if (emailReceiver == null){
-//
-//        }
-//        return EmailResponseDTO //
-//                .builder() //
-//                .id(email.getId()) //
-//                .title(email.getTitle()) //
-//                .content(email.getContent()) //
-//                .senderId(email.getSender().getUsername()) //
-//                .senderName(email.getSender().getUsername()) //
-//                .receiverIds(email.getReceiverList() //
-//                        .stream() //
-//                        .map(er -> er.getReceiver().getUsername()) //
-//                        .toList()) //
-//                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
-//                .files(filePathList) //
-//                .status(emailReceiver.isStatus())
-//                .build();
-//    }
-
     private EmailResponseDTO getEmailDTO(Email email, String username) {
         List<FileResponseDTO> filePathList = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
-        if (_multiKey.isPresent()) {
+        if (_multiKey.isPresent()) //
             for (String key : _multiKey.get().getKeyValues()) {
                 FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
                 fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
@@ -534,19 +495,12 @@ public class MultiService {
                 builder.key(key); // key
                 filePathList.add(builder.build());
             }
-        }
 
         SiteUser user = userService.get(username);
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
+        if (emailReceiver == null){
 
-        List<EmailReceiverResponseDTO> receiverResponseDTOList = email.getReceiverList()
-                .stream()
-                .map(er -> EmailReceiverResponseDTO.builder()
-                        .receiverId(er.getReceiver().getUsername())
-                        .status(er.isStatus())
-                        .build())
-                .collect(Collectors.toList());
-
+        }
         return EmailResponseDTO //
                 .builder() //
                 .id(email.getId()) //
@@ -561,10 +515,8 @@ public class MultiService {
                 .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
                 .files(filePathList) //
                 .status(emailReceiver.isStatus())
-                .receivers(receiverResponseDTOList) // 새로운 필드 설정
                 .build();
     }
-
 
     public EmailResponseDTO getEmailDTO(Long emailId, String username) {
         Email email = emailService.getEmail(emailId);

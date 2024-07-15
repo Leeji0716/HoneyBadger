@@ -90,8 +90,8 @@ public class EmailController {
 
     @PutMapping("/read")
     public ResponseEntity<?> markEmailAsRead(@RequestBody EmailReadRequestDTO emailReadRequestDTO, String username) {
-        EmailReceiverResponseDTO emailReceiverResponseDTO = multiService.read(emailReadRequestDTO, username);
-        return ResponseEntity.status(HttpStatus.OK).body(emailReceiverResponseDTO);
+        EmailResponseDTO emailResponseDTO = multiService.read(emailReadRequestDTO, username);
+        return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
     }
 
     @DeleteMapping //메세지 삭제
