@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import { deleteProfileImage, getUser, putProfileImage, updatePassword } from "../API/UserAPI";
-import { getDateKorean } from "../Global/Method";
+import { CardBack, CardFront, getDateKorean, getRole } from "../Global/Method";
 import Modal from "../Global/Modal";
 
 export default function HOME() {
@@ -17,24 +17,6 @@ export default function HOME() {
         if (ACCESS_TOKEN)
             getUser().then(r => setUser(r)).catch(e => console.log(e));
     }, [ACCESS_TOKEN])
-
-    function getRole(role: number) {
-        switch (role) {
-            case 0: return "사장"
-            case 1: return "부사장"
-            case 2: return "전무"
-            case 3: return "상무"
-            case 4: return "이사"
-            case 5: return "사외 이사"
-            case 6: return "고문"
-            case 7: return "감사"
-            case 8: return "부장"
-            case 9: return "과장"
-            case 10: return "대리"
-            case 11: return "주임"
-            case 12: return "직원"
-        }
-    }
 
     return <Main>
         <div className="w-full flex items-center justify-center p-10">
@@ -122,6 +104,10 @@ export default function HOME() {
                             <button onClick={() => setOpen(false)} className="btn btn-info text-white">취소</button>
                         </div>
                     </Modal>
+                </div>
+                <div className="my-auto flex w-[850px] justify-between">
+                    <CardFront user={user} />
+                    <CardBack />
                 </div>
             </div>
         </div>
