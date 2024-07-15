@@ -3,11 +3,9 @@ import { useEffect, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
 import { getEmail, getUser, mailCancel, mailDelete, readEmail } from "../API/UserAPI";
-import { getSocket, Subscribe } from "../API/SocketAPI";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getDateTime } from "../Global/Method";
-import { link } from "fs";
+
 
 
 
@@ -138,7 +136,7 @@ export default function Email() {
         </div>
     }
 
-    return <Main>
+    return <Main user={user}>
         <div className="w-4/12 flex items-center justify-center">
             <div className="h-11/12 w-11/12 mt-10 bg-white h-screen shadow p-2">
                 <div className="w-full h-30 flex flex-row gap-20 ">

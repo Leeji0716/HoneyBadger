@@ -454,7 +454,7 @@ export default function Chat() {
         </div >
     }
 
-    return <Main>
+    return <Main user={user}>
         <div className="w-4/12 flex items-center justify-center h-screen">
             {/* 왼 쪽 부분 */}
             <div className=" h-11/12 w-11/12 mt-10 bg-white h-[95%] shadow">

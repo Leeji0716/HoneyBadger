@@ -18,7 +18,7 @@ export default function HOME() {
             getUser().then(r => setUser(r)).catch(e => console.log(e));
     }, [ACCESS_TOKEN])
 
-    return <Main>
+    return <Main user={user}>
         <div className="w-full flex items-center justify-center p-10">
             <div className="w-full bg-white h-full shadow p-2 flex flex-col text-lg items-center">
                 <div className="flex items-center mt-10">

@@ -7,6 +7,7 @@ import DropDown, { Direcion } from "../DropDown";
 interface pageInterface {
   children: React.ReactNode,
   classname?: string,
+  user : any;
 }
 
 export default function Main(props: Readonly<pageInterface>) {
