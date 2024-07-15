@@ -48,4 +48,8 @@ public class EmailReceiverRepositoryCustomImpl implements EmailReceiverRepositor
                 .fetch();
     }
 
+    public EmailReceiver findByEmailAndUser(Email email, SiteUser user) {
+        return jpaQueryFactory.selectFrom(qEmailReceiver).where(qEmailReceiver.receiver.eq(user).and(qEmailReceiver.email.eq(email))).fetchOne();
+    }
+
 }

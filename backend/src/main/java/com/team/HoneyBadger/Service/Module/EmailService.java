@@ -7,6 +7,7 @@ import com.team.HoneyBadger.Repository.EmailRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -29,9 +30,12 @@ public class EmailService {
 
     public void findByUsernameDelete(Email email, String username) {
         List<EmailReceiver> emailReceiverList = email.getReceiverList();
-        for (EmailReceiver emailReceiver : emailReceiverList) {
+        Iterator<EmailReceiver> iterator = emailReceiverList.iterator();
+
+        while (iterator.hasNext()) {
+            EmailReceiver emailReceiver = iterator.next();
             if (emailReceiver.getReceiver().getUsername().equals(username)) {
-                emailReceiverList.remove(emailReceiver);
+                iterator.remove();
                 break;
             }
         }

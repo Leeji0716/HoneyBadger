@@ -66,7 +66,7 @@ public class EmailController {
     public ResponseEntity<?> getEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long emailId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            EmailResponseDTO emailResponseDTO = multiService.getEmailDTO(emailId);
+            EmailResponseDTO emailResponseDTO = multiService.getEmailDTO(emailId, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
@@ -91,20 +91,36 @@ public class EmailController {
     }
 
     @PutMapping("/read")
-    public ResponseEntity<?> markEmailAsRead(@RequestBody EmailReadRequestDTO emailReadRequestDTO) {
-        EmailReceiverResponseDTO emailReceiverResponseDTo = multiService.read(emailReadRequestDTO);
+    public ResponseEntity<?> markEmailAsRead(@RequestBody EmailReadRequestDTO emailReadRequestDTO, String username) {
+        EmailReceiverResponseDTO emailReceiverResponseDTo = multiService.read(emailReadRequestDTO, username);
 //        Boolean isRead = multiService.markEmailAsRead(emailReadRequestDTO);
         return ResponseEntity.status(HttpStatus.OK).body(emailReceiverResponseDTo);
     }
 
-    @DeleteMapping
+//    @DeleteMapping
+//    public ResponseEntity<?> deleteEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long emailId) {
+//        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+//        if (tokenDTO.isOK()) try {
+//            multiService.deleteEmail(emailId, tokenDTO.username());
+//            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+//        } else {
+//            return tokenDTO.getResponseEntity();
+//        }
+//    }
+
+    @DeleteMapping //메세지 삭제
     public ResponseEntity<?> deleteEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long emailId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) {
+        if (tokenDTO.isOK()) try {
             multiService.deleteEmail(emailId, tokenDTO.username());
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
-        } else {
-            return tokenDTO.getResponseEntity();
+            return ResponseEntity.status(HttpStatus.OK).body("email DELETE SUCCESS");
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
         }
+        else return tokenDTO.getResponseEntity();
     }
 }

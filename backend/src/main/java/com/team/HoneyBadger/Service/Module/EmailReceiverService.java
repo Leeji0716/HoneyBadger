@@ -41,4 +41,8 @@ public class EmailReceiverService {
     public Optional<EmailReceiver> getEmailReceiver(Long aLong) {
         return emailReceiverRepository.findById(aLong);
     }
+
+    public EmailReceiver getReadStatus(Email email, SiteUser user) {
+        return emailReceiverRepository.findByEmailAndUser(email, user);
+    }
 }

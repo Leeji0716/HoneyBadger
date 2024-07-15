@@ -5,6 +5,10 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record EmailReservationResponseDTO(Long id, String title, String content, Long senderTime,
-                                          List<String> receiverIds, List<FileResponseDTO> files) {
+public record EmailReservationResponseDTO(Long id,
+                                          String title,
+                                          String content,
+                                          Long senderTime,
+                                          List<String> receiverIds,
+                                          List<FileResponseDTO> files) {
 }
