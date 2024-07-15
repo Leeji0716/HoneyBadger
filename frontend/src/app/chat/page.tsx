@@ -529,9 +529,9 @@ export default function Chat() {
     }
 
     return <Main user={user}>
-        <div className="w-4/12 flex items-center justify-center h-screen">
+        <div className="w-4/12 flex items-center justify-center h-full pt-10 pb-4">
             {/* 왼 쪽 부분 */}
-            <div className=" h-11/12 w-11/12 mt-10 bg-white h-[95%] shadow">
+            <div className=" h-11/12 w-11/12 bg-white h-full shadow">
                 <div className="flex justify-start text-xl ml-5 mr-5 mt-5 mb-5 text-black">
                     <button className="font-bold" id="button1" onClick={() => { setOpen(!open), setFilter(!filter) }}>채팅{open ? '▴' : '▾'}</button>
                     <DropDown open={open} onClose={() => setOpen(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="button1">
@@ -610,7 +610,7 @@ export default function Chat() {
                             대화 목록
                         </p>
                     </div>
-                    <div className="w-full justify-end h-[590px] overflow-x-hidden overflow-y-scroll">
+                    <div className="w-full justify-end h-[550px] overflow-x-hidden overflow-y-scroll">
                         {chatrooms?.map((chatroom: chatroomResponseDTO, index: number) => <ChatList key={index} Chatroom={chatroom} ChatDetail={chatDetail} />)}
                     </div>
                 </div>
@@ -618,8 +618,8 @@ export default function Chat() {
         </div>
 
         {/* 오른쪽 부분 */}
-        <div className="w-8/12 flex items-center justify-center">
-            <div className="h-11/12 w-11/12 mt-10 bg-white h-[95%] flex flex-col shadow">
+        <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
+            <div className="h-11/12 w-11/12 bg-white h-full flex flex-col shadow">
                 {chatroom != null ? <ChatDetil Chatroom={chatroom} chatDetail={chatDetail} /> : <></>}
             </div>
         </div>

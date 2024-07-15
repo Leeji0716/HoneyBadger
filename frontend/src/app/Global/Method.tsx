@@ -122,6 +122,7 @@ export function getRole(role: number) {
         case 10: return "대리"
         case 11: return "주임"
         case 12: return "직원"
+        case 13: return "관리자"
     }
 }
 export function CardFront({ user }: { user: any }) {
