@@ -55,10 +55,10 @@ public class MessageController {
     }
 
     @GetMapping("/update") //메세지 읽음 처리 업데이트
-    public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader Long startId) {
+    public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            List<MessageResponseDTO> list = multiService.getMessageList(chatroomId, startId);
+            List<MessageResponseDTO> list = multiService.updateMessageList(tokenDTO.username(), chatroomId);
             return ResponseEntity.status(HttpStatus.OK).body(list);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
@@ -106,5 +106,4 @@ public class MessageController {
 
         else return tokenDTO.getResponseEntity();
     }
-
 }
