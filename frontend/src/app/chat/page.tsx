@@ -5,7 +5,7 @@ import DropDown, { Direcion } from "../Global/DropDown";
 import Modal from "../Global/Modal";
 import { Tooltip } from 'react-tooltip';
 
-import { chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers } from "../API/UserAPI";
+import { chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage } from "../API/UserAPI";
 import { getChatDateTimeFormat } from "../Global/Method";
 import { getSocket } from "../API/SocketAPI";
 
@@ -27,12 +27,10 @@ export default function Chat() {
         notification: messageResponseDTO
     }
 
-    // interface chatDetailResponseDTO {
-    //     id: number,
-    //     name: string,
-    //     users: string[]
-    //     messageResponseDTOList: messageResponseDTO[]
-    // }
+    interface chatroomRequestDTO {
+        name: string;
+        users: string[];
+    }
 
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
@@ -50,7 +48,10 @@ export default function Chat() {
     const [isReady, setReady] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModalOpen1, setIsModalOpen1] = useState(false);
+    const [isModalOpen2, setIsModalOpen2] = useState(false);
     const [userList, setUserList] = useState([] as any[])
+    const [selectedUsers, setSelectedUsers] = useState(new Set<string>());
+    const [chatroomName, setChatroomName] = useState('');
 
     function handleOpenModal() {
         setIsModalOpen(true);
@@ -67,6 +68,15 @@ export default function Chat() {
     function handleClose1Modal() {
         setIsModalOpen1(false);
     }
+
+    function handleOpen2Modal() {
+        setIsModalOpen2(true);
+    }
+
+    function handleClose2Modal() {
+        setIsModalOpen2(false);
+    }
+
 
     useEffect(() => {
         if (ACCESS_TOKEN)
@@ -95,9 +105,56 @@ export default function Chat() {
         }
     }, [temp])
 
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const usersData = await getUsers();
+                setUserList(usersData);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const handleCheckboxChange = (username: string) => {
+        setSelectedUsers(prevSelectedUsers => {
+            const newSelectedUsers = new Set(prevSelectedUsers);
+            if (newSelectedUsers.has(username)) {
+                newSelectedUsers.delete(username);
+            } else {
+                newSelectedUsers.add(username);
+            }
+            return newSelectedUsers;
+        });
+    };
+
+    const handleCreateChatroom = () => {
+        if (chatroomName && selectedUsers.size > 0) {
+            const users = Array.from(selectedUsers);
+
+            if (user && !users.includes(user.username)) {
+                users.push(user.username);
+            }
+
+            const chatroomRequest: chatroomRequestDTO = { name: chatroomName, users };
+            makeChatroom(chatroomRequest)
+                .then(r => {
+                    setIsModalOpen2(false);
+                    setSelectedUsers(new Set());
+                    setChatroomName('');
+                })
+                .catch(e => {
+                    console.error(e);
+                });
+        } else {
+            console.error("이름이나 유저를 선택해주세요");
+        }
+    };
+
     function ChatList({ Chatroom, ChatDetail }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO }) {
-        console.log("ASDASD");
-        console.log(Chatroom);
+        // console.log("ASDASD");
+        // console.log(Chatroom);
 
         const joinMembers: number = Chatroom.users.length;
         function getValue(confirm: number) {
@@ -243,7 +300,14 @@ export default function Chat() {
                                     <span className="font-bold text-md m-3">{user.name}</span>
                                     <span className=" text-md m-3">부서</span>
                                     <span className="text-md m-3">역할</span>
-                                    <button className="font-bold text-3xl m-3">+</button>
+                                    <button onClick={() => {
+                                        addUser({ chatroomId: chatroom.id, username: user.username }).then(r => {
+                                            console.log("완료")
+
+                                        }).catch(e => {
+                                            console.log(e)
+                                        })
+                                    }} className="font-bold text-3xl m-3">+</button>
                                 </li>
                             ))}
                         </ul>
@@ -279,8 +343,7 @@ export default function Chat() {
                         <span></span>
                     </button>
                     <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="burger">
-                        {/* <button onClick={() => setColor(1)}>단체</button>
-                <button onClick={() => setColor(2)}>개인</button> */}
+
                         <button onClick={() => {
                             chatExit({ chatroomId: chatroom.id, username: user.username }).then((r) => {
 
@@ -344,7 +407,18 @@ export default function Chat() {
                                     >
                                         공지 설정
                                     </button>
-
+                                    <button className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
+                                        onClick={() => {
+                                            
+                                            deleteMessage(Number(t?.id))
+                                                .then(() => {
+                                                    console.log("----")
+                                                    setMessageList(prevMessageList => prevMessageList.filter(message => message.id !== t.id));
+                                                })
+                                                .catch((e) => {
+                                                    console.error("Error deleting message:", e);
+                                                });
+                                        }}>삭제</button>
                                     <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
                                     <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
                                         <div className="mt-2 mb-2 ml-3 mr-3">
@@ -366,6 +440,7 @@ export default function Chat() {
                                         </p>
                                         <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
                                         <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">읽음</p>
+                                        <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">삭제</p>
                                         <button
                                             className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
                                             onClick={() => {
@@ -385,7 +460,6 @@ export default function Chat() {
                                                         console.error(e);
                                                     });
                                             }}
-
                                         >
                                             공지 설정
                                         </button>
@@ -465,9 +539,44 @@ export default function Chat() {
                         <button>단체</button>
                     </DropDown>
                 </div>
-                <button className="fixed bottom-5 left-10 w-[50px] h-[50px] rounded-full bg-blue-300 text-xl font-bold text-white">
+                <button onClick={handleOpen2Modal} className="fixed bottom-5 left-10 w-[50px] h-[50px] rounded-full bg-blue-300 text-xl font-bold text-white">
                     +
                 </button>
+                <Modal open={isModalOpen2} onClose={handleClose2Modal} escClose={true} outlineClose={true}>
+                    <div className="overflow-auto w-full">
+                        <p className="font-bold text-3xl m-3 mb-8 flex justify-center">채팅방 만들기</p>
+                        <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] m-2">
+                            <input
+                                type="text"
+                                placeholder="채팅방 이름을 입력해주세요"
+                                className="bolder-0 outline-none bg-white text-black"
+                                value={chatroomName}
+                                onChange={e => setChatroomName(e.target.value)}
+                            />
+                        </div>
+                        <ul className="m-3">
+                            {userList.map((user, index) => (
+                                <li key={index} className="flex justify-between items-center mb-5">
+                                    <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
+                                    <span className="font-bold text-md m-3">{user.name}</span>
+                                    <span className=" text-md m-3">부서</span>
+                                    <span className="text-md m-3">역할</span>
+                                    {/* 체크박스 */}
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedUsers.has(user.username)}
+                                        onChange={() => handleCheckboxChange(user.username)}
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="w-full flex justify-center">
+                            <button onClick={handleCreateChatroom} className="login-button flex items-center m-2">
+                                채팅방 생성
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
 
 
                 <div className="flex flex-col items-center">

@@ -84,6 +84,11 @@ interface noticeRequestDTO{
     messageId: number
 }
 
+interface chatroomRequestDTO{
+    name : string,
+    users : string[]
+}
+
 export const updateUser = async (data: UpdateProps) => {
     const response = await UserApi.put('/api/user', data);
     return response.data;
@@ -179,7 +184,7 @@ export const addUser = async ({ chatroomId, username }: { chatroomId: number, us
         chatroomId: chatroomId,
         username: username
     };
-    const response = await UserApi.post('/api/participant', data);
+    const response = await UserApi.post('/api/participant',null, {headers : data});
     return response.data;
 }
 
@@ -245,3 +250,18 @@ export const updatePassword = async (prePassword: string, newPassword: string) =
     const response = await UserApi.put('/api/user', { prePassword: prePassword, newPassword: newPassword });
     return response.data;
 }
+
+export const makeChatroom = async (chatroomRequestDTO:chatroomRequestDTO) => {
+    const response = await UserApi.post('/api/chatroom',chatroomRequestDTO);
+    return response.data;
+}
+
+export const deleteMessage = async (messageId: number) => {
+    const response = await UserApi.delete('/api/message', {
+        headers: {
+            messageId: messageId
+        }
+    });
+    return response.data;
+};
+
