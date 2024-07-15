@@ -89,7 +89,7 @@ public class EmailController {
     }
 
     @PutMapping("/read")
-    public ResponseEntity<?> markEmailAsRead(@RequestBody EmailReadRequestDTO emailReadRequestDTO, String username) {
+    public ResponseEntity<?> markEmailAsRead(@RequestBody EmailReadRequestDTO emailReadRequestDTO, @RequestHeader String username) {
         EmailResponseDTO emailResponseDTO = multiService.read(emailReadRequestDTO, username);
         return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
     }
