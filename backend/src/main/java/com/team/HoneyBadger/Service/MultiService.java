@@ -527,26 +527,41 @@ public class MultiService {
     public EmailReservationResponseDTO updateEmailReservation(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
         // 요청 DTO에서 ID를 사용하여 이메일 예약을 검색
         EmailReservation emailReservation = emailReservationService.getEmailReservation(emailReservationRequestDTO.id());
+
         // 예약의 발신자, 현재 사용자 username 일치 확인
         if (emailReservation != null && emailReservation.getSender().getUsername().equals(username)) {
+            // KeyPreset을 사용하여 keyValue 생성
             String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(emailReservationRequestDTO.id().toString());
+
+            // multiKey를 가져오거나, 없으면 새로 생성
             MultiKey multiKey = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
+
+            // 새로운 파일 경로 리스트 생성
             List<String> values = new ArrayList<>();
             for (String key : emailReservationRequestDTO.files()) {
                 Optional<FileSystem> _fileSystem = fileSystemService.get(key);
                 _fileSystem.ifPresent(fileSystem -> values.add(fileSystem.getV()));
             }
+
+            // 기존 multiKey의 keyValues를 순회하며, 파일 시스템에서 삭제
             for (String key : multiKey.getKeyValues()) {
                 Optional<FileSystem> _fileSystem = fileSystemService.get(key);
                 _fileSystem.ifPresent(fileSystemService::deleteByKey);
             }
+
+            // multiKey를 새로운 값들로 업데이트
             multiKeyService.updateAll(multiKey, values);
+
+            // 이메일 예약 정보 업데이트
             emailReservationService.update(emailReservation, emailReservationRequestDTO);
+
+            // 업데이트된 이메일 예약 정보를 바탕으로 DTO 반환
             return getEmailReservationDTO(emailReservation);
         } else {
             throw new UnauthorizedException("You are not authorized to update this reservation.");
         }
     }
+
     /*
      * Message or Chat
      */
