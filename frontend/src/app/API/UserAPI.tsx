@@ -276,3 +276,17 @@ export const deleteMessage = async (messageId: number) => {
     return response.data;
 };
 
+export const chatUploadFile = async ({ chatroomId, file }: { chatroomId: number, file: File }) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await UserApi.post('/api/message/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            chatroomId: chatroomId,
+        },
+        
+    });
+
+    return response.data;
+};

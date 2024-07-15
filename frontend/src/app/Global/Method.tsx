@@ -107,6 +107,31 @@ export function getChatDateTimeFormat(data: any) {
             + formattedTime;
     }
 }
+
+export function getChatShowDateTimeFormat(data: any) {
+    const date = new Date(data);
+    const now = new Date();
+    const isToday = date.getDate() === now.getDate() &&
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear();
+
+    const hours = date.getHours();
+    const amPm = hours >= 12 ? '오후' : '오전';
+    const formattedHour = hours % 12 || 12;  // 0시는 12시로 표현
+
+    const formattedTime = amPm + " " + (formattedHour < 10 ? '0' + formattedHour : formattedHour) + ":"
+        + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+
+    if (isToday) {
+        // 오늘 날짜인 경우 시간만 반환
+        return formattedTime;
+    } else {
+        // 오늘이 아닌 경우 날짜만 반환
+        return date.getFullYear() + "-" +
+            (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "-"
+            + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
+    }
+}
 export function getRole(role: number) {
     switch (role) {
         case 0: return "사장"
