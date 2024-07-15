@@ -764,19 +764,10 @@ public class MultiService {
     }
 
     @Transactional
-    public UserResponseDTO getUser(String username) {
-        return getUserResponseDTO(userService.get(username));
-    }
-
-    @Transactional
-    public List<UserResponseDTO> getAllUser(String username) {
-        return userService.getUsernameAll(username).stream().map(this::getUserResponseDTO).toList();
-    }
-
-    @Transactional
     public int alarmCount(Long chatroomId, Long endId) {
         List<Message> messageList = messageService.getUpdatedList(chatroomId, endId);
-        return messageList.size()-1;
+        return messageList.size() - 1;
+    }
     /*
      * Time
      */
