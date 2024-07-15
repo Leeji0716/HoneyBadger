@@ -5,7 +5,7 @@ import DropDown, { Direcion } from "../Global/DropDown";
 import Modal from "../Global/Modal";
 import { Tooltip } from 'react-tooltip';
 
-import { chatExit, getChat, getUser, getChatDetail } from "../API/UserAPI";
+import { chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage } from "../API/UserAPI";
 import { getChatDateTimeFormat } from "../Global/Method";
 import { getSocket } from "../API/SocketAPI";
 
@@ -23,14 +23,13 @@ export default function Chat() {
         id: number,
         name: string,
         users: string[]
-        messageResponseDTO: messageResponseDTO
+        latestMessage: messageResponseDTO
+        notification: messageResponseDTO
     }
 
-    interface chatDetailResponseDTO {
-        id: number,
-        name: string,
-        users: string[]
-        messageResponseDTOList: messageResponseDTO[]
+    interface chatroomRequestDTO {
+        name: string;
+        users: string[];
     }
 
     const [open, setOpen] = useState(false);
@@ -38,17 +37,21 @@ export default function Chat() {
     const [filter, setFilter] = useState(false);
     const [drop, setDrop] = useState(false);
     // const [chat, setChat] = useState("채팅▾");
-    const [chatrooms, setChatrooms] = useState([] as any);
+    const [chatrooms, setChatrooms] = useState([] as any[]);
     const [chatroom, setChatroom] = useState(null as any);
     const [user, setUser] = useState(null as any);
     const [chatDetail, setChatDetail] = useState(null as any);
-    const [test, setTest] = useState<messageResponseDTO[]>([]);
     const [messageList, setMessageList] = useState<messageResponseDTO[]>([]);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const [socket, setSocket] = useState(null as any);
     const [temp, setTemp] = useState(null as any);
     const [isReady, setReady] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen1, setIsModalOpen1] = useState(false);
+    const [isModalOpen2, setIsModalOpen2] = useState(false);
+    const [userList, setUserList] = useState([] as any[])
+    const [selectedUsers, setSelectedUsers] = useState(new Set<string>());
+    const [chatroomName, setChatroomName] = useState('');
 
     function handleOpenModal() {
         setIsModalOpen(true);
@@ -58,12 +61,32 @@ export default function Chat() {
         setIsModalOpen(false);
     }
 
+    function handleOpen1Modal() {
+        setIsModalOpen1(true);
+    }
+
+    function handleClose1Modal() {
+        setIsModalOpen1(false);
+    }
+
+    function handleOpen2Modal() {
+        setIsModalOpen2(true);
+    }
+
+    function handleClose2Modal() {
+        setIsModalOpen2(false);
+    }
+
+
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
                 setUser(r);
+                getUsers().then(r => {
+                    setUserList(r);
+
+                }).catch(e => console.log(e))
                 getChat().then(r => {
-                    // console.log(r);
                     setChatrooms(r);
                 }).catch(e => console.log(e))
             }).catch(e => console.log(e));
@@ -82,16 +105,64 @@ export default function Chat() {
         }
     }, [temp])
 
-    function ChatList({ Chatroom, ChatDetail }: { Chatroom: chatroomResponseDTO, ChatDetail: chatDetailResponseDTO }) {
-        console.log(ChatDetail);
-        // console.log(chatroom);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const usersData = await getUsers();
+                setUserList(usersData);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const handleCheckboxChange = (username: string) => {
+        setSelectedUsers(prevSelectedUsers => {
+            const newSelectedUsers = new Set(prevSelectedUsers);
+            if (newSelectedUsers.has(username)) {
+                newSelectedUsers.delete(username);
+            } else {
+                newSelectedUsers.add(username);
+            }
+            return newSelectedUsers;
+        });
+    };
+
+    const handleCreateChatroom = () => {
+        if (chatroomName && selectedUsers.size > 0) {
+            const users = Array.from(selectedUsers);
+
+            if (user && !users.includes(user.username)) {
+                users.push(user.username);
+            }
+
+            const chatroomRequest: chatroomRequestDTO = { name: chatroomName, users };
+            makeChatroom(chatroomRequest)
+                .then(r => {
+                    setIsModalOpen2(false);
+                    setSelectedUsers(new Set());
+                    setChatroomName('');
+                })
+                .catch(e => {
+                    console.error(e);
+                });
+        } else {
+            console.error("이름이나 유저를 선택해주세요");
+        }
+    };
+
+    function ChatList({ Chatroom, ChatDetail }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO }) {
+        // console.log("ASDASD");
+        // console.log(Chatroom);
 
         const joinMembers: number = Chatroom.users.length;
-        const lastMessage = Chatroom.messageResponseDTO;
         function getValue(confirm: number) {
+            // console.log("asdsaas");
+            // console.log(joinMembers);
             switch (joinMembers) {
-                case 1: return <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />;
-                case 2: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
+                case 2: return <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />;
+                case 3: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
                     <div className="w-[80px] h-[40px] flex">
                         <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full ml-2 mt-2" />
                     </div>
@@ -99,7 +170,7 @@ export default function Chat() {
                         <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full mr-2 mb-2" />
                     </div>
                 </div>
-                case 3: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
+                case 4: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
                     <div className="w-[80px] h-[40px] flex justify-center">
                         <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
                     </div>
@@ -134,9 +205,11 @@ export default function Chat() {
                     const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, username: message?.username, messageType: 0 } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                     setTemp(temp);
                 });
+
                 getChatDetail(Chatroom?.id).then(r => {
                     // setMessageList(r);
-                    setMessageList(r?.messageResponseDTOList);
+                    setMessageList(r);
+
                     const timer = setInterval(() => {
                         document.getElementById((r?.length - 1).toString())?.scrollIntoView();
                         clearInterval(timer);
@@ -148,16 +221,27 @@ export default function Chat() {
             {getValue(joinMembers)}
 
             <div className="w-full m-2 flex flex-col">
-                <div className="flex justify-between">
-                    <p className="text-black font-bold">{Chatroom?.name}</p>
+                <div className="text-black font-bold">
+                    {Chatroom?.name ? (
+                        <span>{Chatroom.name}</span>
+                    ) : (
+                        Chatroom?.users
+                            .filter((username: any) => username !== user?.username) // 현재 사용자 제외
+                            .map((username: any, index: number, array: any[]) => (
+                                <span key={username}>
+                                    {username}
+                                    {index < array.length - 1 && ", "}
+                                </span>
+                            ))
+                    )}
                 </div>
                 <div className="flex justify-between mt-2">
-                    <p className="text-black text-sm">{lastMessage?.message}</p>
+                    <p className="text-black text-sm">{Chatroom?.latestMessage?.message}</p>
                 </div>
             </div>
             <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
                 <div>
-                    <p className="text-gray-300 whitespace-nowrap">{getChatDateTimeFormat(lastMessage?.sendTime)}</p>
+                    <p className="text-gray-300 whitespace-nowrap">{getChatDateTimeFormat(Chatroom?.latestMessage?.sendTime)}</p>
                 </div>
                 <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
                     <p className="text-white text-sm">1</p>
@@ -166,9 +250,10 @@ export default function Chat() {
         </div>
     }
 
-    function ChatDetil({ chatDetail }: { chatDetail: chatroomResponseDTO }) {
+    function ChatDetil({ Chatroom, chatDetail }: { Chatroom: chatroomResponseDTO, chatDetail: messageResponseDTO }) {
         const joinMembers = Array.isArray(chatroom.users) ? chatroom.users.length : 0;
         const [message, setMessage] = useState('');
+        const [roomName, setRoomName] = useState(chatroom?.name);
         // console.log("==========");
         // console.log(chatroom);
         // console.log(chatroom.messageResponseDTOList);
@@ -179,8 +264,21 @@ export default function Chat() {
                     <img src="/pig.png" className="m-2 w-[70px] h-[70px] rounded-full" />
                     <div className="flex flex-col justify-center">
                         <div className="flex">
-                            <p className="text-black font-bold text-3xl mb-1">{chatroom?.name}</p>
-                            <button> 이름편집</button>
+                            <p className="text-black font-bold text-3xl mb-1 whitespace-nowrap">
+                                {chatroom?.name ? (
+                                    <p>{chatroom.name}</p>
+                                ) : (
+                                    chatroom?.users
+                                        .filter((username: any) => username !== user?.username) // 현재 사용자 제외
+                                        .map((username: any, index: number, array: []) => (
+                                            <span key={username}>
+                                                {username}
+                                                {index < array.length - 1 && ", "}
+                                            </span>
+                                        ))
+                                )}
+                            </p>
+                            <button onClick={handleOpen1Modal}> 이름편집</button>
                         </div>
                         <div className="flex items-center gap-1">
                             <button onClick={handleOpenModal}>
@@ -193,7 +291,48 @@ export default function Chat() {
                     </div>
                 </div>
                 <Modal open={isModalOpen} onClose={handleCloseModal} escClose={true} outlineClose={true}>
-                    <div className="w-[900px], h-[800px]"> 이것은 리스트가 사람 리스트가 나올 모달입니다.
+                    <div className="overflow-auto">
+                        <p className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</p>
+                        <ul className="m-3">
+                            {userList.map((user, index) => (
+                                <li key={index} className="flex justify-between items-center mb-5">
+                                    <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
+                                    <span className="font-bold text-md m-3">{user.name}</span>
+                                    <span className=" text-md m-3">부서</span>
+                                    <span className="text-md m-3">역할</span>
+                                    <button onClick={() => {
+                                        addUser({ chatroomId: chatroom.id, username: user.username }).then(r => {
+                                            console.log("완료")
+
+                                        }).catch(e => {
+                                            console.log(e)
+                                        })
+                                    }} className="font-bold text-3xl m-3">+</button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </Modal>
+                <Modal open={isModalOpen1} onClose={handleClose1Modal} escClose={true} outlineClose={true}>
+                    <div className="flex flex-col items-cnete justify-center m-3">
+                        <p className="flex items-center justify-center font-bold">이름 편집</p>
+                        <input type="text" placeholder={chatroom?.name} value={roomName} onChange={e => { console.log(e.target.value); setRoomName(e.target.value) }}
+                        />
+                        <button onClick={() => {
+                            const updatedChatroom = {
+                                ...chatroom,
+                                name: roomName
+                            };
+
+                            editChatroom({ chatroomId: chatroom.id, chatroomResponseDTO: updatedChatroom }).then(r => {
+                                setChatrooms(prev => prev.map(room => room.id === chatroom.id ? r : room));
+                                setChatroom(null);
+                                handleClose1Modal();
+                            }).catch(e => {
+                                console.error(e);
+                            });
+                        }}>변경</button>
+
                     </div>
                 </Modal>
 
@@ -204,8 +343,7 @@ export default function Chat() {
                         <span></span>
                     </button>
                     <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="burger">
-                        {/* <button onClick={() => setColor(1)}>단체</button>
-                <button onClick={() => setColor(2)}>개인</button> */}
+
                         <button onClick={() => {
                             chatExit({ chatroomId: chatroom.id, username: user.username }).then((r) => {
 
@@ -221,10 +359,10 @@ export default function Chat() {
             </div>
             {/* 공지 */}
             <div className="w-full flex justify-center">
-                <div className="official-color w-[59%] h-[70px] rounded-md flex items-center fixed z-50" style={{ opacity: 0.8 }}>
+                <div className="official-color w-[59%] h-[70px] rounded-md flex items-center fixed z-50 absolute" style={{ opacity: 0.8 }}>
                     <img src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="" />
                     <p className="w-full text-white" style={{ opacity: 1 }}>
-                        공지 내용이 들어갈 부분입니다. 어디까지 길어질지 어디 한 번 해보자고 해보자는 거냐고 진짜 공지 내용이 들어갈 부분입니다. 어디까지 길어질지 어디 한 번 해보자고 해보자는 거냐고 진짜
+                        {Chatroom?.notification?.message || '공지가 안 뜹니다'}
                     </p>
                     <button className="h-full flex items-start mr-2 text-white text-3xl" style={{ opacity: 1 }}>
                         ⨯
@@ -245,6 +383,42 @@ export default function Chat() {
                         t.username == user?.username ?
                             <div className="flex w-full justify-end" id={index.toString()}>
                                 <div className="w-6/12 flex justify-end mr-2">
+
+                                    <button
+                                        className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
+                                        onClick={() => {
+
+                                            notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
+                                                .then((r) => {
+                                                    console.log('-=------====');
+                                                    // setNotificationMessage(r);
+
+                                                    chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
+                                                    setChatrooms([...chatrooms]);
+                                                    setChatroom(r);
+
+                                                    console.log(Chatroom);
+                                                })
+                                                .catch((e) => {
+                                                    console.error(e);
+                                                });
+                                        }}
+
+                                    >
+                                        공지 설정
+                                    </button>
+                                    <button className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
+                                        onClick={() => {
+                                            
+                                            deleteMessage(Number(t?.id))
+                                                .then(() => {
+                                                    console.log("----")
+                                                    setMessageList(prevMessageList => prevMessageList.filter(message => message.id !== t.id));
+                                                })
+                                                .catch((e) => {
+                                                    console.error("Error deleting message:", e);
+                                                });
+                                        }}>삭제</button>
                                     <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
                                     <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
                                         <div className="mt-2 mb-2 ml-3 mr-3">
@@ -265,6 +439,30 @@ export default function Chat() {
                                             {t?.message}
                                         </p>
                                         <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
+                                        <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">읽음</p>
+                                        <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">삭제</p>
+                                        <button
+                                            className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
+                                            onClick={() => {
+
+                                                notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
+                                                    .then((r) => {
+                                                        console.log('-=------====');
+                                                        // setNotificationMessage(r);
+
+                                                        chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
+                                                        setChatrooms([...chatrooms]);
+                                                        setChatroom(r);
+
+                                                        console.log(Chatroom);
+                                                    })
+                                                    .catch((e) => {
+                                                        console.error(e);
+                                                    });
+                                            }}
+                                        >
+                                            공지 설정
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -277,7 +475,6 @@ export default function Chat() {
                     <textarea placeholder="내용을 입력하세요" className="bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
 
                         onKeyDown={e => {
-                            console.log('Key pressed:', e.key);
                             if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
                                 e.preventDefault(); // 폼 제출 방지
                                 if (isReady) {
@@ -328,13 +525,13 @@ export default function Chat() {
                     </button>
                 </div>
             </div>
-        </div>
+        </div >
     }
 
-    return <Main>
-        <div className="w-4/12 flex items-center justify-center h-screen">
+    return <Main user={user}>
+        <div className="w-4/12 flex items-center justify-center h-full pt-10 pb-4">
             {/* 왼 쪽 부분 */}
-            <div className=" h-11/12 w-11/12 mt-10 bg-white h-[95%] shadow">
+            <div className=" h-11/12 w-11/12 bg-white h-full shadow">
                 <div className="flex justify-start text-xl ml-5 mr-5 mt-5 mb-5 text-black">
                     <button className="font-bold" id="button1" onClick={() => { setOpen(!open), setFilter(!filter) }}>채팅{open ? '▴' : '▾'}</button>
                     <DropDown open={open} onClose={() => setOpen(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="button1">
@@ -342,9 +539,44 @@ export default function Chat() {
                         <button>단체</button>
                     </DropDown>
                 </div>
-                <button className="fixed bottom-5 left-10 w-[50px] h-[50px] rounded-full bg-blue-300 text-xl font-bold text-white">
+                <button onClick={handleOpen2Modal} className="fixed bottom-5 left-10 w-[50px] h-[50px] rounded-full bg-blue-300 text-xl font-bold text-white">
                     +
                 </button>
+                <Modal open={isModalOpen2} onClose={handleClose2Modal} escClose={true} outlineClose={true}>
+                    <div className="overflow-auto w-full">
+                        <p className="font-bold text-3xl m-3 mb-8 flex justify-center">채팅방 만들기</p>
+                        <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] m-2">
+                            <input
+                                type="text"
+                                placeholder="채팅방 이름을 입력해주세요"
+                                className="bolder-0 outline-none bg-white text-black"
+                                value={chatroomName}
+                                onChange={e => setChatroomName(e.target.value)}
+                            />
+                        </div>
+                        <ul className="m-3">
+                            {userList.map((user, index) => (
+                                <li key={index} className="flex justify-between items-center mb-5">
+                                    <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
+                                    <span className="font-bold text-md m-3">{user.name}</span>
+                                    <span className=" text-md m-3">부서</span>
+                                    <span className="text-md m-3">역할</span>
+                                    {/* 체크박스 */}
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedUsers.has(user.username)}
+                                        onChange={() => handleCheckboxChange(user.username)}
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="w-full flex justify-center">
+                            <button onClick={handleCreateChatroom} className="login-button flex items-center m-2">
+                                채팅방 생성
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
 
 
                 <div className="flex flex-col items-center">
@@ -378,7 +610,7 @@ export default function Chat() {
                             대화 목록
                         </p>
                     </div>
-                    <div className="w-full justify-end h-[590px] overflow-x-hidden overflow-y-scroll">
+                    <div className="w-full justify-end h-[550px] overflow-x-hidden overflow-y-scroll">
                         {chatrooms?.map((chatroom: chatroomResponseDTO, index: number) => <ChatList key={index} Chatroom={chatroom} ChatDetail={chatDetail} />)}
                     </div>
                 </div>
@@ -386,9 +618,9 @@ export default function Chat() {
         </div>
 
         {/* 오른쪽 부분 */}
-        <div className="w-8/12 flex items-center justify-center">
-            <div className="h-11/12 w-11/12 mt-10 bg-white h-[95%] flex flex-col shadow">
-                {chatroom != null ? <ChatDetil chatDetail={chatDetail} /> : <></>}
+        <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
+            <div className="h-11/12 w-11/12 bg-white h-full flex flex-col shadow">
+                {chatroom != null ? <ChatDetil Chatroom={chatroom} chatDetail={chatDetail} /> : <></>}
             </div>
         </div>
     </Main>

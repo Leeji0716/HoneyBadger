@@ -1,10 +1,11 @@
 'use client';
 
-import { emailFiles, getUser, mailImage, mailUpdate, reservationEmail, sendEmail } from "@/app/API/UserAPI";
+import { emailFiles, getUser, mailImage, mailUpdate, reservationEmail, reservationFiles, sendEmail } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
-import { eontransferLocalTime, transferLocalTime } from "@/app/Global/Method";
+import { eongetDateTimeFormat, eontransferLocalTime, getDateTimeFormatInput, transferLocalTime } from "@/app/Global/Method";
 import QuillNoSSRWrapper from "@/app/Global/QuillNoSSRWrapper";
+import { Ultra } from "next/font/google";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
@@ -24,13 +25,22 @@ export default function EmailForm() {
     const [user, setUser] = useState(null as any);
     const [fileList, setFileList] = useState<File[]>([]);
     const [time, setTime] = useState<Date | null>(null);
+    const [senderTime, setSenderTime] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [image, setImage] = useState("");
+    const [files, setFiles] = useState<MailFile[]>([]);
+    const [id, setId] = useState(0);
+
+    interface MailFile {
+        key: string,
+        original_name: string,
+        value: string
+    }
 
     // const [email, setEmail] = useState<Email | null>(null);
     const quillInstance = useRef<ReactQuill>(null);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
-
+    console.log("flag : " + flag);
     useEffect(() => { console.log(time) }, [time])
     useEffect(() => {
         if (ACCESS_TOKEN) {
@@ -38,9 +48,12 @@ export default function EmailForm() {
             if (localStorage.getItem('email')) {
                 const email = JSON.parse(localStorage.getItem('email') as string);
                 setEmail(email);
+                setId(email.id);
                 setReceiverIds(email?.receiverIds);
                 setTitle(email?.title);
                 setContent(email?.content);
+                setSenderTime(email?.senderTime);
+                setFiles(email?.files);
                 setFlag(2);
                 console.log("플래그값 : " + flag);
             }
@@ -103,7 +116,14 @@ export default function EmailForm() {
 
     function test() {
         if (flag == 2) {
-            mailUpdate({ mailId: email.id, email: { content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: eontransferLocalTime(time), attachments: fileList } })
+            if (fileList.length == 0) {
+                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).catch(e => console.log(e));
+            } else {
+                const form = new FormData();
+                for (const file of fileList)
+                    form.append('attachments', file);
+                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).then(r => reservationFiles({ attachments: form, emailId: email.id }).then(r => window.location.href = "/email").catch(e => console.log(e))).catch(e => console.log(e));
+            }
         }
         else if (flag == 0) {
             if (fileList.length == 0) {
@@ -113,15 +133,30 @@ export default function EmailForm() {
                 for (const file of fileList)
                     form.append('attachments', file);
 
-                sendEmail({ content: content, title: title, receiverIds: receiverIds }).then(r => emailFiles({ attachments: form, emailId: r})).then(r => window.location.href = "/email").catch(e => console.log(e)).catch(e => console.log(e))
+                sendEmail({ content: content, title: title, receiverIds: receiverIds }).then(r => emailFiles({ attachments: form, emailId: r })).then(r => window.location.href = "/email").catch(e => console.log(e)).catch(e => console.log(e))
             }
         }
         else {
-            reservationEmail({ content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: eontransferLocalTime(time), attachments: fileList }).then(r => window.location.href = "/email").catch(e => console.log(e))
+            if (fileList.length == 0) {
+                reservationEmail({ content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time) }).then(r => window.location.href = "/email").catch(e => console.log(e))
+            } else {
+                const form = new FormData();
+                for (const file of fileList)
+                    form.append('attachments', file);
+
+                reservationEmail({ content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time) }).then(r => reservationFiles({ attachments: form, emailId: r }).then(r => window.location.href = "/email").catch(e => console.log(e))).catch(e => console.log(e))
+            }
         }
     }
 
-    return <Main>
+    const sliceText = (text: string) => {
+        const slice: string[] = text.split(".");
+        const extension: string = slice[slice.length - 1];
+
+        return extension;
+    }
+
+    return <Main user={user}>
         <div className="flex flex-col items-center gap-5 bg-white w-full p-6">
             <h2 className="font-bold">메일 쓰깅</h2>
             <div className="w-full border-b-2"></div>
@@ -129,7 +164,7 @@ export default function EmailForm() {
                 <button className="mail-hover w-[100px]" onClick={test}>보내기</button>
                 <button className="mail-hover w-[100px]" onClick={() => setOpen(!open)}>예약</button>
                 <DropDown open={open} onClose={() => setOpen(false)} className="mt-8" defaultDriection={Direcion.DOWN} width={200} height={200} button="button1">
-                    <input type="datetime-local" name="" id="" onChange={(e) => {
+                    <input type="datetime-local" name="" id="" defaultValue={getDateTimeFormatInput(senderTime)} onChange={(e) => {
                         const inputDateTimeString = e.target.value; // "YYYY-MM-DDTHH:mm" 형식의 문자열
                         const selectedDate = new Date(inputDateTimeString);
                         setTime(selectedDate);
@@ -168,6 +203,22 @@ export default function EmailForm() {
                         setFileList((prevFiles) => [...prevFiles, ...filesArray]);
                     }
                 }} />
+            </div>
+            <div className="w-[1000px] h-[150px]  overflow-y-scroll">
+                {files.length != 0 ? files.map((f: MailFile, index: number) => <ul key={index}>
+                    <div className="flex border-solid border-2 border-gray-200 p-4">
+                        <button className="mr-2" onClick={() => { const removeFile = [...files]; removeFile.splice(index, 1); setFiles(removeFile); }}>X</button>
+                        <img src={"/" + sliceText(f.original_name) + ".PNG"} alt="" />
+                        <p>{f.original_name}</p>
+                    </div>
+                </ul>) : <></>}
+                {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}>
+                    <div className="flex border-solid border-2 border-gray-200 p-4">
+                        <button className="mr-2" onClick={() => { const removeFile = [...fileList]; removeFile.splice(index, 1); setFileList(removeFile); }}>X</button>
+                        <img src={"/" + sliceText(f.name) + ".PNG"} alt="" />
+                        <p>{f.name}</p>
+                    </div>
+                </ul>) : <></>}
             </div>
             <div className="w-full flex justify-center h-[500px]">
                 <QuillNoSSRWrapper

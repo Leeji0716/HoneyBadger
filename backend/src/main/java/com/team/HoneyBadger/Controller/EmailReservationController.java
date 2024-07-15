@@ -34,7 +34,7 @@ public class EmailReservationController {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
             try {
-                multiService.emailFilesUpload(email_id, attachments);
+                multiService.emailReservationFilesUpload(email_id, attachments);
                 return ResponseEntity.status(HttpStatus.OK).body("okay");
             } catch (IOException ex) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("files not uploaded");
@@ -43,7 +43,7 @@ public class EmailReservationController {
             return tokenDTO.getResponseEntity();
     }
 
-    @PostMapping(value = "/schedule", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/schedule")
     public ResponseEntity<?> scheduleEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReservationRequestDTO emailReservationRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {

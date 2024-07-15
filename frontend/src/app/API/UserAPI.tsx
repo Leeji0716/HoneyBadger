@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { getAPI } from './AxiosAPI';
 import { access } from 'fs';
+import exp from 'constants';
 
 
 export const UserApi = getAPI();
@@ -63,21 +64,44 @@ interface UpdateProps {
 interface SendEmail {
     title: string,
     content: string,
-    senderId: string,
     receiverIds: string[],
-    sendTime?: Date | null,
-    attachments?: File[] | null
+    sendTime?: Date | null
 }
 
-interface SendEmail2 {
+interface CreateEmail {
     title: string,
     content: string,
     receiverIds: string[]
 }
 
+interface emailReservationUpdate {
+    id : number,
+    title: string,
+    content: string,
+    receiverIds: string[],
+    sendTime?: Date | null,
+    files : MailFile[]
+}
+
+interface MailFile {
+    key: string,
+    original_name: string,
+    value: string
+}
+
 interface chatroomResponseDTO {
     name?: string,
     users: string[]
+}
+
+interface noticeRequestDTO{
+    chatroomId: number,
+    messageId: number
+}
+
+interface chatroomRequestDTO{
+    name : string,
+    users : string[]
 }
 
 export const updateUser = async (data: UpdateProps) => {
@@ -94,7 +118,7 @@ export const getEmail = async (status: number) => {
     return response.data;
 }
 
-export const sendEmail = async (data: SendEmail2) => {
+export const sendEmail = async (data: CreateEmail) => {
     console.log(data);
     const response = await UserApi.post('/api/email', data);
     return response.data;
@@ -112,7 +136,7 @@ export const getChatDetail = async (chatroomId: number) => {
 }
 
 export const reservationEmail = async (data: SendEmail) => {
-    const response = await UserApi.post('/api/email/schedule', data);
+    const response = await UserApi.post('/api/emailReservation/schedule', data);
     return response.data;
 }
 
@@ -120,9 +144,9 @@ export const readEmail = async ({ emailId, readerId }: { emailId: number, reader
 
     const data = {
         emailId: emailId,
-        readerId: readerId
+        receiverId: readerId
     };
-    const response = await UserApi.post('/api/email/read', data);
+    const response = await UserApi.put('/api/email/read', data);
     return response.data;
 }
 
@@ -155,12 +179,8 @@ export const mailDelete = async (mailId: number) => {
     return response.data;
 }
 
-export const mailUpdate = async ({ mailId, email }: { mailId: number, email: SendEmail }) => {
-    const response = await UserApi.put('/api/email/delete', email, {
-        headers: {
-            id: mailId
-        }
-    });
+export const mailUpdate = async (email: emailReservationUpdate ) => {
+    const response = await UserApi.put('/api/emailReservation', email);
     return response.data;
 }
 
@@ -175,33 +195,34 @@ export const addUser = async ({ chatroomId, username }: { chatroomId: number, us
         chatroomId: chatroomId,
         username: username
     };
-    const response = await UserApi.post('/api/participant', data);
+    const response = await UserApi.post('/api/participant',null, {headers : data});
     return response.data;
 }
 
-export const editChatroom = async ({ chatroomId, data }: { chatroomId: number, data: chatroomResponseDTO }) => {
-    const response = await UserApi.put('/api/chatroom/', data);
-    return response.data;
-}
-
-export const notification = async (accessToken: string, chatroomId: number, messageId: number) => {
-    const config = {
-        headers: {
-            'Authorization': accessToken,
-            'chatroomId': chatroomId,
-            'MessageId': messageId
+export const editChatroom = async ({ chatroomId, chatroomResponseDTO }: { chatroomId: number, chatroomResponseDTO: chatroomResponseDTO }) => {
+    const response = await UserApi.put('/api/chatroom', chatroomResponseDTO, {
+        headers:
+        {
+            chatroomId:chatroomId
         }
-    };
-    try {
-        const response = await UserApi.put('/api/chatroom/notification', null, config);
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
+});
+    return response.data;
 }
+
+
+
+export const notification = async (data: noticeRequestDTO) => {
+    const response = await UserApi.put('/api/chatroom/notification', data);    
+    return response.data;
+}
+
+export const getUsers = async () => {
+    const response = await UserApi.get('/api/user/usernames');
+    return response.data;
+}
+
 
 export const emailFiles = async ({ attachments, emailId }: { attachments: FormData, emailId: number }) => {
-
     const response = await UserApi.post('/api/email/files', attachments, {
         headers: {
             'Content-Type': 'multipart/form-data',
@@ -210,4 +231,48 @@ export const emailFiles = async ({ attachments, emailId }: { attachments: FormDa
     });
     return response.data;
 }
+
+
+export const reservationFiles = async ({ attachments, emailId }: { attachments: FormData, emailId: number }) => {
+
+    const response = await UserApi.post('/api/emailReservation/files', attachments, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            email_id: emailId
+        }
+    });
+    return response.data;
+}
+
+export const putProfileImage = async (form: FormData) => {
+    const response = await UserApi.put('/api/user/profile_image', form, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+}
+
+export const deleteProfileImage = async () => {
+    const response = await UserApi.delete('/api/user/profile_image');
+    return response.data;
+}
+export const updatePassword = async (prePassword: string, newPassword: string) => {
+    const response = await UserApi.put('/api/user', { prePassword: prePassword, newPassword: newPassword });
+    return response.data;
+}
+
+export const makeChatroom = async (chatroomRequestDTO:chatroomRequestDTO) => {
+    const response = await UserApi.post('/api/chatroom',chatroomRequestDTO);
+    return response.data;
+}
+
+export const deleteMessage = async (messageId: number) => {
+    const response = await UserApi.delete('/api/message', {
+        headers: {
+            messageId: messageId
+        }
+    });
+    return response.data;
+};
 

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +37,8 @@ public class EmailReceiverService {
         return emailReceiverRepository.findReceivedEmailsByUserId(userId); // 사용자에 대해 받은 이메일 목록을 반환하는 로직
     }
 
-    public List<Email> getReservedEmailsForUser(String userId) {
-        return emailReceiverRepository.findReservedEmailsByUserId(userId); // 사용자에 대해 예약된 이메일 목록을 반환하는 로직
+
+    public Optional<EmailReceiver> getEmailReceiver(Long aLong) {
+        return emailReceiverRepository.findById(aLong);
     }
 }

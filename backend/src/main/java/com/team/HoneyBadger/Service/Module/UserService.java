@@ -33,6 +33,12 @@ public class UserService {
                 .build());
     }
 
+    @Transactional
+    public void update(SiteUser user, String password) {
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+    }
+
     public boolean isMatch(String password1, String password2) {
         return passwordEncoder.matches(password1, password2);
     }
