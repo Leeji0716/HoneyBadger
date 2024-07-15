@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import { getUser } from "../API/UserAPI";
