@@ -18,7 +18,7 @@ import java.util.List;
 public class EmailReservationController {
     private final MultiService multiService;
 
-    @DeleteMapping("/reservation")
+    @DeleteMapping
     public ResponseEntity<?> deleteScheduledEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long reservationId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
