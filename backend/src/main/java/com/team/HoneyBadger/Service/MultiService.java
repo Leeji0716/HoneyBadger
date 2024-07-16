@@ -466,17 +466,23 @@ public class MultiService {
     }
 
     public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
-        Boolean isRead = emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
-
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
-
         EmailResponseDTO emailResponseDTO = getEmailDTO(email, username);
-
-
-
         return emailResponseDTO;
     }
 
+//    public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
+//        Email email = emailService.getEmail(emailReadRequestDTO.emailId());
+//        email.markAsRead(username);
+//        emailService.readSaveEmail(email);  // 변경사항 저장
+//
+//        List<EmailReadStatusDTO> recipientStatuses = email.getRecipients().stream()
+//                .map(recipient -> new EmailReadStatusDTO(recipient, email.isReadByUser(recipient)))
+//                .collect(Collectors.toList());
+//        EmailResponseDTO emailResponseDTO = getEmailDTO(recipientStatuses, email.getId());
+//
+//        return emailResponseDTO;
+//    }
 
     @Transactional
     public void deleteEmail(Long emailId, String username) {
@@ -498,8 +504,8 @@ public class MultiService {
 
         SiteUser user = userService.get(username);
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
-        if (emailReceiver == null){
-
+        if (emailReceiver == null) {
+            throw new EmailReceiverNotFoundException("Email receiver not found for email ID: " + email.getId() + " and username: " + username);
         }
         return EmailResponseDTO //
                 .builder() //

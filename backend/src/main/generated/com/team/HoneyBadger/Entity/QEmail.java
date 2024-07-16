@@ -28,7 +28,11 @@ public class QEmail extends EntityPathBase<Email> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
+    public final MapPath<String, Boolean, BooleanPath> readStatus = this.<String, Boolean, BooleanPath>createMap("readStatus", String.class, Boolean.class, BooleanPath.class);
+
     public final ListPath<EmailReceiver, QEmailReceiver> receiverList = this.<EmailReceiver, QEmailReceiver>createList("receiverList", EmailReceiver.class, QEmailReceiver.class, PathInits.DIRECT2);
+
+    public final ListPath<String, StringPath> recipients = this.<String, StringPath>createList("recipients", String.class, StringPath.class, PathInits.DIRECT2);
 
     public final QSiteUser sender;
 

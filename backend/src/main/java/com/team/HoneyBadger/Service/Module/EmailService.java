@@ -19,6 +19,10 @@ public class EmailService {
         return emailRepository.save(Email.builder().title(title).sender(sender).build());
     }
 
+    public void readSaveEmail(Email email) {
+        emailRepository.save(email);
+    }
+
     public Email update(Email email, String content) {
         email.setContent(content);
         return emailRepository.save(email);
