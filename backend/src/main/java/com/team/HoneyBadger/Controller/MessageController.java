@@ -40,7 +40,7 @@ public class MessageController {
     }
 
     @MessageMapping("/read/{id}")
-    @SendTo("/api/sub/read/{id}") //메세지 읽기
+    @SendTo("/api/sub/read/{id}") //메세지 읽기 -> readUsers 리스트에 추가
     public ResponseEntity<?> readMessages(@DestinationVariable Long id, String username) {
         try {
             multiService.readMessage(id, username);
@@ -54,7 +54,7 @@ public class MessageController {
         }
     }
 
-    @GetMapping("/update") //메세지 읽음 처리 업데이트
+    @GetMapping("/update") //메세지 읽음 처리 업데이트 -> LastMessage 저장
     public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
