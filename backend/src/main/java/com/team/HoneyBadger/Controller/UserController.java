@@ -1,9 +1,6 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.DTO.PasswordChangeDTO;
-import com.team.HoneyBadger.DTO.SignupRequestDTO;
-import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.DTO.UserResponseDTO;
+import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.DataNotSameException;
@@ -110,6 +107,19 @@ public class UserController {
             try {
                 multiService.changePassword(tokenDTO.username(), passwordChangeDTO);
                 return ResponseEntity.status(HttpStatus.OK).body("OK");
+            } catch (DataNotSameException ex) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+            }
+        } else return tokenDTO.getResponseEntity();
+    }
+
+    @PutMapping("/info")
+    public ResponseEntity<?> changeInfo(@RequestHeader("Authorization") String accessToken, @RequestBody UserInfoRequestDTO userInfoRequestDTO) {
+        TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            try {
+                UserResponseDTO dto = multiService.changeUser(userInfoRequestDTO);
+                return ResponseEntity.status(HttpStatus.OK).body(dto);
             } catch (DataNotSameException ex) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
             }
