@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
+import com.team.HoneyBadger.Enum.DepartmentRole;
 import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
 import com.team.HoneyBadger.Enum.Role;
@@ -429,7 +430,7 @@ public class MultiService {
     @Transactional
     public Long sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
-        if(receiverIds.isEmpty()){
+        if (receiverIds.isEmpty()) {
             throw new EmailReceiverNotFoundException("email not found");
         }
         SiteUser sender = userService.get(senderId);
@@ -667,9 +668,9 @@ public class MultiService {
     private MessageResponseDTO GetMessageDTO(Message message) {
         Long sendTime = this.dateTimeTransfer(message.getCreateDate());
         int readUsers;
-        if (message.getReadUsers() == null){
+        if (message.getReadUsers() == null) {
             readUsers = 0;
-        }else {
+        } else {
             readUsers = message.getReadUsers().size();
         }
 
@@ -843,11 +844,17 @@ public class MultiService {
     @Transactional
     public List<DepartmentTopResponseDTO> createDepartment(String username, DepartmentRequestDTO requestDTO) throws IOException {
         Department parent = departmentService.get(requestDTO.parentId());
-        Department department = departmentService.save(requestDTO.name(), parent);
+        if (departmentService.get(requestDTO.name()) != null)
+            throw new DataDuplicateException("department already exist");
+
+        Department department = departmentService.save(requestDTO.name(), parent, DepartmentRole.values()[requestDTO.role()]);
         if (requestDTO.url() != null) {
-            Path pre = Paths.get(requestDTO.url());
+            String path = HoneyBadgerApplication.getOsType().getLoc();
+            Path pre = Paths.get(path + requestDTO.url());
             String newUrl = requestDTO.url().replaceAll("/user/" + username + "/temp/depart_", "/department/" + department.getName() + "/");
-            Path now = Paths.get(newUrl);
+            Path now = Paths.get(path + newUrl);
+            if (!now.getParent().toFile().exists())
+                now.getParent().toFile().mkdirs();
             Files.move(pre, now, StandardCopyOption.REPLACE_EXISTING);
             fileSystemService.save(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()), newUrl);
         }
@@ -904,11 +911,19 @@ public class MultiService {
             check(child);
     }
 
-    public List<UserResponseDTO> getUsers(String departmentId) {
+    public DepartmentUserResponseDTO getDepartmentUsers(String departmentId) {
         Department department = departmentService.get(departmentId);
         if (department == null)
             throw new DataNotFoundException("해당 부서는 존재하지 않습니다.");
-        return department.getUsers().stream().map(this::getUserResponseDTO).toList();
+        return getDepartmentUserResponseDTO(department);
+    }
+
+    private DepartmentUserResponseDTO getDepartmentUserResponseDTO(Department department) {
+        List<UserResponseDTO> users = department.getUsers().stream().map(this::getUserResponseDTO).toList();
+        List<DepartmentUserResponseDTO> list = new ArrayList<>();
+        for (Department child : department.getChild())
+            list.add(getDepartmentUserResponseDTO(child));
+        return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).build();
     }
 
 
