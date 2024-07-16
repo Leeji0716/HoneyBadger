@@ -4,6 +4,7 @@ import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -43,10 +44,11 @@ public class ChatroomController {
 
     @GetMapping("/list") //채팅방리스트 가져오기
     public ResponseEntity<?> getChatroomList(@RequestHeader("Authorization") String accessToken,
-                                             @RequestHeader(value = "keyword", defaultValue = "") String keyword) {
+                                             @RequestHeader(value = "keyword", defaultValue = "") String keyword,
+                                             @RequestHeader("Page") int page) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            List<ChatroomResponseDTO> chatroomResponseDTOList = multiService.getChatRoomListByUser(tokenDTO.username(), keyword);
+            Page<ChatroomResponseDTO> chatroomResponseDTOList = multiService.getChatRoomListByUser(tokenDTO.username(), keyword, page);
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTOList);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
@@ -59,10 +61,10 @@ public class ChatroomController {
     }
 
     @GetMapping //채팅방 찾아오기
-    public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) {
+    public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader("Page") int page) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            List<MessageResponseDTO> messageResponseDTOList = multiService.getMessageList(chatroomId);
+            Page<MessageResponseDTO> messageResponseDTOList = multiService.getMessageList(chatroomId, page);
             return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
