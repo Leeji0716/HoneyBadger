@@ -1,11 +1,16 @@
 package com.team.HoneyBadger.Repository.Custom.Impl;
 
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team.HoneyBadger.Entity.EmailReservation;
 import com.team.HoneyBadger.Entity.QEmailReservation;
 import com.team.HoneyBadger.Repository.Custom.EmailReservationRepositoryCustom;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -27,8 +32,16 @@ public class EmailReservationRepositoryImpl implements EmailReservationRepositor
     }
 
     @Override
-    public List<EmailReservation> findReservedEmailsByUserId(String userId) {
-        return jpaQueryFactory.selectFrom(qEmailReservation)
-                .where(qEmailReservation.sender.username.eq(userId)).fetch();
+    public Page<EmailReservation> findReservedEmailsByUserId(String userId, Pageable pageable) {
+        BooleanExpression predicate = qEmailReservation.sender.username.eq(userId);
+
+        QueryResults<EmailReservation> queryResults = jpaQueryFactory.selectFrom(qEmailReservation)
+                .where(predicate)
+                .orderBy(qEmailReservation.sendTime.asc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetchResults();
+
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
 }

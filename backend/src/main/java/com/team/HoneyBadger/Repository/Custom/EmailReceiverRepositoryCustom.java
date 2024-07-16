@@ -3,6 +3,8 @@ package com.team.HoneyBadger.Repository.Custom;
 import com.team.HoneyBadger.Entity.Email;
 import com.team.HoneyBadger.Entity.EmailReceiver;
 import com.team.HoneyBadger.Entity.SiteUser;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -12,9 +14,9 @@ public interface EmailReceiverRepositoryCustom {
 
     List<Email> findByReceiver(String receiverId);
 
-    List<Email> findSentEmailsByUserId(String userId);
+    Page<Email> findSentEmailsByUserId(String userId, Pageable pageable);
 
-    List<Email> findReceivedEmailsByUserId(String userId);
+    Page<Email> findReceivedEmailsByUserId(String userId, Pageable pageable);
 
     EmailReceiver findByEmailAndUser(Email email, SiteUser user);
 }
