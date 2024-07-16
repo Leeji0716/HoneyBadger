@@ -1,12 +1,15 @@
 package com.team.HoneyBadger.Repository.Custom.Impl;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Repository.Custom.EmailReceiverRepositoryCustom;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
-
 
 import java.util.List;
 
@@ -35,20 +38,28 @@ public class EmailReceiverRepositoryCustomImpl implements EmailReceiverRepositor
     }
 
     @Override
-    public List<Email> findSentEmailsByUserId(String userId) {
-        return jpaQueryFactory.selectFrom(qEmail)
+    public Page<Email> findSentEmailsByUserId(String userId, Pageable pageable) {
+        QueryResults<Email> queryResults = jpaQueryFactory.selectFrom(qEmail)
                 .where(qEmail.sender.username.eq(userId))
                 .orderBy(qEmail.createDate.desc())
-                .fetch();
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetchResults();
+
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
 
+
     @Override
-    public List<Email> findReceivedEmailsByUserId(String userId) {
-        return jpaQueryFactory.selectFrom(qEmail)
+    public Page<Email> findReceivedEmailsByUserId(String userId, Pageable pageable) {
+        QueryResults<Email> queryResults = jpaQueryFactory.selectFrom(qEmail)
                 .join(qEmail.receiverList, qEmailReceiver)
                 .where(qEmailReceiver.receiver.username.eq(userId))
                 .orderBy(qEmail.createDate.desc())
-                .fetch();
+                .offset(pageable.getOffset()).limit(pageable.getPageSize())
+                .fetchResults();
+
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
 
     public EmailReceiver findByEmailAndUser(Email email, SiteUser user) {
