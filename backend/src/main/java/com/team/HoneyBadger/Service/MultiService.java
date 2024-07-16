@@ -559,7 +559,8 @@ public class MultiService {
                         .toList()) //
                 .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
                 .files(filePathList) //
-                .status(emailReceiver != null ? emailReceiver.isStatus() : false)
+//                .status(emailReceiver != null ? emailReceiver.isStatus() : false)
+                .status(emailReceiver != null && emailReceiver.isStatus())
                 .receiverStatus(receiverStatus)
                 .build();
     }
