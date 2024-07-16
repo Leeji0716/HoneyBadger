@@ -1,10 +1,12 @@
 package com.team.HoneyBadger.Service;
 
-import com.team.HoneyBadger.Exception.*;
+
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
+import com.team.HoneyBadger.Enum.Role;
+import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
@@ -12,6 +14,7 @@ import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +27,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -44,7 +48,7 @@ public class MultiService {
     private final FileSystemService fileSystemService;
     private final MultiKeyService multiKeyService;
     private final LastReadMessageService lastReadMessageService;
-
+    private final DepartmentService departmentService;
 
     /**
      * Auth
@@ -165,23 +169,17 @@ public class MultiService {
 
     public void changePassword(String username, PasswordChangeDTO passwordChangeDTO) {
         SiteUser user = userService.get(username);
-        System.out.printf(passwordChangeDTO.prePassword() + " / " + passwordChangeDTO.newPassword() + " / " + user.getPassword());
         if (!userService.isMatch(passwordChangeDTO.prePassword(), user.getPassword()))
             throw new DataNotSameException("password");
         userService.update(user, passwordChangeDTO.newPassword());
     }
 
-    /*
-     * Department
-     */
-    private DepartmentResponseDTO getDepartmentDTO(Department department) {
-        if (department == null) return null;
-        return DepartmentResponseDTO.builder().name(department.getName()).parent(appendParent(department.getParent())).build();
-    }
-
-    private DepartmentResponseDTO appendParent(Department now) {
-        if (now.getParent() == null) return DepartmentResponseDTO.builder().name(now.getName()).build();
-        else return DepartmentResponseDTO.builder().name(now.getName()).parent(appendParent(now.getParent())).build();
+    public UserResponseDTO changeUser(UserInfoRequestDTO userInfoRequestDTO) {
+        SiteUser user = userService.get(userInfoRequestDTO.username());
+        Department department = departmentService.get(userInfoRequestDTO.department_id());
+        Role role = userInfoRequestDTO.role() >= 0 && userInfoRequestDTO.role() < Role.values().length ? Role.values()[userInfoRequestDTO.role()] : null;
+        user = userService.update(user, userInfoRequestDTO.name(), role, userInfoRequestDTO.password(), userInfoRequestDTO.phoneNumber(), userInfoRequestDTO.joinDate(), department);
+        return getUserResponseDTO(user);
     }
 
     /*
@@ -481,11 +479,18 @@ public class MultiService {
         }
     }
 
+    public EmailReceiverResponseDTO read(EmailReadRequestDTO emailReadRequestDTO) {
+        Boolean isRead = emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
+        EmailResponseDTO emailResponseDTO = getEmailDTO(emailReadRequestDTO.emailId());
+        EmailReceiverResponseDTO emailReceiverResponseDTO = EmailReceiverResponseDTO.builder().id(emailResponseDTO.id()).status(isRead).emailResponseDTO(emailResponseDTO).build();
+        return emailReceiverResponseDTO;
+
     @Transactional
     public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
         EmailResponseDTO emailResponseDTO = getEmailDTO(email, username);
         return emailResponseDTO;
+
     }
 
     @Transactional
@@ -755,6 +760,19 @@ public class MultiService {
     /*
      * MessageReservation or ChatReservation
      */
+    @Scheduled(cron = "0 0 */1 * * *")
+    @Transactional
+    public void sendReservation() {
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        List<MessageReservation> messageReservationList = messageReservationService.getMessageReservationFromDate(LocalDateTime.now());
+        for (MessageReservation messageReservation : messageReservationList) {
+            if (messageReservation.getSendDate().toLocalTime().isBefore(LocalTime.now())) {
+                MessageRequestDTO messageRequestDTO = new MessageRequestDTO(messageReservation.getMessage(), messageReservation.getSender().getUsername(), messageReservation.getMessageType());
+                sendMessage(messageReservation.getId(), messageRequestDTO);
+                messageReservationService.delete(messageReservation);
+            }
+        }
+    }
 
     @Transactional
     public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
@@ -824,4 +842,80 @@ public class MultiService {
             file.delete();
         }
     }
+
+    /*
+     * Department
+     */
+    @Transactional
+    public List<DepartmentTopResponseDTO> createDepartment(String username, DepartmentRequestDTO requestDTO) throws IOException {
+        Department parent = departmentService.get(requestDTO.parentId());
+        Department department = departmentService.save(requestDTO.name(), parent);
+        if (requestDTO.url() != null) {
+            Path pre = Paths.get(requestDTO.url());
+            String newUrl = requestDTO.url().replaceAll("/user/" + username + "/temp/depart_", "/department/" + department.getName() + "/");
+            Path now = Paths.get(newUrl);
+            Files.move(pre, now, StandardCopyOption.REPLACE_EXISTING);
+            fileSystemService.save(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()), newUrl);
+        }
+        return departmentService.getTopList().stream().map(this::getDepartmentTopDTO).toList();
+    }
+
+    @Transactional
+    public String saveDepartmentImage(String username, MultipartFile file) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        String key = KeyPreset.DEPARTMENT_PROFILE.getValue(username);
+        Optional<FileSystem> _fileSystem = fileSystemService.get(key);
+        if (_fileSystem.isPresent()) {
+            File preFile = new File(path + _fileSystem.get().getV());
+            if (preFile.exists()) deleteFileWithFolder(preFile);
+        }
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/api/user/" + username + "/temp/depart_" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");
+        fileSystemService.save(key, fileName);
+        File dest = new File(path + fileName);
+        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+        file.transferTo(dest);
+        return fileName;
+    }
+
+    private DepartmentResponseDTO getDepartmentDTO(Department department) {
+        if (department == null) return null;
+        DepartmentResponseDTO parent = department.getParent() != null ? getDepartmentDTO(department.getParent()) : null;
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()));
+        return DepartmentResponseDTO.builder().name(department.getName()).parent(parent).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).build();
+    }
+
+    private DepartmentTopResponseDTO getDepartmentTopDTO(Department department) {
+        if (department == null) return null;
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()));
+        return DepartmentTopResponseDTO.builder().name(department.getName()).child(department.getChild().stream().map(this::getDepartmentTopDTO).toList()).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).build();
+    }
+
+    public List<DepartmentTopResponseDTO> getDepartmentTree() {
+        return departmentService.getTopList().stream().map(this::getDepartmentTopDTO).toList();
+    }
+
+    @Transactional
+    public List<DepartmentTopResponseDTO> deleteDepartment(String departmentId) throws RelatedException {
+        Department department = departmentService.get(departmentId);
+        check(department);
+        departmentService.delete(department);
+        return getDepartmentTree();
+    }
+
+    public void check(Department department) {
+        if (!department.getUsers().isEmpty())
+            throw new RelatedException("부서에 인원이 남아있습니다.");
+        for (Department child : department.getChild())
+            check(child);
+    }
+
+    public List<UserResponseDTO> getUsers(String departmentId) {
+        Department department = departmentService.get(departmentId);
+        if (department == null)
+            throw new DataNotFoundException("해당 부서는 존재하지 않습니다.");
+        return department.getUsers().stream().map(this::getUserResponseDTO).toList();
+    }
+
+
 }
