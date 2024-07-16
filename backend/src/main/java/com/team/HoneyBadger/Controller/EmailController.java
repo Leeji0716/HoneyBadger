@@ -18,16 +18,19 @@ import java.util.List;
 public class EmailController {
     private final MultiService multiService;
 
-    @GetMapping("/list") //유저에 대한 모든 이메일
+    @GetMapping("/list") // 유저에 대한 모든 이메일
     public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken, @RequestHeader("status") int status) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) try {
-            Object emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status);
-            return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTOList);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        if (tokenDTO.isOK()) {
+            try {
+                Object emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status);
+                return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTOList);
+            } catch (DataNotFoundException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            }
+        } else {
+            return tokenDTO.getResponseEntity();
         }
-        else return tokenDTO.getResponseEntity();
     }
 
     @PostMapping("/upload") //이메일 파일 업로드
