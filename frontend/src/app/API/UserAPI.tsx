@@ -152,9 +152,9 @@ export const readEmail = async ({ emailId, readerId }: { emailId: number, reader
 
 
 export const mailCancel = async (mailId: number) => {
-    const response = await UserApi.delete('/api/email/cancel', {
+    const response = await UserApi.delete('/api/emailReservation', {
         headers: {
-            id: mailId
+            reservationId: mailId
         }
     });
     return response.data;
@@ -171,9 +171,9 @@ export const mailImage = async (formData: any) => {
 }
 
 export const mailDelete = async (mailId: number) => {
-    const response = await UserApi.delete('/api/email/delete', {
+    const response = await UserApi.delete('/api/email', {
         headers: {
-            id: mailId
+            emailId: mailId
         }
     });
     return response.data;
