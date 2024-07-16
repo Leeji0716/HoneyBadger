@@ -316,22 +316,30 @@ public class MultiService {
 
 
         SiteUser user = userService.get(username);
-
         LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
-        int alarmcnt;
+
+        int alarmCnt; //
+
         if (lastReadMessage == null){
             if (!chatroom.getMessageList().isEmpty()){
-                lastReadMessage = lastReadMessageService.create(user, chatroom, chatroom.getMessageList().get(0).getId());
-                alarmcnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage()) + 1;
+//                lastReadMessage = lastReadMessageService.create(user, chatroom, chatroom.getMessageList().get(0).getId());
+//                alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage()) + 1;
+                alarmCnt = chatroom.getMessageList().size();
             }else {
-                alarmcnt = 0;
+                alarmCnt = 0;
             }
         }else {
-            alarmcnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
+            alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
         }
 
-
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).alarmCount(alarmcnt).build();
+        return ChatroomResponseDTO.builder()
+                .id(chatroom.getId())
+                .name(chatroom.getName())
+                .users(users)
+                .latestMessage(latestMessageDTO)
+                .notification(notificationDTO)
+                .alarmCount(alarmCnt)
+                .build();
     }
 
     @Transactional
@@ -466,17 +474,10 @@ public class MultiService {
     }
 
     public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
-        Boolean isRead = emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
-
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
-
         EmailResponseDTO emailResponseDTO = getEmailDTO(email, username);
-
-
-
         return emailResponseDTO;
     }
-
 
     @Transactional
     public void deleteEmail(Long emailId, String username) {
@@ -498,8 +499,16 @@ public class MultiService {
 
         SiteUser user = userService.get(username);
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
-        if (emailReceiver == null){
 
+        List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
+                .map(receiver -> EmailReceiverDTO.builder()
+                        .receiverUsername(receiver.getReceiver().getUsername())
+                        .status(receiver.isStatus())
+                        .build())
+                .collect(Collectors.toList());
+        
+        if (emailReceiver == null) {
+            throw new EmailReceiverNotFoundException("Email receiver not found for email ID: " + email.getId() + " and username: " + username);
         }
         return EmailResponseDTO //
                 .builder() //
@@ -515,6 +524,7 @@ public class MultiService {
                 .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
                 .files(filePathList) //
                 .status(emailReceiver.isStatus())
+                .receiverStatus(receiverStatus)
                 .build();
     }
 
@@ -646,8 +656,17 @@ public class MultiService {
     @Transactional
     private MessageResponseDTO GetMessageDTO(Message message) {
         Long sendTime = this.dateTimeTransfer(message.getCreateDate());
+        int readUsers = message.getReadUsers().size();
 
-        return MessageResponseDTO.builder().id(message.getId()).sendTime(sendTime).username(message.getSender().getUsername()).name(message.getSender().getName()).message(message.getMessage()).messageType(message.getMessageType().ordinal()).build();
+        return MessageResponseDTO.builder()
+                .id(message.getId())
+                .sendTime(sendTime)
+                .username(message.getSender().getUsername())
+                .name(message.getSender().getName())
+                .message(message.getMessage())
+                .messageType(message.getMessageType().ordinal())
+                .readUsers(readUsers)
+                .build();
     }
 
     @Transactional
@@ -663,7 +682,6 @@ public class MultiService {
 
             // 삭제된 메시지에 대한 응답을 생성합니다.
             System.out.println("Message deleted");
-//            throw new RuntimeException("Message deleted");
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
             System.out.println("Cannot delete message older than 5 minutes");
@@ -703,7 +721,7 @@ public class MultiService {
     }
 
     @Transactional
-    public void readMessage(Long chatroomId, String username) { //메세지 읽기 & 채팅방 접속
+    public void readMessage(Long chatroomId, String username) { //메세지 읽기 처리
         SiteUser reader = userService.get(username);
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
 

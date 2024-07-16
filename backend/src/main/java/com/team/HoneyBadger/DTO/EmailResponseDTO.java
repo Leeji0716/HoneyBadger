@@ -13,5 +13,6 @@ public record EmailResponseDTO(Long id,
                                Long senderTime,
                                List<String> receiverIds,
                                List<FileResponseDTO> files,
-                               boolean status) {
+                               boolean status,
+                               List<EmailReceiverDTO> receiverStatus) {
 }

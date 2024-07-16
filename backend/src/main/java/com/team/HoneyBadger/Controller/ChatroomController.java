@@ -19,6 +19,28 @@ import java.util.List;
 public class ChatroomController {
     private final MultiService multiService;
 
+    @MessageMapping("/updateChatroom/{id}")
+    @SendTo("/api/sub/updateChatroom/{id}") //업데이트 채팅룸 --> 갈아 끼울 채팅방 정보
+    public ResponseEntity<?> updateChatRoom(@DestinationVariable Long id, String username) {
+        // 추가하기 then r=> updateChatRoom();
+        try {
+            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(id, username);
+            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+        }
+    }
+
+    //    @GetMapping("/get") //--> updateChatroom PostMan 테스트 완료
+//    public ResponseEntity<?> getChatRoom(@RequestHeader("chatroomId") Long chatroomId, @RequestHeader("Authorization") String accessToken) {
+//        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+//        if (tokenDTO.isOK()) {
+//            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(chatroomId, tokenDTO.username());
+//            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
+//        } else
+//            return tokenDTO.getResponseEntity();
+//    }
+
     @GetMapping("/list") //채팅방리스트 가져오기
     public ResponseEntity<?> getChatroomList(@RequestHeader("Authorization") String accessToken,
                                              @RequestHeader(value = "keyword", defaultValue = "") String keyword) {
@@ -87,28 +109,6 @@ public class ChatroomController {
         }
         else return tokenDTO.getResponseEntity();
     }
-
-    @MessageMapping("/updateChatroom/{id}")
-    @SendTo("/api/sub/updateChatroom/{id}") //업데이트 채팅룸
-    public ResponseEntity<?> updateChatRoom(@DestinationVariable Long chatroomId, String username) {
-        // 추가하기 then r=> updateChatRoom();
-        try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(chatroomId, username);
-            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
-        }
-    }
-
-//    @GetMapping("/get") --> updateChatroom 테스트
-//    public ResponseEntity<?> getChatRoom(@RequestHeader("chatroomId") Long chatroomId, @RequestHeader("Authorization") String accessToken) {
-//        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-//        if (tokenDTO.isOK()) {
-//            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(chatroomId, tokenDTO.username());
-//            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-//        } else
-//            return tokenDTO.getResponseEntity();
-//    }
 
     @DeleteMapping //채팅방 삭제(참여자 테이블에서도 삭제됨.)
     public ResponseEntity<?> delete(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) {

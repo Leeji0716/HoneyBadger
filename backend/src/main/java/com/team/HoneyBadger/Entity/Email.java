@@ -6,10 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Getter
@@ -30,6 +31,12 @@ public class Email {
     private List<EmailReceiver> receiverList;
 
     private LocalDateTime createDate;
+
+    @ElementCollection
+    private List<String> recipients = new ArrayList<>();
+
+    @ElementCollection
+    private Map<String, Boolean> readStatus = new HashMap<>();  // 읽은 사용자 목록 저장
 
     @Builder
     public Email(String title, String content, SiteUser sender) {

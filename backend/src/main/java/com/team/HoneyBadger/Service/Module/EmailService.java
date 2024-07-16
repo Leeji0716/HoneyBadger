@@ -19,9 +19,9 @@ public class EmailService {
         return emailRepository.save(Email.builder().title(title).sender(sender).build());
     }
 
-    public Email update(Email email, String content) {
+    public void update(Email email, String content) {
         email.setContent(content);
-        return emailRepository.save(email);
+        emailRepository.save(email);
     }
 
     public Email getEmail(Long emailId) {
