@@ -51,15 +51,6 @@ export const getUser = async () => {
     const response = await UserApi.get('/api/user');
     return response.data;
 }
-interface UpdateProps {
-    name: string,
-    email: string,
-    phoneNumber: string,
-    nickname: string,
-    password: string,
-    newPassword: string,
-    url: string
-}
 
 interface SendEmail {
     title: string,
@@ -102,11 +93,6 @@ interface noticeRequestDTO {
 interface chatroomRequestDTO{
     name : string,
     users : string[]
-}
-
-export const updateUser = async (data: UpdateProps) => {
-    const response = await UserApi.put('/api/user', data);
-    return response.data;
 }
 
 export const getEmail = async (status: number) => {
