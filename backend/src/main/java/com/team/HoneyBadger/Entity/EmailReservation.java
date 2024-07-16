@@ -27,6 +27,7 @@ public class EmailReservation {
     private SiteUser sender;
 
     private List<String> receiverList;
+
     private LocalDateTime sendTime;
 
     private LocalDateTime createTime;

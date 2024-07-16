@@ -67,6 +67,10 @@ public class UserService {
         return userRepository.findAll().stream().filter(u -> !u.getUsername().equals(username)) // username과 동일하지 않은 이름만 필터링
                 .toList();
     }
+
+    public List<SiteUser> getUsersDepartmentIsNull() {
+        return userRepository.getUsersDepartmentIsNull();
+    }
 }
 
 

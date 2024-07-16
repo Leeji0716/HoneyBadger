@@ -32,6 +32,8 @@ public class QDepartment extends EntityPathBase<Department> {
 
     public final QDepartment parent;
 
+    public final EnumPath<com.team.HoneyBadger.Enum.DepartmentRole> role = createEnum("role", com.team.HoneyBadger.Enum.DepartmentRole.class);
+
     public final ListPath<SiteUser, QSiteUser> users = this.<SiteUser, QSiteUser>createList("users", SiteUser.class, QSiteUser.class, PathInits.DIRECT2);
 
     public QDepartment(String variable) {

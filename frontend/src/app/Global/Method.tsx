@@ -136,6 +136,12 @@ export function getChatShowDateTimeFormat(data: any) {
             + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
     }
 }
+export function getDepartmentRole(role: number) {
+    switch (role) {
+        case 0: return "일반";
+        case 1: return "인사"
+    }
+}
 export function getRole(role: number) {
     switch (role) {
         case 0: return "사장"

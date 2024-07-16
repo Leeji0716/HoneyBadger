@@ -1,6 +1,7 @@
 package com.team.HoneyBadger.Service.Module;
 
 import com.team.HoneyBadger.Entity.Department;
+import com.team.HoneyBadger.Enum.DepartmentRole;
 import com.team.HoneyBadger.Repository.DepartmentRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,8 @@ public class DepartmentService {
     private final DepartmentRepository departmentRepository;
 
     @Transactional
-    public Department save(String name, Department parent) {
-        return departmentRepository.save(Department.builder().name(name).parent(parent).build());
+    public Department save(String name, Department parent, DepartmentRole role) {
+        return departmentRepository.save(Department.builder().name(name).parent(parent).role(role).build());
     }
 
     @Transactional
