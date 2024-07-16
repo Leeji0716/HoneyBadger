@@ -80,7 +80,13 @@ interface emailReservationUpdate {
     content: string,
     receiverIds: string[],
     sendTime?: Date | null,
-    files: string[]
+    files : MailFile[]
+}
+
+interface MailFile {
+    key: string,
+    original_name: string,
+    value: string
 }
 
 interface chatroomResponseDTO {
@@ -91,6 +97,16 @@ interface chatroomResponseDTO {
 interface noticeRequestDTO {
     chatroomId: number,
     messageId: number
+}
+
+interface chatroomRequestDTO{
+    name : string,
+    users : string[]
+}
+
+export const updateUser = async (data: UpdateProps) => {
+    const response = await UserApi.put('/api/user', data);
+    return response.data;
 }
 
 export const getEmail = async (status: number) => {
@@ -129,17 +145,17 @@ export const readEmail = async ({ emailId, readerId }: { emailId: number, reader
 
     const data = {
         emailId: emailId,
-        readerId: readerId
+        receiverId: readerId
     };
-    const response = await UserApi.post('/api/email/read', data);
+    const response = await UserApi.put('/api/email/read', data);
     return response.data;
 }
 
 
 export const mailCancel = async (mailId: number) => {
-    const response = await UserApi.delete('/api/email/cancel', {
+    const response = await UserApi.delete('/api/emailReservation', {
         headers: {
-            id: mailId
+            reservationId: mailId
         }
     });
     return response.data;
@@ -156,9 +172,9 @@ export const mailImage = async (formData: any) => {
 }
 
 export const mailDelete = async (mailId: number) => {
-    const response = await UserApi.delete('/api/email/delete', {
+    const response = await UserApi.delete('/api/email', {
         headers: {
-            id: mailId
+            emailId: mailId
         }
     });
     return response.data;
@@ -180,7 +196,7 @@ export const addUser = async ({ chatroomId, username }: { chatroomId: number, us
         chatroomId: chatroomId,
         username: username
     };
-    const response = await UserApi.post('/api/participant', data);
+    const response = await UserApi.post('/api/participant',null, {headers : data});
     return response.data;
 }
 
@@ -273,3 +289,32 @@ export const updateUser = async (data: userInfo) => {
     const response = await UserApi.put('/api/user/info', data);
     return response.data;
 }
+  
+export const makeChatroom = async (chatroomRequestDTO:chatroomRequestDTO) => {
+    const response = await UserApi.post('/api/chatroom',chatroomRequestDTO);
+    return response.data;
+}
+
+export const deleteMessage = async (messageId: number) => {
+    const response = await UserApi.delete('/api/message', {
+        headers: {
+            messageId: messageId
+        }
+    });
+    return response.data;
+};
+
+export const chatUploadFile = async ({ chatroomId, file }: { chatroomId: number, file: File }) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await UserApi.post('/api/message/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            chatroomId: chatroomId,
+        },
+        
+    });
+
+    return response.data;
+};

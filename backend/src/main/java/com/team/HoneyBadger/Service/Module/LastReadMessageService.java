@@ -14,9 +14,24 @@ import java.util.Optional;
 @RequiredArgsConstructor
 
 public class LastReadMessageService {
-    private final LastReadMessageRepository messageRepository;
+    private final LastReadMessageRepository lastReadMessageRepository;
 
-    public Optional<LastReadMessage> get(SiteUser user, Chatroom chatroom) {
-        return null;
+    public LastReadMessage get(SiteUser user, Chatroom chatroom) throws NullPointerException {
+        return lastReadMessageRepository.getLastMessage(user, chatroom);
+//        return null;
+    }
+
+    public LastReadMessage create(SiteUser user, Chatroom chatroom, Long lastMessageId) {
+        LastReadMessage lastReadMessage = new LastReadMessage();
+        lastReadMessage.setSiteUser(user);
+        lastReadMessage.setChatroom(chatroom);
+        lastReadMessage.setLastReadMessage(lastMessageId);
+
+        return lastReadMessageRepository.save(lastReadMessage);
+    }
+
+    public LastReadMessage updateMessage(LastReadMessage lastReadMessage, Long lastReadMessageId) {
+        lastReadMessage.setLastReadMessage(lastReadMessageId);
+        return lastReadMessageRepository.save(lastReadMessage);
     }
 }

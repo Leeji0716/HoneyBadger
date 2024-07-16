@@ -6,5 +6,5 @@ import lombok.Builder;
 
 import java.util.List;
 @Builder
-public record ChatroomResponseDTO(Long id, String name, List<String> users, MessageResponseDTO latestMessage, MessageResponseDTO notification) {
+public record ChatroomResponseDTO(Long id, String name, List<String> users, MessageResponseDTO latestMessage, MessageResponseDTO notification, int alarmCount) {
 }

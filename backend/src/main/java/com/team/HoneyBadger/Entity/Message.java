@@ -39,8 +39,4 @@ public class Message {
         this.sender = sender;
         this.chatroom = chatroom;
     }
-
-    public boolean isReadByAllParticipants(List<String> participants) {
-        return participants.size() == readUsers.size();
-    }
 }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,8 +24,9 @@ import java.util.stream.Collectors;
 public class MessageService {
     private final MessageRepository messageRepository;
 
+    //나중에 여기서 고쳐 readUsers 나 추가하기
     public Message save(String msg, SiteUser siteUser, Chatroom chatroom, MessageType messageType) {
-        Message message = Message.builder().message(msg).sender(siteUser).chatroom(chatroom).messageType(messageType).build();
+        Message message = Message.builder().message(msg).sender(siteUser).chatroom(chatroom).messageType(messageType).readUsers(new ArrayList<>()).build();
         return messageRepository.save(message);
     }
 
@@ -57,7 +59,8 @@ public class MessageService {
                         message.getSender().getUsername(),
                         message.getSender().getName(),
                         message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                        message.getMessageType()
+                        message.getMessageType().ordinal(),
+                        message.getReadUsers() != null ? message.getReadUsers().size() : 0
                 ))
                 .collect(Collectors.toList());
     }

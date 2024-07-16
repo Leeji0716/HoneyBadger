@@ -65,7 +65,7 @@
             stompClient = Stomp.over(socket);
             stompClient.connect({}, function(frame) {
                 console.log('Connected: ' + frame);
-                stompClient.subscribe('/api/sub/message/1', function(message) {
+                stompClient.subscribe('/api/sub/message/5', function(message) {
                     console.log(message.body);
                     showMessage(JSON.parse(message.body));
                 });
@@ -77,7 +77,7 @@
             var messageSender = document.getElementById('username').value;
             var roomId = 'room1'; // 테스트할 채팅방 ID
 
-            stompClient.send("/api/pub/message/1", {}, JSON.stringify({
+            stompClient.send("/api/pub/message/5", {}, JSON.stringify({
                 username: messageSender,
                 message: messageContent,
                 messageType: 0 // TEXT 메시지 타입은 0로 설정
@@ -105,7 +105,7 @@
             xhr.onload = function () {
                 if (xhr.status === 200) {
                     console.log('File uploaded successfully:', xhr.responseText);
-                    stompClient.send("/api/pub/message/1", {}, JSON.stringify({
+                    stompClient.send("/api/pub/message/5", {}, JSON.stringify({
                         username: messageSender,
                         message: xhr.responseText,
                         messageType: 3 // FILE 메시지 타입은 3로 설정

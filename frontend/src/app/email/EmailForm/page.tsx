@@ -5,7 +5,7 @@ import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
 import { eongetDateTimeFormat, eontransferLocalTime, getDateTimeFormatInput, transferLocalTime } from "@/app/Global/Method";
 import QuillNoSSRWrapper from "@/app/Global/QuillNoSSRWrapper";
-import { Ultra } from "next/font/google";
+import { Fuzzy_Bubbles, Sree_Krushnadevaraya, Ultra } from "next/font/google";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
@@ -26,9 +26,9 @@ export default function EmailForm() {
     const [fileList, setFileList] = useState<File[]>([]);
     const [time, setTime] = useState<Date | null>(null);
     const [senderTime, setSenderTime] = useState("");
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>("");
     const [image, setImage] = useState("");
-    const [files, setFiles] = useState<string[]>([]);
+    const [files, setFiles] = useState<MailFile[]>([]);
     const [id, setId] = useState(0);
 
     interface MailFile {
@@ -117,9 +117,12 @@ export default function EmailForm() {
     function test() {
         if (flag == 2) {
             if (fileList.length == 0) {
-                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).catch(e => console.log(e));
-            }else{
-                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).then(r => console.log(r)).catch(e => console.log(e));
+                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).then(r => window.location.href="/email").catch(e => console.log(e));
+            } else {
+                const form = new FormData();
+                for (const file of fileList)
+                    form.append('attachments', file);
+                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).then(r => reservationFiles({ attachments: form, emailId: email.id }).then(r => window.location.href = "/email").catch(e => console.log(e))).catch(e => console.log(e));
             }
         }
         else if (flag == 0) {
@@ -153,12 +156,30 @@ export default function EmailForm() {
         return extension;
     }
 
+    const finderror = () => {
+        if(receiverIds.length == 0){
+            setError("받는사람을 입력해 주세요.");
+        }else if(title.length == 0){
+            setError("제목을 입력해주세요");
+        }else if(content.length == 0){
+            setError("내용을 입력해주세요");
+        }else{
+            setError(null);
+        }
+    }
+
+    useEffect(() => {
+        if(error == null){
+            test();
+        }
+    },[error]);
+
     return <Main user={user}>
         <div className="flex flex-col items-center gap-5 bg-white w-full p-6">
             <h2 className="font-bold">메일 쓰깅</h2>
             <div className="w-full border-b-2"></div>
             <div className="flex flex-row justify-center gap-3">
-                <button className="mail-hover w-[100px]" onClick={test}>보내기</button>
+                <button className="mail-hover w-[100px]" onClick={() => finderror()}>보내기</button>
                 <button className="mail-hover w-[100px]" onClick={() => setOpen(!open)}>예약</button>
                 <DropDown open={open} onClose={() => setOpen(false)} className="mt-8" defaultDriection={Direcion.DOWN} width={200} height={200} button="button1">
                     <input type="datetime-local" name="" id="" defaultValue={getDateTimeFormatInput(senderTime)} onChange={(e) => {
@@ -172,9 +193,9 @@ export default function EmailForm() {
                 <button className="mail-hover w-[100px]">임시저장</button>
             </div>
             {error ? <p className="font-bold text-red-600">{error}</p> : <></>}
-            <div className="flex justify-center gap-5 w-full">
+            <div className="flex w-[1400px] gap-5 w-full">
                 <label htmlFor="" className="w-[5%]  whitespace-nowrap">받는 사람</label>
-                <div className="w-[70%] flex border-solid border-b-2">
+                <div className="w-full flex border-solid border-b-2">
                     {receiverIds.length == 0 ? <></> : receiverIds.map((recever, index) => (ShowReciver(index, recever)))}
                     <input type="text" className="w-full whitespace-nowrap" onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -186,32 +207,38 @@ export default function EmailForm() {
                     }} />
                 </div>
             </div>
-            <div className="flex justify-center gap-5 w-full">
+            <div className="flex w-[1400px] gap-5 w-full">
                 <label htmlFor="" className="w-[5%]">제목</label>
-                <input type="text" className="border-b-2 w-[70%]" defaultValue={title} onChange={(e) => {
+                <input type="text" className="border-b-2 w-full" defaultValue={title} onChange={(e) => {
                     setTitle(e.target.value);
                 }} />
             </div>
-            <div className="flex justify-center w-full gap-5">
-                <label htmlFor="" className="w-[5%]">파일첨부</label>
-                {files.length != 0 ?
-                    email.files.map((f: MailFile, index: number) => <li key={index}>
-                        <div className="flex mb-4 border-solid border-2 border-gray-200 p-4 gap-6">
-                            <img src={"/" + sliceText(f.original_name) + ".PNG"} alt="" />
-                            <a href={f.value}>{f.original_name}</a>
-                        </div>
-                    </li>)
-                    :
-                    <></>
-                }
-                <input type="file" multiple className="border-b-2 w-[70%]" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            <div className="flex w-[1400px] w-full gap-5">
+                <input id="file" hidden type="file" multiple className="border-b-2" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                     if (event.target.files) {
                         const filesArray = Array.from(event.target.files);
                         setFileList((prevFiles) => [...prevFiles, ...filesArray]);
                     }
                 }} />
             </div>
-            {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}><li>{f.name}</li></ul>) : <></>}
+            <div className="w-[1400px] h-[150px] border border-gary-500 overflow-y-scroll relative">
+                {/* <button className="btn btn-sm absolute top-[5px] right-[5px]" onClick={() => document.getElementById('file')?.click()}>파일 선택</button> */}
+                <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" onClick={() => document.getElementById('file')?.click()}></img>
+                {files.length != 0 ? files.map((f: MailFile, index: number) => <ul key={index}>
+                    <div className="flex items-center bg-white p-2">
+                        <img src="/x.png" alt="" className="mr-2 w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...files]; removeFile.splice(index, 1); setFiles(removeFile); }}></img>
+                        <img src={"/" + sliceText(f.original_name) + ".PNG"} className="w-[26px] h-[31px] mr-2" alt="" />
+                        <p>{f.original_name}</p>
+                    </div>
+                </ul>) : <></>}
+                {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}>
+                    <div className="flex items-center bg-white p-2">
+                        <img src="/x.png" alt="" className="mr-2  w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...fileList]; removeFile.splice(index, 1); setFileList(removeFile); }}></img>
+                        <img src={"/" + sliceText(f.name) + ".PNG"} className="w-[26px] h-[31px] mr-2" alt="" />
+                        <p>{f.name}</p>
+                    </div>
+                </ul>) : <></>}
+            </div>
             <div className="w-full flex justify-center h-[500px]">
                 <QuillNoSSRWrapper
                     forwardedRef={quillInstance}
@@ -219,7 +246,7 @@ export default function EmailForm() {
                     onChange={(e: any) => setContent(e)}
                     modules={modules}
                     theme="snow"
-                    className='w-full h-[70%]'
+                    className='w-[1400px] h-[70%]'
                     placeholder="내용을 입력해주세요."
                 />
             </div>

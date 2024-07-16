@@ -40,11 +40,11 @@ public class MessageController {
     }
 
     @MessageMapping("/read/{id}")
-    @SendTo("/api/sub/read/{id}") //메세지 읽기
+    @SendTo("/api/sub/read/{id}") //메세지 읽기 -> readUsers 리스트에 추가
     public ResponseEntity<?> readMessages(@DestinationVariable Long id, String username) {
         try {
             multiService.readMessage(id, username);
-            return ResponseEntity.status(HttpStatus.OK).body("OK");
+            return ResponseEntity.status(HttpStatus.OK).body("Read OK");
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
@@ -54,11 +54,11 @@ public class MessageController {
         }
     }
 
-    @GetMapping("/update") //메세지 읽음 처리 업데이트
-    public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader Long startId) {
+    @GetMapping("/update") //메세지 읽음 처리 업데이트 -> LastMessage 저장
+    public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            List<MessageResponseDTO> list = multiService.getMessageList(chatroomId, startId);
+            List<MessageResponseDTO> list = multiService.updateMessageList(tokenDTO.username(), chatroomId);
             return ResponseEntity.status(HttpStatus.OK).body(list);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
@@ -77,7 +77,8 @@ public class MessageController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
         }
         if (tokenDTO.isOK()) try {
-            String fileName = multiService.fileUpload(chatroomId, file);
+            String fileName = multiService.
+                    fileUpload(chatroomId, file);
             return ResponseEntity.status(HttpStatus.OK).body(fileName);
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
@@ -106,5 +107,4 @@ public class MessageController {
 
         else return tokenDTO.getResponseEntity();
     }
-
 }
