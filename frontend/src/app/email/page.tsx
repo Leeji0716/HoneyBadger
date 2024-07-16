@@ -11,6 +11,11 @@ import { getDateTime } from "../Global/Method";
 
 export default function Email() {
 
+    interface Receiver {
+        receiverUsername: string,
+        status: boolean
+    }
+
     interface MailFile {
         key: string,
         original_name: string,
@@ -26,7 +31,8 @@ export default function Email() {
         senderTime: number,
         receiverIds: string[],
         files: MailFile[],
-        status: boolean
+        status: boolean,
+        receiverStatus: Receiver[]
     }
 
     const [open, setOpen] = useState(false);
@@ -37,8 +43,8 @@ export default function Email() {
     const [email, setEmail] = useState(null as any);
     const [open3, setOpen3] = useState(null as any);
     const [discernment, setDiscernment] = useState(false);
-    const [status,setStatus] = useState(0);
-    const [sort, setSort] = useState(0);
+    const [status, setStatus] = useState(0);
+    const [sort, setSort] = useState(1);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const maxLength = 30;
     const router = useRouter();
@@ -58,7 +64,7 @@ export default function Email() {
 
 
     const truncateText = ({ text, maxLength }: { text: string, maxLength: number }) => {
-        
+
         if (text?.length <= maxLength) {
             return text;
         }
@@ -74,21 +80,22 @@ export default function Email() {
     }
 
     // reponse -> List에  들어가는 DTO
-        // findIndex 현재 List중에서 같은 내용의 index
-        //  전(pre) , 후 (next)
-        // set([...pre , new, ...next])
+    // findIndex 현재 List중에서 같은 내용의 index
+    //  전(pre) , 후 (next)
+    // set([...pre , new, ...next])
 
 
-    function MailBox({ email }: { email: EmailResponseDTO}) {
-    
-        return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300" onClick={() => { 
-            if(email.status == false){
-                readEmail({ emailId: email.id, readerId: user.username }).then(r => {setEmail(r); console.log("이메일: "); console.log(r); const index = emailList.findIndex(e => e.id === email.id); console.log("index"); console.log(index); const pre = [...emailList]; pre[index] = r; console.log("pre:"); console.log(pre); setEmailList(pre); console.log("emailList"); console.log(emailList) }).catch(e => console.log(e))
-                }
-                else{
-                    setEmail(email);
-                    }}}>
-            {email.status == false ? <div className="h-full w-[6px] official-color mr-2"></div> : <></>}
+    function MailBox({ email }: { email: EmailResponseDTO }) {
+
+        return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300" onClick={() => {
+            if (email.status == false) {
+                readEmail({ emailId: email.id, readerId: user.username }).then(r => { setEmail(r); console.log("이메일: "); console.log(r); const index = emailList.findIndex(e => e.id === email.id); console.log("index"); console.log(index); const pre = [...emailList]; pre[index] = r; console.log("pre:"); console.log(pre); setEmailList(pre); console.log("emailList"); console.log(emailList) }).catch(e => console.log(e))
+            }
+            else {
+                setEmail(email);
+            }
+        }}>
+            {sort == 1 && email.status == false ? <div className="h-full w-[6px] official-color mr-2"></div> : <></>}
             <div className="w-[60px] h-full flex items-center">
                 <img className="rounded-full w-[40px] h-[40px]" src="/hui.jpg" alt="후잉~" />
             </div>
@@ -118,7 +125,11 @@ export default function Email() {
                 <h2 className="text-2xl font-semibold">{email?.title}</h2>
                 <div className="flex justify-start items-center gap-5 mt-2 mb-2 pt-2">
                     <p className="text-sm">받는사람</p>
-                    {email.receiverIds.map((r:string,index:number) => <button className="inline-flex bg-blue-200 rounded-full text-white font-bold px-4 py-2 text-sm" key={index}>{r}</button> )} 
+                    {sort != 0 ?
+                        email.receiverIds.map((r: string, index: number) => <button className="inline-flex bg-blue-200 rounded-full text-white font-bold px-4 py-2 text-sm" key={index}>{r}</button>)
+                        :
+                        email.receiverStatus.map((r: Receiver, index: number) =>  r.status == false ? <button className="inline-flex bg-blue-200 rounded-full text-white font-bold px-4 py-2 text-sm" key={index}>{r.receiverUsername}</button> : <button className="inline-flex bg-red-200 rounded-full text-white font-bold px-4 py-2 text-sm" key={index}>{r.receiverUsername}</button> )
+                    }
                 </div>
                 <div className="flex justify-start items-center mb-2 gap-5">
                     <p className="text-sm">보낸사람</p>
@@ -153,36 +164,36 @@ export default function Email() {
             <div className="h-full w-11/12 bg-white shadow p-2">
                 <div className="w-full h-30 flex flex-row">
                     <div className="flex mr-20 items-center gap-2">
-                    <button  onClick={() => { setStatus(1); getEmail(1).then(r =>{setSort(1); setEmailList(r)}).catch(e => console.log(e)); }}>받은 메일</button>
-                    <img src="/plus.png" id="button1" className="w-[20px] h-[20px]" onClick={() => {open1 == false ? "" : setOpen1(!open1); setOpen(!open);}} alt="" />
-                    <DropDown open={open} onClose={() => setOpen(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button1">
-                        <button className="bg-white">중요</button>
-                        <button className="bg-white">태그</button>
-                        <button className="bg-white">태그</button>
-                    </DropDown>
+                        <button onClick={() => { setStatus(1); getEmail(1).then(r => { setSort(1); setEmailList(r) }).catch(e => console.log(e)); }}>받은 메일</button>
+                        <img src="/plus.png" id="button1" className="w-[20px] h-[20px]" onClick={() => { open1 == false ? "" : setOpen1(!open1); setOpen(!open); }} alt="" />
+                        <DropDown open={open} onClose={() => setOpen(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button1">
+                            <button className="bg-white">중요</button>
+                            <button className="bg-white">태그</button>
+                            <button className="bg-white">태그</button>
+                        </DropDown>
                     </div>
                     <div className="flex mr-20 items-center gap-2">
-                    <button className="" onClick={() => {setStatus(0); getEmail(0).then(r => {setSort(0), setEmailList(r)}).catch(e => console.log(e));  }}>보낸 메일</button>
-                    <img src="/plus.png" id="button2" className="w-[20px] h-[20px]" onClick={() => { open == false ? "" : setOpen(!open);setOpen1(!open1); }} alt="" />
-                    <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button2">
-                        <button>중요</button>
-                        <button>태그</button>
-                        <button>태그</button>
-                    </DropDown>
+                        <button className="" onClick={() => { setStatus(0); getEmail(0).then(r => { setSort(0), setEmailList(r) }).catch(e => console.log(e)); }}>보낸 메일</button>
+                        <img src="/plus.png" id="button2" className="w-[20px] h-[20px]" onClick={() => { open == false ? "" : setOpen(!open); setOpen1(!open1); }} alt="" />
+                        <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button2">
+                            <button>중요</button>
+                            <button>태그</button>
+                            <button>태그</button>
+                        </DropDown>
                     </div>
-                    <button className="" onClick={() => { open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2).then(r =>{setSort(2); setEmailList(r)}).catch(e => console.log(e)) }}>예약 메일</button>
+                    <button className="" onClick={() => { open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2).then(r => { setSort(2); setEmailList(r) }).catch(e => console.log(e)) }}>예약 메일</button>
                 </div>
                 <div className="h-[800px] overflow-y-scroll">
-                    {emailList?.map((email: EmailResponseDTO, index: number) => <MailBox key={index} email={email}/>)}
+                    {emailList?.map((email: EmailResponseDTO, index: number) => <MailBox key={index} email={email} />)}
                     <DropDown open={open3 != null && open3?.id == email?.id} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button={"burger" + open3?.id}>
                         {status != 2 ?
                             <>
-                                <button onClick={() => { mailDelete(open3.id).then(r => window.location.href="/email").catch(e => console.log(e)) }}>삭제</button>
+                                <button onClick={() => { mailDelete(open3.id).then(r => window.location.href = "/email").catch(e => console.log(e)) }}>삭제</button>
                             </>
                             :
                             <>
                                 <button onClick={() => { router.push(`/email/EmailForm`); localStorage.setItem("email", JSON.stringify(email)) }}>수정</button>
-                                <button onClick={() => { mailCancel(open3.id).then(r => window.location.href="/email").catch(e => console.log(e)) }}>삭제</button>
+                                <button onClick={() => { mailCancel(open3.id).then(r => window.location.href = "/email").catch(e => console.log(e)) }}>삭제</button>
                             </>
 
                         }
