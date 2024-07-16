@@ -6,5 +6,5 @@ import java.util.List;
 
 @Builder
 public record DepartmentTopResponseDTO(String name, List<DepartmentTopResponseDTO> child, String url, Long createDate,
-                                       Long modifyDate) {
+                                       Long modifyDate, int role) {
 }
