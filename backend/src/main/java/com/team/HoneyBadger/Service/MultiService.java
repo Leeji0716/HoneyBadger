@@ -1034,13 +1034,13 @@ public class MultiService {
         if (department == null) return null;
         DepartmentResponseDTO parent = department.getParent() != null ? getDepartmentDTO(department.getParent()) : null;
         Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()));
-        return DepartmentResponseDTO.builder().name(department.getName()).parent(parent).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).build();
+        return DepartmentResponseDTO.builder().name(department.getName()).parent(parent).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).role(department.getRole().ordinal()).build();
     }
 
     private DepartmentTopResponseDTO getDepartmentTopDTO(Department department) {
         if (department == null) return null;
         Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()));
-        return DepartmentTopResponseDTO.builder().name(department.getName()).child(department.getChild().stream().map(this::getDepartmentTopDTO).toList()).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).build();
+        return DepartmentTopResponseDTO.builder().name(department.getName()).child(department.getChild().stream().map(this::getDepartmentTopDTO).toList()).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).role(department.getRole().ordinal()).build();
     }
 
     public List<DepartmentTopResponseDTO> getDepartmentTree() {
@@ -1063,6 +1063,9 @@ public class MultiService {
     }
 
     public DepartmentUserResponseDTO getDepartmentUsers(String departmentId) {
+        if(departmentId==null)
+            return DepartmentUserResponseDTO.builder().users(userService.getUsersDepartmentIsNull().stream().map(this::getUserResponseDTO).toList()).build();
+
         Department department = departmentService.get(departmentId);
         if (department == null)
             throw new DataNotFoundException("해당 부서는 존재하지 않습니다.");

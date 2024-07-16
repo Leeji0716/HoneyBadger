@@ -5,4 +5,5 @@ import com.team.HoneyBadger.Entity.SiteUser;
 import java.util.List;
 
 public interface UserRepositoryCustom {
+    List<SiteUser> getUsersDepartmentIsNull();
 }

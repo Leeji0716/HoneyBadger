@@ -97,7 +97,7 @@ export default function Page() {
         const stack = props?.stack ? props.stack + 1 : 1;
         return <>
             <div className="mb-4 flex flex-col border-2 border-black p-4 rounded-lg" style={{ marginLeft: (stack) * 40, backgroundColor: "#" + translateDex(255 - (stack % 3 == 0 ? stack * 30 % 256 : 0)) + translateDex(255 - (stack % 3 == 1 ? stack * 30 % 256 : 0)) + translateDex(255 - (stack % 3 == 2 ? stack * 30 % 256 : 0)) }}>
-                <label className="font-bold w-[800px] text-2xl">{departmentUsers?.name}</label>
+                <label className="font-bold w-[800px] text-2xl">{departmentUsers?.name ? departmentUsers.name : '무소속 유저'}</label>
                 <label className="text-start text-sm w-[800px]">총 {size} 명(직속 {users?.length}명 / 예하 {size - users?.length}명)</label>
                 {users?.length == 0 ? <label>해당 부서에 직속 할당된 인원이 없습니다.</label>
                     :
@@ -126,10 +126,11 @@ export default function Page() {
                         </table>
                     </div>
                 }
+                <button className="self-start btn btn-xs mt-1">인원 추가</button>
                 {departmentUsers?.child?.length > 0 ? detailFolds.includes(departmentUsers) ?
-                    <button className="self-start btn btn-xs" onClick={() => { setDetailFold([...detailFolds.filter(f => f.name != departmentUsers?.name)]); }}>하위 그룹 닫기</button>
+                    <button className="self-start btn btn-xs mt-2" onClick={() => { setDetailFold([...detailFolds.filter(f => f.name != departmentUsers?.name)]); }}>하위 그룹 닫기</button>
                     :
-                    <button className="self-start btn btn-xs" onClick={() => { setDetailFold([...detailFolds, departmentUsers]); }}>하위 그룹 열기</button>
+                    <button className="self-start btn btn-xs mt-2" onClick={() => { setDetailFold([...detailFolds, departmentUsers]); }}>하위 그룹 열기</button>
                     :
                     <></>
                 }
@@ -141,7 +142,11 @@ export default function Page() {
     return <Main user={user}>
         <div className="w-4/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-[847px] w-11/12 bg-white shadow p-2 ">
-                <div className="w-full h-30 flex justify-end gap-20 ">
+                <div className="w-full h-30 flex justify-between gap-20 ">
+                    <button className="btn btn-xs btn-error text-white font-bold" onClick={() => {
+                        if (!departmentUsers||departmentUsers?.name != null)
+                            getDepartmentUsers().then(r => {setDepartmentUsers(r);}).catch(e => console.log(e));
+                    }}>무소속 사용자</button>
                     <button className="btn btn-xs btn-warning text-white font-bold" onClick={() => {
                         setAddOpen(true);
                         setDepartmentId('');
@@ -160,7 +165,7 @@ export default function Page() {
         <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-[847px] w-11/12 bg-white shadow p-4 flex flex-col items-center overflow-y-scroll">
                 <div className="mt-6">
-                    {select == null ? <label className="text-4xl font-bold">부서를 선택해주세요</label>
+                    {!select &&!departmentUsers ? <label className="text-4xl font-bold">부서를 선택해주세요</label>
                         :
                         <Detail departmentUsers={departmentUsers} />
                     }
@@ -202,9 +207,7 @@ export default function Page() {
                         <button className="btn btn-xs btn-info  text-white mr-2 mt-5" onClick={() => {
                             updateUser({ username: selectUser?.username, name: name, password: password, role: role, phoneNumber: phoneNumber, joinDate: joinDate, department_id: departmentId })
                                 .then(r => {
-                                    // const index = users.findIndex(u => u.username == selectUser?.username);
-                                    // const renew = [...users.splice(0, index), r, ...users.splice(index + 1)];
-                                    // setUsers([...renew.filter(f => f.department.name == select?.name)]);
+                                    getDepartmentUsers(departmentUsers?.name).then(r=>setDepartmentUsers(r)).catch(e=>console.log(e));
                                     if (r.username == user.username)
                                         setUser(r);
                                 }).catch(e => console.log(e))
@@ -219,7 +222,7 @@ export default function Page() {
                     </div>
                     <button className="btn btn-xs btn-error mt-2 text-white" onClick={() => setOpenDepartment(false)}>취소</button>
                 </Modal>
-                <Modal open={addOpen} onClose={() => setAddOpen(false)} escClose={true} outlineClose={true} className="w-[500px] h-[550px] flex flex-col">
+                <Modal open={addOpen} onClose={() => setAddOpen(false)} escClose={true} outlineClose={true} className="w-[500px] h-[600px] flex flex-col">
                     <div className="w-full h-[50px] bg-[#8fbee9] text-white font-bold flex p-2 text-2xl">부서 추가</div>
                     <div className="flex flex-col p-4">
                         <div className="flex items-center mb-4">

@@ -41,7 +41,7 @@ public class DepartmentController {
             return ResponseEntity.status(HttpStatus.OK).body(list);
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("파일 저장에 오류가 발생");
-        }catch(DataDuplicateException ex){
+        } catch (DataDuplicateException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
@@ -70,12 +70,13 @@ public class DepartmentController {
         }
         else return tokenDTO.getResponseEntity();
     }
+
     @GetMapping("/users")
-    public ResponseEntity<?> getDepartmentUser(@RequestHeader("Authorization") String accessToken, @RequestHeader("DepartmentId") String departmentId) {
+    public ResponseEntity<?> getDepartmentUser(@RequestHeader("Authorization") String accessToken, @RequestHeader(value = "DepartmentId", required = false) String departmentId) {
         TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
             try {
-                DepartmentUserResponseDTO response= multiService.getDepartmentUsers(URLDecoder.decode(departmentId, StandardCharsets.UTF_8));
+                DepartmentUserResponseDTO response = multiService.getDepartmentUsers(departmentId != null ? URLDecoder.decode(departmentId, StandardCharsets.UTF_8) : departmentId);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             } catch (DataDuplicateException ex) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());

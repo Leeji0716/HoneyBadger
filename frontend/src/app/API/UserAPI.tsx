@@ -276,7 +276,7 @@ export const deleteDepartment = async (DepartmentId: string) => {
     const response = await UserApi.delete('/api/department', { headers: { DepartmentId: DepartmentId } });
     return response.data;
 }
-export const getDepartmentUsers = async (DepartmentId: string) => {
+export const getDepartmentUsers = async (DepartmentId?: string) => {
     const response = await UserApi.get('/api/department/users', { headers: { DepartmentId: DepartmentId } });
     return response.data;
 }

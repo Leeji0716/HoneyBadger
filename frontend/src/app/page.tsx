@@ -26,7 +26,6 @@ export default function Home() {
       localStorage.setItem('refreshToken', r.refreshToken);
       window.location.href = '/main';
     }).catch(e => {
-      console.log(e.response.data.message)
       if (e.response.status == 404 && e.response.data.message == "entity not found")
         return setError('없는 아이디입니다.');
       else if (e.response.status == 404 && e.response.data == "password")
