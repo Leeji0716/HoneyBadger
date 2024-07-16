@@ -1,10 +1,12 @@
 package com.team.HoneyBadger.Service;
 
-import com.team.HoneyBadger.Exception.*;
+
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
+import com.team.HoneyBadger.Enum.Role;
+import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
@@ -12,6 +14,7 @@ import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +27,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -44,7 +48,7 @@ public class MultiService {
     private final FileSystemService fileSystemService;
     private final MultiKeyService multiKeyService;
     private final LastReadMessageService lastReadMessageService;
-
+    private final DepartmentService departmentService;
 
     /**
      * Auth
@@ -121,6 +125,7 @@ public class MultiService {
                 .department(getDepartmentDTO(user.getDepartment())) //
                 .build();
     }
+
     public UserResponseDTO updateProfile(String username, MultipartFile file) throws IOException {
         if (file == null || !file.getContentType().contains("image")) throw new InvalidFileTypeException("not image");
         String key = KeyPreset.USER_PROFILE.getValue(username);
@@ -164,23 +169,17 @@ public class MultiService {
 
     public void changePassword(String username, PasswordChangeDTO passwordChangeDTO) {
         SiteUser user = userService.get(username);
-        System.out.printf(passwordChangeDTO.prePassword() + " / " + passwordChangeDTO.newPassword() + " / " + user.getPassword());
         if (!userService.isMatch(passwordChangeDTO.prePassword(), user.getPassword()))
             throw new DataNotSameException("password");
         userService.update(user, passwordChangeDTO.newPassword());
     }
 
-    /*
-     * Department
-     */
-    private DepartmentResponseDTO getDepartmentDTO(Department department) {
-        if (department == null) return null;
-        return DepartmentResponseDTO.builder().name(department.getName()).parent(appendParent(department.getParent())).build();
-    }
-
-    private DepartmentResponseDTO appendParent(Department now) {
-        if (now.getParent() == null) return DepartmentResponseDTO.builder().name(now.getName()).build();
-        else return DepartmentResponseDTO.builder().name(now.getName()).parent(appendParent(now.getParent())).build();
+    public UserResponseDTO changeUser(UserInfoRequestDTO userInfoRequestDTO) {
+        SiteUser user = userService.get(userInfoRequestDTO.username());
+        Department department = departmentService.get(userInfoRequestDTO.department_id());
+        Role role = userInfoRequestDTO.role() >= 0 && userInfoRequestDTO.role() < Role.values().length ? Role.values()[userInfoRequestDTO.role()] : null;
+        user = userService.update(user, userInfoRequestDTO.name(), role, userInfoRequestDTO.password(), userInfoRequestDTO.phoneNumber(), userInfoRequestDTO.joinDate(), department);
+        return getUserResponseDTO(user);
     }
 
     /*
@@ -272,7 +271,7 @@ public class MultiService {
         List<Message> updatedMessages;
         if (lastReadMessage != null) { // 특정 채팅방에서 유저의 startId 이후의 업데이트된 메시지 목록을 가져옴
             updatedMessages = messageService.getUpdatedList(chatroomId, lastReadMessage.getLastReadMessage());
-        }else { // 특정 채팅방의 메세지 목록을 가져옴
+        } else { // 특정 채팅방의 메세지 목록을 가져옴
             updatedMessages = chatroom.getMessageList();
         }
 
@@ -284,11 +283,11 @@ public class MultiService {
         return updatedMessages.stream().map(this::GetMessageDTO).toList();
     }
 
-    private void saveLastMessage(SiteUser user, Chatroom chatroom, Long lastReadMessageId){
+    private void saveLastMessage(SiteUser user, Chatroom chatroom, Long lastReadMessageId) {
         LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
-        if (lastReadMessage == null){
+        if (lastReadMessage == null) {
             lastReadMessageService.create(user, chatroom, lastReadMessageId);
-        }else {
+        } else {
             lastReadMessageService.updateMessage(lastReadMessage, lastReadMessageId);
         }
     }
@@ -320,15 +319,15 @@ public class MultiService {
 
         int alarmCnt; //
 
-        if (lastReadMessage == null){
-            if (!chatroom.getMessageList().isEmpty()){
+        if (lastReadMessage == null) {
+            if (!chatroom.getMessageList().isEmpty()) {
 //                lastReadMessage = lastReadMessageService.create(user, chatroom, chatroom.getMessageList().get(0).getId());
 //                alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage()) + 1;
                 alarmCnt = chatroom.getMessageList().size();
-            }else {
+            } else {
                 alarmCnt = 0;
             }
-        }else {
+        } else {
             alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
         }
 
@@ -383,6 +382,8 @@ public class MultiService {
     /*
      * Email
      */
+
+    @Transactional
     public void emailFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         String keyValue = KeyPreset.EMAIL_MULTI.getValue(email_id.toString());
@@ -404,6 +405,7 @@ public class MultiService {
         multiKeyService.updateAll(key, list);
     }
 
+    @Transactional
     public String emailContentUpload(String username, MultipartFile file) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
@@ -424,8 +426,12 @@ public class MultiService {
         return fileName;
     }
 
+    @Transactional
     public Long sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
+        if(receiverIds.isEmpty()){
+            throw new EmailReceiverNotFoundException("email not found");
+        }
         SiteUser sender = userService.get(senderId);
         Email email = emailService.save(title, sender);
         if (content != null)
@@ -456,27 +462,46 @@ public class MultiService {
     public Object getEmailsForUser(String username, int statusIndex) {
         switch (statusIndex) {
             case 0:
-                List<Email> SenderEmail = emailReceiverService.getSentEmailsForUser(username);
-                return SenderEmail.stream()
-                        .map(email -> getEmailDTO(email, username)) // getEmailDTO에 username을 전달
+                List<Email> senderEmails = emailReceiverService.getSentEmailsForUser(username);
+                if (senderEmails == null) {
+                    throw new DataNotFoundException("Failed to retrieve sent emails for user: " + username);
+                }
+                senderEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
+                return senderEmails.stream()
+                        .map(email -> getEmailDTO(email, username))
                         .collect(Collectors.toList());
+
             case 1:
-                List<Email> ReceiverEmail = emailReceiverService.getReceivedEmailsForUser(username);
-                return ReceiverEmail.stream()
-                        .map(email -> getEmailDTO(email, username)) // getEmailDTO에 username을 전달
+                List<Email> receiverEmails = emailReceiverService.getReceivedEmailsForUser(username);
+                if (receiverEmails == null) {
+                    throw new DataNotFoundException("Failed to retrieve received emails for user: " + username);
+                }
+                receiverEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
+                return receiverEmails.stream()
+                        .map(email -> getEmailDTO(email, username))
                         .collect(Collectors.toList());
+
             case 2:
-                List<EmailReservation> ReservationEmail = emailReservationService.getReservedEmailsForUser(username);
-                return ReservationEmail.stream().map(this::getEmailReservationDTO).collect(Collectors.toList());
+                List<EmailReservation> reservationEmails = emailReservationService.getReservedEmailsForUser(username);
+                if (reservationEmails == null) {
+                    throw new DataNotFoundException("Failed to retrieve reserved emails for user: " + username);
+                }
+                reservationEmails.sort(Comparator.comparing(EmailReservation::getCreateTime).reversed());
+                return reservationEmails.stream()
+                        .map(this::getEmailReservationDTO)
+                        .collect(Collectors.toList());
+
             default:
                 throw new IllegalArgumentException("Invalid status index: " + statusIndex);
         }
     }
 
+    @Transactional
     public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
         EmailResponseDTO emailResponseDTO = getEmailDTO(email, username);
         return emailResponseDTO;
+
     }
 
     @Transactional
@@ -485,10 +510,50 @@ public class MultiService {
         emailService.findByUsernameDelete(email, username);
     }
 
+//    private EmailResponseDTO getEmailDTO(Email email, String username) {
+//        List<FileResponseDTO> filePathList = new ArrayList<>();
+//        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
+//        if (_multiKey.isPresent()) //
+//            for (String key : _multiKey.get().getKeyValues()) {
+//                FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
+//                fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
+//                fileSystemService.get(KeyPreset.EMAIL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
+//                builder.key(key); // key
+//                filePathList.add(builder.build());
+//            }
+//
+//        SiteUser user = userService.get(username);
+//        EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
+//
+//        List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
+//                .map(receiver -> EmailReceiverDTO.builder()
+//                        .receiverUsername(receiver.getReceiver().getUsername())
+//                        .status(receiver.isStatus())
+//                        .build())
+//                .collect(Collectors.toList());
+//
+//        return EmailResponseDTO //
+//                .builder() //
+//                .id(email.getId()) //
+//                .title(email.getTitle()) //
+//                .content(email.getContent()) //
+//                .senderId(email.getSender().getUsername()) //
+//                .senderName(email.getSender().getUsername()) //
+//                .receiverIds(email.getReceiverList() //
+//                        .stream() //
+//                        .map(er -> er.getReceiver().getUsername()) //
+//                        .toList()) //
+//                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
+//                .files(filePathList) //
+//                .status(emailReceiver != null ? emailReceiver.isStatus() : false)
+//                .receiverStatus(receiverStatus)
+//                .build();
+//    }
+
     private EmailResponseDTO getEmailDTO(Email email, String username) {
         List<FileResponseDTO> filePathList = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
-        if (_multiKey.isPresent()) //
+        if (_multiKey.isPresent()) {
             for (String key : _multiKey.get().getKeyValues()) {
                 FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
                 fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
@@ -496,8 +561,13 @@ public class MultiService {
                 builder.key(key); // key
                 filePathList.add(builder.build());
             }
+        }
 
         SiteUser user = userService.get(username);
+        if (user == null) {
+            throw new DataNotFoundException("User not found with username: " + username);
+        }
+
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
 
         List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
@@ -506,24 +576,22 @@ public class MultiService {
                         .status(receiver.isStatus())
                         .build())
                 .collect(Collectors.toList());
-        
-        if (emailReceiver == null) {
-            throw new EmailReceiverNotFoundException("Email receiver not found for email ID: " + email.getId() + " and username: " + username);
+
+        boolean status = false;
+        if (emailReceiver != null) {
+            status = emailReceiver.isStatus();
         }
-        return EmailResponseDTO //
-                .builder() //
-                .id(email.getId()) //
-                .title(email.getTitle()) //
-                .content(email.getContent()) //
-                .senderId(email.getSender().getUsername()) //
-                .senderName(email.getSender().getUsername()) //
-                .receiverIds(email.getReceiverList() //
-                        .stream() //
-                        .map(er -> er.getReceiver().getUsername()) //
-                        .toList()) //
-                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
-                .files(filePathList) //
-                .status(emailReceiver.isStatus())
+
+        return EmailResponseDTO.builder()
+                .id(email.getId())
+                .title(email.getTitle())
+                .content(email.getContent())
+                .senderId(email.getSender().getUsername())
+                .senderName(email.getSender().getUsername())
+                .receiverIds(email.getReceiverList().stream().map(er -> er.getReceiver().getUsername()).toList())
+                .senderTime(this.dateTimeTransfer(email.getCreateDate()))
+                .files(filePathList)
+                .status(status) // emailReceiver가 null인 경우 기본값으로 false 설정
                 .receiverStatus(receiverStatus)
                 .build();
     }
@@ -536,6 +604,7 @@ public class MultiService {
     /*
      * Email Reservation
      */
+    @Transactional
     public void emailReservationFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(email_id.toString());
@@ -555,6 +624,7 @@ public class MultiService {
         multiKeyService.updateAll(key, list);
     }
 
+    @Transactional
     public void deleteEmailReservation(Long reservationId, String username) {
         EmailReservation emailReservation = emailReservationService.getEmailReservation(reservationId);
         if (emailReservation.getSender().getUsername().equals(username)) {
@@ -562,12 +632,14 @@ public class MultiService {
         }
     }
 
+    @Transactional
     public Long reservationEmail(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
         SiteUser sender = userService.get(username);
         EmailReservation emailReservation = emailReservationService.save(emailReservationRequestDTO, sender);
         return emailReservation.getId();
     }
 
+    @Transactional
     private EmailReservationResponseDTO getEmailReservationDTO(EmailReservation reservation) {
         List<FileResponseDTO> fileslist = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_RESERVATION_MULTI.getValue(reservation.getId().toString()));
@@ -581,6 +653,7 @@ public class MultiService {
         return EmailReservationResponseDTO.builder().title(reservation.getTitle()).content(reservation.getContent()).id(reservation.getId()).receiverIds(reservation.getReceiverList()).senderTime(this.dateTimeTransfer(reservation.getSendTime())).files(fileslist).build();
     }
 
+    @Transactional
     public EmailReservationResponseDTO updateEmailReservation(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
         // 요청 DTO에서 ID를 사용하여 이메일 예약을 검색
         EmailReservation emailReservation = emailReservationService.getEmailReservation(emailReservationRequestDTO.id());
@@ -746,6 +819,19 @@ public class MultiService {
     /*
      * MessageReservation or ChatReservation
      */
+    @Scheduled(cron = "0 0 */1 * * *")
+    @Transactional
+    public void sendReservation() {
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        List<MessageReservation> messageReservationList = messageReservationService.getMessageReservationFromDate(LocalDateTime.now());
+        for (MessageReservation messageReservation : messageReservationList) {
+            if (messageReservation.getSendDate().toLocalTime().isBefore(LocalTime.now())) {
+                MessageRequestDTO messageRequestDTO = new MessageRequestDTO(messageReservation.getMessage(), messageReservation.getSender().getUsername(), messageReservation.getMessageType());
+                sendMessage(messageReservation.getId(), messageRequestDTO);
+                messageReservationService.delete(messageReservation);
+            }
+        }
+    }
 
     @Transactional
     public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
@@ -815,11 +901,83 @@ public class MultiService {
             file.delete();
         }
     }
-
     public List<String> getMessage(Long id) {
         Message message = messageService.getMessageById(id);
         List<String> users = message.getReadUsers();
 
         return users;
+    }
+    /*
+     * Department
+     */
+    @Transactional
+    public List<DepartmentTopResponseDTO> createDepartment(String username, DepartmentRequestDTO requestDTO) throws IOException {
+        Department parent = departmentService.get(requestDTO.parentId());
+        Department department = departmentService.save(requestDTO.name(), parent);
+        if (requestDTO.url() != null) {
+            Path pre = Paths.get(requestDTO.url());
+            String newUrl = requestDTO.url().replaceAll("/user/" + username + "/temp/depart_", "/department/" + department.getName() + "/");
+            Path now = Paths.get(newUrl);
+            Files.move(pre, now, StandardCopyOption.REPLACE_EXISTING);
+            fileSystemService.save(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()), newUrl);
+        }
+        return departmentService.getTopList().stream().map(this::getDepartmentTopDTO).toList();
+    }
+
+    @Transactional
+    public String saveDepartmentImage(String username, MultipartFile file) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        String key = KeyPreset.DEPARTMENT_PROFILE.getValue(username);
+        Optional<FileSystem> _fileSystem = fileSystemService.get(key);
+        if (_fileSystem.isPresent()) {
+            File preFile = new File(path + _fileSystem.get().getV());
+            if (preFile.exists()) deleteFileWithFolder(preFile);
+        }
+        UUID uuid = UUID.randomUUID();
+        String fileName = "/api/user/" + username + "/temp/depart_" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");
+        fileSystemService.save(key, fileName);
+        File dest = new File(path + fileName);
+        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+        file.transferTo(dest);
+        return fileName;
+    }
+
+    private DepartmentResponseDTO getDepartmentDTO(Department department) {
+        if (department == null) return null;
+        DepartmentResponseDTO parent = department.getParent() != null ? getDepartmentDTO(department.getParent()) : null;
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()));
+        return DepartmentResponseDTO.builder().name(department.getName()).parent(parent).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).build();
+    }
+
+    private DepartmentTopResponseDTO getDepartmentTopDTO(Department department) {
+        if (department == null) return null;
+        Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()));
+        return DepartmentTopResponseDTO.builder().name(department.getName()).child(department.getChild().stream().map(this::getDepartmentTopDTO).toList()).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).build();
+    }
+
+    public List<DepartmentTopResponseDTO> getDepartmentTree() {
+        return departmentService.getTopList().stream().map(this::getDepartmentTopDTO).toList();
+    }
+
+    @Transactional
+    public List<DepartmentTopResponseDTO> deleteDepartment(String departmentId) throws RelatedException {
+        Department department = departmentService.get(departmentId);
+        check(department);
+        departmentService.delete(department);
+        return getDepartmentTree();
+    }
+
+    public void check(Department department) {
+        if (!department.getUsers().isEmpty())
+            throw new RelatedException("부서에 인원이 남아있습니다.");
+        for (Department child : department.getChild())
+            check(child);
+    }
+
+    public List<UserResponseDTO> getUsers(String departmentId) {
+        Department department = departmentService.get(departmentId);
+        if (department == null)
+            throw new DataNotFoundException("해당 부서는 존재하지 않습니다.");
+        return department.getUsers().stream().map(this::getUserResponseDTO).toList();
     }
 }

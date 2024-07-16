@@ -22,11 +22,12 @@ public class Department {
     @ManyToOne(fetch = FetchType.LAZY)
     private Department parent;
     @OneToMany(mappedBy = "parent", orphanRemoval = true, cascade = CascadeType.ALL)
-    private List<Department> subGroups;
+    private List<Department> child;
 
     @Builder
-    public Department(String name) {
+    public Department(String name, Department parent) {
         this.name = name;
+        this.parent = parent;
         this.createDate = LocalDateTime.now();
         this.modifyDate = createDate;
 //        this.users = new ArrayList<>();
