@@ -20,6 +20,6 @@ public class MessageRepositoryCustomImpl implements MessageRepositoryCustom {
 
     @Override
     public List<Message> getList(Long startId) {
-        return jpaQueryFactory.selectFrom(qMessage).where(qMessage.id.gt(startId).and(qMessage.id.eq(startId))).fetch();
+        return jpaQueryFactory.selectFrom(qMessage).where(qMessage.id.gt(startId).or(qMessage.id.eq(startId))).fetch();
     }
 }

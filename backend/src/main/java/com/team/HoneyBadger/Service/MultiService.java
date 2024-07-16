@@ -656,6 +656,8 @@ public class MultiService {
     @Transactional
     private MessageResponseDTO GetMessageDTO(Message message) {
         Long sendTime = this.dateTimeTransfer(message.getCreateDate());
+//        int readUsers = message.getReadUsers().size();
+
         int readUsers;
         if (message.getReadUsers() == null){
             readUsers = 0;
@@ -812,5 +814,12 @@ public class MultiService {
             }
             file.delete();
         }
+    }
+
+    public List<String> getMessage(Long id) {
+        Message message = messageService.getMessageById(id);
+        List<String> users = message.getReadUsers();
+
+        return users;
     }
 }
