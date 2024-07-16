@@ -656,8 +656,17 @@ public class MultiService {
     @Transactional
     private MessageResponseDTO GetMessageDTO(Message message) {
         Long sendTime = this.dateTimeTransfer(message.getCreateDate());
+        int readUsers = message.getReadUsers().size();
 
-        return MessageResponseDTO.builder().id(message.getId()).sendTime(sendTime).username(message.getSender().getUsername()).name(message.getSender().getName()).message(message.getMessage()).messageType(message.getMessageType().ordinal()).build();
+        return MessageResponseDTO.builder()
+                .id(message.getId())
+                .sendTime(sendTime)
+                .username(message.getSender().getUsername())
+                .name(message.getSender().getName())
+                .message(message.getMessage())
+                .messageType(message.getMessageType().ordinal())
+                .readUsers(readUsers)
+                .build();
     }
 
     @Transactional
@@ -712,7 +721,7 @@ public class MultiService {
     }
 
     @Transactional
-    public void readMessage(Long chatroomId, String username) { //메세지 읽기 & 채팅방 접속
+    public void readMessage(Long chatroomId, String username) { //메세지 읽기 처리
         SiteUser reader = userService.get(username);
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
 
