@@ -1,19 +1,13 @@
 package com.team.HoneyBadger.Exception;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "email not found")
 public class EmailReceiverNotFoundException extends RuntimeException {
-    public EmailReceiverNotFoundException() {
-        super();
-    }
 
     public EmailReceiverNotFoundException(String message) {
         super(message);
     }
 
-    public EmailReceiverNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public EmailReceiverNotFoundException(Throwable cause) {
-        super(cause);
-    }
 }
