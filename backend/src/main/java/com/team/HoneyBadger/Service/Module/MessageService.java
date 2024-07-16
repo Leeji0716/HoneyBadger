@@ -8,6 +8,9 @@ import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Enum.MessageType;
 import com.team.HoneyBadger.Repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,8 +54,8 @@ public class MessageService {
         return messageRepository.getMessageList(chatroomId, startId);
     }
 
-    public List<MessageResponseDTO> getMessageList(List<Message> messageList) { //메세지 리스트 메세지 ResponseDTO 변환
-        return messageList.stream()
+    public Page<MessageResponseDTO> getMessageList(List<Message> messageList, Pageable pageable) { //메세지 리스트 메세지 ResponseDTO 변환
+        List<MessageResponseDTO> responseDTOList = messageList.stream()
                 .map(message -> new MessageResponseDTO(
                         message.getId(),
                         message.getMessage(),
@@ -61,9 +64,14 @@ public class MessageService {
                         message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
                         message.getMessageType().ordinal(),
                         message.getReadUsers() != null ? message.getReadUsers().size() : 0
-//                        message.getReadUsers().size()
                 ))
                 .collect(Collectors.toList());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), responseDTOList.size());
+        List<MessageResponseDTO> pagedList = responseDTOList.subList(start, end);
+
+        return new PageImpl<>(pagedList, pageable, responseDTOList.size());
     }
 
     public Message getLatesMessage(List<Message> messageList) {

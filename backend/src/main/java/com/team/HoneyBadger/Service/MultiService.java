@@ -13,6 +13,10 @@ import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
 import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -245,21 +249,39 @@ public class MultiService {
         return getChatRoom(chatroom, loginUser);
     }
 
-    @Transactional
-    public List<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword) {
-        SiteUser siteUser = userService.get(username);
-        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
-        List<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
-        for (Chatroom chatroom : chatroomList) {
-            chatroomResponseDTOList.add(getChatRoom(chatroom, username));
-        }
-        return chatroomResponseDTOList;
-    }
+//    @Transactional
+//    public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
+//        SiteUser siteUser = userService.get(username);
+//        Pageable pageable = PageRequest.of(page, 3);
+//        Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
+//        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
+//        Page<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
+//        for (Chatroom chatroom : chatroomPage) {
+//            chatroomResponseDTOList.add(getChatRoom(chatroom, username));
+//        }
+//        return chatroomResponseDTOList;
+//    }
 
     @Transactional
-    public List<MessageResponseDTO> getMessageList(Long chatroomId) {
+    public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
+        SiteUser siteUser = userService.get(username);
+        Pageable pageable = PageRequest.of(page, 10);
+        Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
+
+        List<ChatroomResponseDTO> chatroomResponseDTOList = chatroomPage.stream()
+                .map(chatroom -> getChatRoom(chatroom, username))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(chatroomResponseDTOList, pageable, chatroomPage.getTotalElements());
+    }
+
+
+    @Transactional
+    public Page<MessageResponseDTO> getMessageList(Long chatroomId, int page) {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        return messageService.getMessageList(chatroom.getMessageList());
+        Pageable pageable = PageRequest.of(page, 15);
+        Page<MessageResponseDTO> messagePage = messageService.getMessageList(chatroom.getMessageList(), pageable);
+        return messagePage;
     }
 
     @Transactional
