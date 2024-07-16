@@ -100,15 +100,15 @@ public class ChatroomController {
         else return tokenDTO.getResponseEntity();
     }
 
-//    @GetMapping("/get") --> updateChatroom PostMan 테스트 완료
-//    public ResponseEntity<?> getChatRoom(@RequestHeader("chatroomId") Long chatroomId, @RequestHeader("Authorization") String accessToken) {
-//        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-//        if (tokenDTO.isOK()) {
-//            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(chatroomId, tokenDTO.username());
-//            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-//        } else
-//            return tokenDTO.getResponseEntity();
-//    }
+    @GetMapping("/get") //--> updateChatroom PostMan 테스트 완료
+    public ResponseEntity<?> getChatRoom(@RequestHeader("chatroomId") Long chatroomId, @RequestHeader("Authorization") String accessToken) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(chatroomId, tokenDTO.username());
+            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
+        } else
+            return tokenDTO.getResponseEntity();
+    }
 
     @DeleteMapping //채팅방 삭제(참여자 테이블에서도 삭제됨.)
     public ResponseEntity<?> delete(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) {

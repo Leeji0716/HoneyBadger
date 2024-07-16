@@ -316,22 +316,30 @@ public class MultiService {
 
 
         SiteUser user = userService.get(username);
-
         LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
-        int alarmcnt;
+
+        int alarmCnt; //
+
         if (lastReadMessage == null){
             if (!chatroom.getMessageList().isEmpty()){
-                lastReadMessage = lastReadMessageService.create(user, chatroom, chatroom.getMessageList().get(0).getId());
-                alarmcnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage()) + 1;
+//                lastReadMessage = lastReadMessageService.create(user, chatroom, chatroom.getMessageList().get(0).getId());
+//                alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage()) + 1;
+                alarmCnt = chatroom.getMessageList().size();
             }else {
-                alarmcnt = 0;
+                alarmCnt = 0;
             }
         }else {
-            alarmcnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
+            alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
         }
 
-
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).alarmCount(alarmcnt).build();
+        return ChatroomResponseDTO.builder()
+                .id(chatroom.getId())
+                .name(chatroom.getName())
+                .users(users)
+                .latestMessage(latestMessageDTO)
+                .notification(notificationDTO)
+                .alarmCount(alarmCnt)
+                .build();
     }
 
     @Transactional
@@ -663,7 +671,6 @@ public class MultiService {
 
             // 삭제된 메시지에 대한 응답을 생성합니다.
             System.out.println("Message deleted");
-//            throw new RuntimeException("Message deleted");
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
             System.out.println("Cannot delete message older than 5 minutes");
