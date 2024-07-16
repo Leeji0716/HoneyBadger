@@ -499,6 +499,14 @@ public class MultiService {
 
         SiteUser user = userService.get(username);
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
+
+        List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
+                .map(receiver -> EmailReceiverDTO.builder()
+                        .receiverUsername(receiver.getReceiver().getUsername())
+                        .status(receiver.isStatus())
+                        .build())
+                .collect(Collectors.toList());
+        
         if (emailReceiver == null) {
             throw new EmailReceiverNotFoundException("Email receiver not found for email ID: " + email.getId() + " and username: " + username);
         }
@@ -516,6 +524,7 @@ public class MultiService {
                 .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
                 .files(filePathList) //
                 .status(emailReceiver.isStatus())
+                .receiverStatus(receiverStatus)
                 .build();
     }
 

@@ -88,7 +88,7 @@ public class EmailController {
         else return tokenDTO.getResponseEntity();
     }
 
-    @PutMapping("/read")
+    @PutMapping("/read") //메세지 읽음 처리
     public ResponseEntity<?> markEmailAsRead(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReadRequestDTO emailReadRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         EmailResponseDTO emailResponseDTO = multiService.read(emailReadRequestDTO, tokenDTO.username());
