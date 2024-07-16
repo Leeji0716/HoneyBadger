@@ -44,7 +44,7 @@ public class MessageController {
     public ResponseEntity<?> readMessages(@DestinationVariable Long id, String username) {
         try {
             multiService.readMessage(id, username);
-            return ResponseEntity.status(HttpStatus.OK).body("OK");
+            return ResponseEntity.status(HttpStatus.OK).body("Read OK");
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
