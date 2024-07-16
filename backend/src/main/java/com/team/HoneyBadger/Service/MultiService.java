@@ -479,12 +479,6 @@ public class MultiService {
         }
     }
 
-    public EmailReceiverResponseDTO read(EmailReadRequestDTO emailReadRequestDTO) {
-        Boolean isRead = emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
-        EmailResponseDTO emailResponseDTO = getEmailDTO(emailReadRequestDTO.emailId());
-        EmailReceiverResponseDTO emailReceiverResponseDTO = EmailReceiverResponseDTO.builder().id(emailResponseDTO.id()).status(isRead).emailResponseDTO(emailResponseDTO).build();
-        return emailReceiverResponseDTO;
-
     @Transactional
     public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
