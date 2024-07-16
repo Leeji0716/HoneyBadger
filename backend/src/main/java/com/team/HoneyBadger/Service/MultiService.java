@@ -466,7 +466,7 @@ public class MultiService {
                 if (senderEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve sent emails for user: " + username);
                 }
-                senderEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
+//                senderEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
                 return senderEmails.stream()
                         .map(email -> getEmailDTO(email, username))
                         .collect(Collectors.toList());
@@ -476,7 +476,7 @@ public class MultiService {
                 if (receiverEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve received emails for user: " + username);
                 }
-                receiverEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
+//                receiverEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
                 return receiverEmails.stream()
                         .map(email -> getEmailDTO(email, username))
                         .collect(Collectors.toList());
@@ -486,7 +486,7 @@ public class MultiService {
                 if (reservationEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve reserved emails for user: " + username);
                 }
-                reservationEmails.sort(Comparator.comparing(EmailReservation::getCreateTime).reversed());
+//                reservationEmails.sort(Comparator.comparing(EmailReservation::getCreateTime).reversed());
                 return reservationEmails.stream()
                         .map(this::getEmailReservationDTO)
                         .collect(Collectors.toList());

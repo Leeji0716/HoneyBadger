@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+
 import java.util.List;
 
 @Repository
@@ -37,6 +38,7 @@ public class EmailReceiverRepositoryCustomImpl implements EmailReceiverRepositor
     public List<Email> findSentEmailsByUserId(String userId) {
         return jpaQueryFactory.selectFrom(qEmail)
                 .where(qEmail.sender.username.eq(userId))
+                .orderBy(qEmail.createDate.desc())
                 .fetch();
     }
 
@@ -45,11 +47,14 @@ public class EmailReceiverRepositoryCustomImpl implements EmailReceiverRepositor
         return jpaQueryFactory.selectFrom(qEmail)
                 .join(qEmail.receiverList, qEmailReceiver)
                 .where(qEmailReceiver.receiver.username.eq(userId))
+                .orderBy(qEmail.createDate.desc())
                 .fetch();
     }
 
     public EmailReceiver findByEmailAndUser(Email email, SiteUser user) {
-        return jpaQueryFactory.selectFrom(qEmailReceiver).where(qEmailReceiver.receiver.eq(user).and(qEmailReceiver.email.eq(email))).fetchOne();
+        return jpaQueryFactory.selectFrom(qEmailReceiver)
+                .where(qEmailReceiver.receiver.eq(user)
+                        .and(qEmailReceiver.email.eq(email)))
+                .fetchOne();
     }
-
 }
