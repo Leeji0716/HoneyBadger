@@ -71,7 +71,7 @@ interface emailReservationUpdate {
     content: string,
     receiverIds: string[],
     sendTime?: Date | null,
-    files : MailFile[]
+    files : string[]
 }
 
 interface MailFile {
