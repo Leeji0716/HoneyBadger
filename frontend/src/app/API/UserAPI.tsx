@@ -129,9 +129,13 @@ export const getChat = async () => {
     return response.data;
 }
 
-
 export const getChatDetail = async (chatroomId: number) => {
     const response = await UserApi.get('/api/chatroom', { headers: { chatroomId: chatroomId } });
+    return response.data;
+}
+
+export const getUpdateMessageList = async (chatroomId: number) => {
+    const response = await UserApi.get('/api/message/update', { headers: { chatroomId: chatroomId } });
     return response.data;
 }
 
@@ -290,3 +294,5 @@ export const chatUploadFile = async ({ chatroomId, file }: { chatroomId: number,
 
     return response.data;
 };
+
+

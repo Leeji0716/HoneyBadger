@@ -18,6 +18,7 @@ export default function Chat() {
         messageType: number,
         sendTime: number,
         name: string
+        readUsers: number
     }
 
     interface chatroomResponseDTO {
@@ -80,7 +81,6 @@ export default function Chat() {
         setIsModalOpen2(false);
     }
 
-
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
@@ -102,8 +102,6 @@ export default function Chat() {
     }, [])
 
     useEffect(() => {
-        console.log("--------....>>>>");
-        console.log(temp);
         if (temp) {
             const test:messageResponseDTO[] = [...messageList];
             test.push(temp);
@@ -162,12 +160,9 @@ export default function Chat() {
     };
 
     function ChatList({ Chatroom, ChatDetail}: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO }) {
-        // console.log("ASDASD");
-        // console.log(Chatroom);
         const joinMembers: number = Chatroom.users.length;
         function getValue(confirm: number) {
-            // console.log("asdsaas");
-            // console.log(joinMembers);
+
             switch (joinMembers) {
                 case 2: return <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />;
                 case 3: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
@@ -209,13 +204,17 @@ export default function Chat() {
                 // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
                 socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
                     const message = JSON.parse(e.body).body;
-                    // console.log(message); // Type -> 숫자로 변경
                     const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, username: message?.username, messageType: message.messageType } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                     setTemp(temp);
                 });
+                socket.subscribe("/api/sub/read/"+Chatroom?.id, (e: any) => {
+                    
+                    
+                    
+                });
 
                 getChatDetail(Chatroom?.id).then(r => {
-                    // setMessageList(r);
+            
                     setMessageList(r);
                     console.log(r);
                     console.log(r);
@@ -225,7 +224,6 @@ export default function Chat() {
                         clearInterval(timer);
                     }, 100);
                 }).catch(e => console.log(e));
-
             }
         }}>
             {getValue(joinMembers)}
@@ -265,12 +263,7 @@ export default function Chat() {
         const [message, setMessage] = useState('');
         const [roomName, setRoomName] = useState(chatroom?.name);
         const [messageType, setMessageType] = useState(0);
-        console.log("xrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
-        console.log(messageList);
-        // console.log("==========");
-        // console.log(chatroom);
-        // console.log(chatroom.messageResponseDTOList);
-        // console.log("시시간간");
+
         return <div>
             <div className="flex w-full justify-between border-b-2">
                 <div className="text-black flex w-[50%]">
@@ -403,9 +396,7 @@ export default function Chat() {
 
                                             notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
                                                 .then((r) => {
-                                                    console.log('-=------====');
-                                                    // setNotificationMessage(r);
-
+            
                                                     chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
                                                     setChatrooms([...chatrooms]);
                                                     setChatroom(r);
@@ -436,7 +427,7 @@ export default function Chat() {
                                     <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
                                         <div className="mt-2 mb-2 ml-3 mr-3">
                                             {t?.messageType == 0
-                                            ? <><div>{t?.messageType}</div><div>{t?.message}</div></>
+                                            ? <><div>{t?.message}</div></>
                                             : <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
                                             }
                                         </div>
