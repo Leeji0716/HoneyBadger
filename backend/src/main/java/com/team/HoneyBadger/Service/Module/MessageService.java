@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class MessageService {
     private final MessageRepository messageRepository;
 
-    //나중에 여기서 고쳐 readUsers 나 추가하기
+    //나중에 여기서 고쳐 readUsers 에 나 추가하기
     public Message save(String msg, SiteUser siteUser, Chatroom chatroom, MessageType messageType) {
         Message message = Message.builder().message(msg).sender(siteUser).chatroom(chatroom).messageType(messageType).readUsers(new ArrayList<>()).build();
         return messageRepository.save(message);
@@ -61,6 +61,7 @@ public class MessageService {
                         message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
                         message.getMessageType().ordinal(),
                         message.getReadUsers() != null ? message.getReadUsers().size() : 0
+//                        message.getReadUsers().size()
                 ))
                 .collect(Collectors.toList());
     }
