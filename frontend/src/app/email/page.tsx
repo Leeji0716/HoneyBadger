@@ -64,11 +64,11 @@ export default function Email() {
 
 
     const truncateText = ({ text, maxLength }: { text: string, maxLength: number }) => {
-
-        if (text?.length <= maxLength) {
-            return text;
+       const trimText =  text?.replace(/<p><br><\/p>/g, '').trim();
+        if (trimText?.length <= maxLength) {
+            return trimText;
         }
-        return text?.substring(0, maxLength) + '...';
+        return trimText?.substring(0, maxLength) + '...';
     };
 
 
@@ -84,11 +84,19 @@ export default function Email() {
     //  전(pre) , 후 (next)
     // set([...pre , new, ...next])
 
+    const storageItems = (email:EmailResponseDTO,index:number) => {
+        const items = {
+            email : email,
+            index : index
+        }
+        return items;
+    }
+    
 
     function MailBox({ email }: { email: EmailResponseDTO }) {
 
         return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300" onClick={() => {
-            if (email.status == false) {
+            if (email.status == false && sort == 1) {
                 readEmail({ emailId: email.id, readerId: user.username }).then(r => { setEmail(r); console.log("이메일: "); console.log(r); const index = emailList.findIndex(e => e.id === email.id); console.log("index"); console.log(index); const pre = [...emailList]; pre[index] = r; console.log("pre:"); console.log(pre); setEmailList(pre); console.log("emailList"); console.log(emailList) }).catch(e => console.log(e))
             }
             else {
@@ -188,11 +196,13 @@ export default function Email() {
                     <DropDown open={open3 != null && open3?.id == email?.id} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button={"burger" + open3?.id}>
                         {status != 2 ?
                             <>
+                                <button onClick={() => { router.push(`/email/EmailForm`); localStorage.setItem("email", JSON.stringify(storageItems(email,0))) }}>전달</button>
+                                <button onClick={() => { router.push(`/email/EmailForm`); localStorage.setItem("email", JSON.stringify(storageItems(email,1))) }}>답장</button>
                                 <button onClick={() => { mailDelete(open3.id).then(r => window.location.href = "/email").catch(e => console.log(e)) }}>삭제</button>
                             </>
                             :
                             <>
-                                <button onClick={() => { router.push(`/email/EmailForm`); localStorage.setItem("email", JSON.stringify(email)) }}>수정</button>
+                                <button onClick={() => { router.push(`/email/EmailForm`); localStorage.setItem("email", JSON.stringify(storageItems(email,2))) }}>수정</button>
                                 <button onClick={() => { mailCancel(open3.id).then(r => window.location.href = "/email").catch(e => console.log(e)) }}>삭제</button>
                             </>
 
