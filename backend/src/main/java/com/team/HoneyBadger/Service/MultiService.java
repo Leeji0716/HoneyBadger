@@ -459,21 +459,52 @@ public class MultiService {
         return email.getId();
     }
 
+//    public Object getEmailsForUser(String username, int statusIndex) {
+//        switch (statusIndex) {
+//            case 0:
+//                List<Email> SenderEmail = emailReceiverService.getSentEmailsForUser(username);
+//                return SenderEmail.stream()
+//                        .map(email -> getEmailDTO(email, username)) // getEmailDTO에 username을 전달
+//                        .collect(Collectors.toList());
+//            case 1:
+//                List<Email> ReceiverEmail = emailReceiverService.getReceivedEmailsForUser(username);
+//                return ReceiverEmail.stream()
+//                        .map(email -> getEmailDTO(email, username)) // getEmailDTO에 username을 전달
+//                        .collect(Collectors.toList());
+//            case 2:
+//                List<EmailReservation> ReservationEmail = emailReservationService.getReservedEmailsForUser(username);
+//                return ReservationEmail.stream().map(this::getEmailReservationDTO).collect(Collectors.toList());
+//            default:
+//                throw new IllegalArgumentException("Invalid status index: " + statusIndex);
+//        }
+//    }
+
     public Object getEmailsForUser(String username, int statusIndex) {
         switch (statusIndex) {
             case 0:
-                List<Email> SenderEmail = emailReceiverService.getSentEmailsForUser(username);
-                return SenderEmail.stream()
-                        .map(email -> getEmailDTO(email, username)) // getEmailDTO에 username을 전달
+                List<Email> senderEmails = emailReceiverService.getSentEmailsForUser(username);
+                // 최근 순서로 내림차순 정렬
+                senderEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
+                return senderEmails.stream()
+                        .map(email -> getEmailDTO(email, username))
                         .collect(Collectors.toList());
+
             case 1:
-                List<Email> ReceiverEmail = emailReceiverService.getReceivedEmailsForUser(username);
-                return ReceiverEmail.stream()
-                        .map(email -> getEmailDTO(email, username)) // getEmailDTO에 username을 전달
+                List<Email> receiverEmails = emailReceiverService.getReceivedEmailsForUser(username);
+                // 최근 순서로 내림차순 정렬
+                receiverEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
+                return receiverEmails.stream()
+                        .map(email -> getEmailDTO(email, username))
                         .collect(Collectors.toList());
+
             case 2:
-                List<EmailReservation> ReservationEmail = emailReservationService.getReservedEmailsForUser(username);
-                return ReservationEmail.stream().map(this::getEmailReservationDTO).collect(Collectors.toList());
+                List<EmailReservation> reservationEmails = emailReservationService.getReservedEmailsForUser(username);
+                // 최근 순서로 내림차순 정렬
+                reservationEmails.sort(Comparator.comparing(EmailReservation::getCreateTime).reversed());
+                return reservationEmails.stream()
+                        .map(this::getEmailReservationDTO)
+                        .collect(Collectors.toList());
+
             default:
                 throw new IllegalArgumentException("Invalid status index: " + statusIndex);
         }

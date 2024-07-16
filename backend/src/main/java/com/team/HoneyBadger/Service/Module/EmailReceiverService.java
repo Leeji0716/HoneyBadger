@@ -37,12 +37,11 @@ public class EmailReceiverService {
         return emailReceiverRepository.findReceivedEmailsByUserId(userId); // 사용자에 대해 받은 이메일 목록을 반환하는 로직
     }
 
+    public EmailReceiver getReadStatus(Email email, SiteUser user) {
+        return emailReceiverRepository.findByEmailAndUser(email, user);
+    }
 
     public Optional<EmailReceiver> getEmailReceiver(Long aLong) {
         return emailReceiverRepository.findById(aLong);
-    }
-
-    public EmailReceiver getReadStatus(Email email, SiteUser user) {
-        return emailReceiverRepository.findByEmailAndUser(email, user);
     }
 }
