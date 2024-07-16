@@ -1,7 +1,7 @@
 #!/bin/bash
 
 JAR=HoneyBadger-0.0.1-SNAPSHOT.jar
-LOG=/home/ubuntu/honeybadger/data/api/config/back.log
+LOG=/home/ubuntu/honeybadger/data/api/back.log
 
 echo "BACK started."
 

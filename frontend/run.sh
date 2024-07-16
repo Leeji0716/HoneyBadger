@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG=/home/ubuntu/honeybadger/data/api/config/front.log
+LOG=/home/ubuntu/honeybadger/data/api/front.log
 
 echo "FRONT started."
 
