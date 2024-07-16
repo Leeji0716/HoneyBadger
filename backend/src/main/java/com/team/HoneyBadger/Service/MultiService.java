@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
+import com.team.HoneyBadger.Enum.DepartmentRole;
 import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
 import com.team.HoneyBadger.Enum.Role;
@@ -13,6 +14,10 @@ import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
 import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -245,21 +250,39 @@ public class MultiService {
         return getChatRoom(chatroom, loginUser);
     }
 
-    @Transactional
-    public List<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword) {
-        SiteUser siteUser = userService.get(username);
-        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
-        List<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
-        for (Chatroom chatroom : chatroomList) {
-            chatroomResponseDTOList.add(getChatRoom(chatroom, username));
-        }
-        return chatroomResponseDTOList;
-    }
+//    @Transactional
+//    public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
+//        SiteUser siteUser = userService.get(username);
+//        Pageable pageable = PageRequest.of(page, 3);
+//        Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
+//        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
+//        Page<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
+//        for (Chatroom chatroom : chatroomPage) {
+//            chatroomResponseDTOList.add(getChatRoom(chatroom, username));
+//        }
+//        return chatroomResponseDTOList;
+//    }
 
     @Transactional
-    public List<MessageResponseDTO> getMessageList(Long chatroomId) {
+    public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
+        SiteUser siteUser = userService.get(username);
+        Pageable pageable = PageRequest.of(page, 10);
+        Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
+
+        List<ChatroomResponseDTO> chatroomResponseDTOList = chatroomPage.stream()
+                .map(chatroom -> getChatRoom(chatroom, username))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(chatroomResponseDTOList, pageable, chatroomPage.getTotalElements());
+    }
+
+
+    @Transactional
+    public Page<MessageResponseDTO> getMessageList(Long chatroomId, int page) {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        return messageService.getMessageList(chatroom.getMessageList());
+        Pageable pageable = PageRequest.of(page, 15);
+        Page<MessageResponseDTO> messagePage = messageService.getMessageList(chatroom.getMessageList(), pageable);
+        return messagePage;
     }
 
     @Transactional
@@ -429,7 +452,7 @@ public class MultiService {
     @Transactional
     public Long sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
-        if(receiverIds.isEmpty()){
+        if (receiverIds.isEmpty()) {
             throw new EmailReceiverNotFoundException("email not found");
         }
         SiteUser sender = userService.get(senderId);
@@ -459,51 +482,47 @@ public class MultiService {
         return email.getId();
     }
 
-//    public Object getEmailsForUser(String username, int statusIndex) {
-//        switch (statusIndex) {
-//            case 0:
-//                List<Email> SenderEmail = emailReceiverService.getSentEmailsForUser(username);
-//                return SenderEmail.stream()
-//                        .map(email -> getEmailDTO(email, username)) // getEmailDTO에 username을 전달
-//                        .collect(Collectors.toList());
-//            case 1:
-//                List<Email> ReceiverEmail = emailReceiverService.getReceivedEmailsForUser(username);
-//                return ReceiverEmail.stream()
-//                        .map(email -> getEmailDTO(email, username)) // getEmailDTO에 username을 전달
-//                        .collect(Collectors.toList());
-//            case 2:
-//                List<EmailReservation> ReservationEmail = emailReservationService.getReservedEmailsForUser(username);
-//                return ReservationEmail.stream().map(this::getEmailReservationDTO).collect(Collectors.toList());
-//            default:
-//                throw new IllegalArgumentException("Invalid status index: " + statusIndex);
-//        }
-//    }
-
-    public Object getEmailsForUser(String username, int statusIndex) {
+    public Page<Object> getEmailsForUser(String username, int statusIndex, int page) {
+        Pageable pageable = PageRequest.of(page, 3);
         switch (statusIndex) {
             case 0:
-                List<Email> senderEmails = emailReceiverService.getSentEmailsForUser(username);
-                // 최근 순서로 내림차순 정렬
-                senderEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
-                return senderEmails.stream()
-                        .map(email -> getEmailDTO(email, username))
-                        .collect(Collectors.toList());
+                Page<Email> senderEmails = emailReceiverService.getSentEmailsForUser(username, pageable);
+                if (senderEmails == null) {
+                    throw new DataNotFoundException("Failed to retrieve sent emails for user: " + username);
+                }
+                return new PageImpl<>(
+                        senderEmails.stream()
+                                .map(email -> getEmailDTO(email, username))
+                                .collect(Collectors.toList()),
+                        pageable,
+                        senderEmails.getTotalElements()
+                );
 
             case 1:
-                List<Email> receiverEmails = emailReceiverService.getReceivedEmailsForUser(username);
-                // 최근 순서로 내림차순 정렬
-                receiverEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
-                return receiverEmails.stream()
-                        .map(email -> getEmailDTO(email, username))
-                        .collect(Collectors.toList());
+                Page<Email> receiverEmails = emailReceiverService.getReceivedEmailsForUser(username, pageable);
+                if (receiverEmails == null) {
+                    throw new DataNotFoundException("Failed to retrieve received emails for user: " + username);
+                }
+                return new PageImpl<>(
+                        receiverEmails.stream()
+                                .map(email -> getEmailDTO(email, username))
+                                .collect(Collectors.toList()),
+                        pageable,
+                        receiverEmails.getTotalElements()
+                );
 
             case 2:
-                List<EmailReservation> reservationEmails = emailReservationService.getReservedEmailsForUser(username);
-                // 최근 순서로 내림차순 정렬
-                reservationEmails.sort(Comparator.comparing(EmailReservation::getCreateTime).reversed());
-                return reservationEmails.stream()
-                        .map(this::getEmailReservationDTO)
-                        .collect(Collectors.toList());
+                Page<EmailReservation> reservationEmails = emailReservationService.getReservedEmailsForUser(username, pageable);
+                if (reservationEmails == null) {
+                    throw new DataNotFoundException("Failed to retrieve reserved emails for user: " + username);
+                }
+                return new PageImpl<>(
+                        reservationEmails.stream()
+                                .map(this::getEmailReservationDTO)
+                                .collect(Collectors.toList()),
+                        pageable,
+                        reservationEmails.getTotalElements()
+                );
 
             default:
                 throw new IllegalArgumentException("Invalid status index: " + statusIndex);
@@ -513,9 +532,9 @@ public class MultiService {
     @Transactional
     public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
-        EmailResponseDTO emailResponseDTO = getEmailDTO(email, username);
+        emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
+        EmailResponseDTO emailResponseDTO = getEmailDTO(email, emailReadRequestDTO.receiverId()); // receiverId 사용
         return emailResponseDTO;
-
     }
 
     @Transactional
@@ -524,10 +543,10 @@ public class MultiService {
         emailService.findByUsernameDelete(email, username);
     }
 
-    private EmailResponseDTO getEmailDTO(Email email, String username) {
+    private EmailResponseDTO getEmailDTO(Email email, String receiverId) {
         List<FileResponseDTO> filePathList = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
-        if (_multiKey.isPresent()) //
+        if (_multiKey.isPresent()) {
             for (String key : _multiKey.get().getKeyValues()) {
                 FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
                 fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
@@ -535,8 +554,14 @@ public class MultiService {
                 builder.key(key); // key
                 filePathList.add(builder.build());
             }
+        }
 
-        SiteUser user = userService.get(username);
+        SiteUser user = userService.get(receiverId);
+        if (user == null) {
+            throw new DataNotFoundException("User not found with receiverId: " + receiverId);
+        }
+
+        // receiverId를 기반으로 읽음 상태를 조회
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
 
         List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
@@ -546,21 +571,23 @@ public class MultiService {
                         .build())
                 .collect(Collectors.toList());
 
-        return EmailResponseDTO //
-                .builder() //
-                .id(email.getId()) //
-                .title(email.getTitle()) //
-                .content(email.getContent()) //
-                .senderId(email.getSender().getUsername()) //
-                .senderName(email.getSender().getUsername()) //
-                .receiverIds(email.getReceiverList() //
-                        .stream() //
-                        .map(er -> er.getReceiver().getUsername()) //
-                        .toList()) //
-                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
-                .files(filePathList) //
-//                .status(emailReceiver != null ? emailReceiver.isStatus() : false)
-                .status(emailReceiver != null && emailReceiver.isStatus())
+        boolean status = false;
+        if (emailReceiver != null) {
+            status = emailReceiver.isStatus();
+        } else {
+            System.out.println("emailReceiver is null for emailId: " + email.getId() + " and receiverId: " + receiverId);
+        }
+
+        return EmailResponseDTO.builder()
+                .id(email.getId())
+                .title(email.getTitle())
+                .content(email.getContent())
+                .senderId(email.getSender().getUsername())
+                .senderName(email.getSender().getUsername())
+                .receiverIds(email.getReceiverList().stream().map(er -> er.getReceiver().getUsername()).toList())
+                .senderTime(this.dateTimeTransfer(email.getCreateDate()))
+                .files(filePathList)
+                .status(status) // emailReceiver가 null인 경우 기본값으로 false 설정
                 .receiverStatus(receiverStatus)
                 .build();
     }
@@ -698,10 +725,12 @@ public class MultiService {
     @Transactional
     private MessageResponseDTO GetMessageDTO(Message message) {
         Long sendTime = this.dateTimeTransfer(message.getCreateDate());
+//        int readUsers = message.getReadUsers().size();
+
         int readUsers;
-        if (message.getReadUsers() == null){
+        if (message.getReadUsers() == null) {
             readUsers = 0;
-        }else {
+        } else {
             readUsers = message.getReadUsers().size();
         }
 
@@ -868,18 +897,29 @@ public class MultiService {
             file.delete();
         }
     }
+    public List<String> getMessage(Long id) {
+        Message message = messageService.getMessageById(id);
+        List<String> users = message.getReadUsers();
 
+        return users;
+    }
     /*
      * Department
      */
     @Transactional
     public List<DepartmentTopResponseDTO> createDepartment(String username, DepartmentRequestDTO requestDTO) throws IOException {
         Department parent = departmentService.get(requestDTO.parentId());
-        Department department = departmentService.save(requestDTO.name(), parent);
+        if (departmentService.get(requestDTO.name()) != null)
+            throw new DataDuplicateException("department already exist");
+
+        Department department = departmentService.save(requestDTO.name(), parent, DepartmentRole.values()[requestDTO.role()]);
         if (requestDTO.url() != null) {
-            Path pre = Paths.get(requestDTO.url());
+            String path = HoneyBadgerApplication.getOsType().getLoc();
+            Path pre = Paths.get(path + requestDTO.url());
             String newUrl = requestDTO.url().replaceAll("/user/" + username + "/temp/depart_", "/department/" + department.getName() + "/");
-            Path now = Paths.get(newUrl);
+            Path now = Paths.get(path + newUrl);
+            if (!now.getParent().toFile().exists())
+                now.getParent().toFile().mkdirs();
             Files.move(pre, now, StandardCopyOption.REPLACE_EXISTING);
             fileSystemService.save(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()), newUrl);
         }
@@ -936,12 +976,18 @@ public class MultiService {
             check(child);
     }
 
-    public List<UserResponseDTO> getUsers(String departmentId) {
+    public DepartmentUserResponseDTO getDepartmentUsers(String departmentId) {
         Department department = departmentService.get(departmentId);
         if (department == null)
             throw new DataNotFoundException("해당 부서는 존재하지 않습니다.");
-        return department.getUsers().stream().map(this::getUserResponseDTO).toList();
+        return getDepartmentUserResponseDTO(department);
     }
 
-
+    private DepartmentUserResponseDTO getDepartmentUserResponseDTO(Department department) {
+        List<UserResponseDTO> users = department.getUsers().stream().map(this::getUserResponseDTO).toList();
+        List<DepartmentUserResponseDTO> list = new ArrayList<>();
+        for (Department child : department.getChild())
+            list.add(getDepartmentUserResponseDTO(child));
+        return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).build();
+    }
 }

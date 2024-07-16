@@ -6,12 +6,13 @@ import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Repository.EmailReservationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -60,8 +61,8 @@ public class EmailReservationService {
         emailReservationRepository.save(emailReservation);
     }
 
-    public List<EmailReservation> getReservedEmailsForUser(String userId) {
-        return emailReservationRepository.findReservedEmailsByUserId(userId); // 사용자에 대해 예약된 이메일 목록을 반환하는 로직
+    public Page<EmailReservation> getReservedEmailsForUser(String userId, Pageable pageable) {
+        return emailReservationRepository.findReservedEmailsByUserId(userId, pageable); // 사용자에 대해 예약된 이메일 목록을 반환하는 로직
     }
 
     public void delete(EmailReservation emailReservation) {

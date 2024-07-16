@@ -1,9 +1,13 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.DTO.*;
+import com.team.HoneyBadger.DTO.EmailReadRequestDTO;
+import com.team.HoneyBadger.DTO.EmailRequestDTO;
+import com.team.HoneyBadger.DTO.EmailResponseDTO;
+import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,11 +23,11 @@ public class EmailController {
     private final MultiService multiService;
 
     @GetMapping("/list") // 유저에 대한 모든 이메일
-    public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken, @RequestHeader("status") int status) {
+    public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken, @RequestHeader("status") int status,@RequestHeader("Page") int page) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
             try {
-                Object emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status);
+                Page<Object> emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status, page);
                 return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTOList);
             } catch (DataNotFoundException ex) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());

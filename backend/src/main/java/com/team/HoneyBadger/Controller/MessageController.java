@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,7 +42,21 @@ public class MessageController {
 
     @MessageMapping("/read/{id}")
     @SendTo("/api/sub/read/{id}") //메세지 읽기 -> readUsers 리스트에 추가
-    public ResponseEntity<?> readMessages(@DestinationVariable Long id, String username) {
+    public ResponseEntity<?> readMessages(@DestinationVariable Long id, @Payload MessageRequestDTO messageRequestDTO) {
+        try {
+            multiService.readMessage(id, messageRequestDTO.username());
+            return ResponseEntity.status(HttpStatus.OK).body("Read OK");
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+        }
+    }
+
+    @PutMapping("/readTest") //메세지 읽기 테스트 -> readUsers 리스트에 추가
+    public ResponseEntity<?> readMessagesTest(@RequestHeader Long id, @RequestHeader String username) {
         try {
             multiService.readMessage(id, username);
             return ResponseEntity.status(HttpStatus.OK).body("Read OK");
@@ -68,6 +83,13 @@ public class MessageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
+    }
+
+
+    @GetMapping("/readUsers") //readUsers 출력 테스트
+    public ResponseEntity readUsersTest(@RequestHeader Long id){
+        List<String> messageResponseDTO = multiService.getMessage(id);
+        return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
     }
 
     @PostMapping("/upload") //메세지 파일 업로드
