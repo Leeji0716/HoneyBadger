@@ -466,7 +466,6 @@ public class MultiService {
                 if (senderEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve sent emails for user: " + username);
                 }
-//                senderEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
                 return senderEmails.stream()
                         .map(email -> getEmailDTO(email, username))
                         .collect(Collectors.toList());
@@ -476,7 +475,6 @@ public class MultiService {
                 if (receiverEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve received emails for user: " + username);
                 }
-//                receiverEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
                 return receiverEmails.stream()
                         .map(email -> getEmailDTO(email, username))
                         .collect(Collectors.toList());
@@ -486,7 +484,6 @@ public class MultiService {
                 if (reservationEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve reserved emails for user: " + username);
                 }
-//                reservationEmails.sort(Comparator.comparing(EmailReservation::getCreateTime).reversed());
                 return reservationEmails.stream()
                         .map(this::getEmailReservationDTO)
                         .collect(Collectors.toList());
@@ -499,9 +496,9 @@ public class MultiService {
     @Transactional
     public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
-        EmailResponseDTO emailResponseDTO = getEmailDTO(email, username);
+        emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
+        EmailResponseDTO emailResponseDTO = getEmailDTO(email, emailReadRequestDTO.receiverId()); // receiverId 사용
         return emailResponseDTO;
-
     }
 
     @Transactional
@@ -550,7 +547,57 @@ public class MultiService {
 //                .build();
 //    }
 
-    private EmailResponseDTO getEmailDTO(Email email, String username) {
+//    private EmailResponseDTO getEmailDTO(Email email, String username) {
+//        List<FileResponseDTO> filePathList = new ArrayList<>();
+//        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
+//        if (_multiKey.isPresent()) {
+//            for (String key : _multiKey.get().getKeyValues()) {
+//                FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
+//                fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
+//                fileSystemService.get(KeyPreset.EMAIL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
+//                builder.key(key); // key
+//                filePathList.add(builder.build());
+//            }
+//        }
+//
+//        SiteUser user = userService.get(username);
+//        if (user == null) {
+//            throw new DataNotFoundException("User not found with username: " + username);
+//        }
+//
+//        // getReadStatus 메서드가 올바르게 동작하는지 확인
+//        EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
+//
+//        List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
+//                .map(receiver -> EmailReceiverDTO.builder()
+//                        .receiverUsername(receiver.getReceiver().getUsername())
+//                        .status(receiver.isStatus())
+//                        .build())
+//                .collect(Collectors.toList());
+//
+//        // emailReceiver가 null이 아닌지 확인
+//        boolean status = false;
+//        if (emailReceiver != null) {
+//            status = emailReceiver.isStatus(); // emailReceiver의 상태가 올바른지 확인
+//        } else {
+//            System.out.println("emailReceiver is null for emailId: " + email.getId() + " and username: " + username);
+//        }
+//
+//        return EmailResponseDTO.builder()
+//                .id(email.getId())
+//                .title(email.getTitle())
+//                .content(email.getContent())
+//                .senderId(email.getSender().getUsername())
+//                .senderName(email.getSender().getUsername())
+//                .receiverIds(email.getReceiverList().stream().map(er -> er.getReceiver().getUsername()).toList())
+//                .senderTime(this.dateTimeTransfer(email.getCreateDate()))
+//                .files(filePathList)
+//                .status(status) // emailReceiver가 null인 경우 기본값으로 false 설정
+//                .receiverStatus(receiverStatus)
+//                .build();
+//    }
+
+    private EmailResponseDTO getEmailDTO(Email email, String receiverId) {
         List<FileResponseDTO> filePathList = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
         if (_multiKey.isPresent()) {
@@ -563,11 +610,12 @@ public class MultiService {
             }
         }
 
-        SiteUser user = userService.get(username);
+        SiteUser user = userService.get(receiverId);
         if (user == null) {
-            throw new DataNotFoundException("User not found with username: " + username);
+            throw new DataNotFoundException("User not found with receiverId: " + receiverId);
         }
 
+        // receiverId를 기반으로 읽음 상태를 조회
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
 
         List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
@@ -580,6 +628,8 @@ public class MultiService {
         boolean status = false;
         if (emailReceiver != null) {
             status = emailReceiver.isStatus();
+        } else {
+            System.out.println("emailReceiver is null for emailId: " + email.getId() + " and receiverId: " + receiverId);
         }
 
         return EmailResponseDTO.builder()
@@ -595,6 +645,37 @@ public class MultiService {
                 .receiverStatus(receiverStatus)
                 .build();
     }
+
+//    private EmailResponseDTO getEmailDTO(Email email, String username) {
+//        List<FileResponseDTO> filePathList = new ArrayList<>();
+//        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
+//        if (_multiKey.isPresent()) //
+//            for (String key : _multiKey.get().getKeyValues()) {
+//                FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
+//                fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
+//                fileSystemService.get(KeyPreset.EMAIL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
+//                builder.key(key); // key
+//                filePathList.add(builder.build());
+//            }
+//
+//        SiteUser user = userService.get(username);
+//        EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
+//        return EmailResponseDTO //
+//                .builder() //
+//                .id(email.getId()) //
+//                .title(email.getTitle()) //
+//                .content(email.getContent()) //
+//                .senderId(email.getSender().getUsername()) //
+//                .senderName(email.getSender().getUsername()) //
+//                .receiverIds(email.getReceiverList() //
+//                        .stream() //
+//                        .map(er -> er.getReceiver().getUsername()) //
+//                        .toList()) //
+//                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
+//                .files(filePathList) //
+//                .status(emailReceiver.isStatus())
+//                .build();
+//    }
 
     public EmailResponseDTO getEmailDTO(Long emailId, String username) {
         Email email = emailService.getEmail(emailId);
