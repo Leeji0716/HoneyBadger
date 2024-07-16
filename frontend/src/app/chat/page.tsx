@@ -5,7 +5,7 @@ import DropDown, { Direcion } from "../Global/DropDown";
 import Modal from "../Global/Modal";
 import { Tooltip } from 'react-tooltip';
 
-import { chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage, chatUploadFile } from "../API/UserAPI";
+import { chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage, chatUploadFile, getUpdateMessageList } from "../API/UserAPI";
 import { getChatDateTimeFormat } from "../Global/Method";
 import { getChatShowDateTimeFormat } from "../Global/Method";
 import { getSocket } from "../API/SocketAPI";
@@ -17,8 +17,8 @@ export default function Chat() {
         message: string,
         messageType: number,
         sendTime: number,
-        name: string
-        readUsers: number
+        name: string,
+        readUsers?: number
     }
 
     interface chatroomResponseDTO {
@@ -54,7 +54,7 @@ export default function Chat() {
     const [isModalOpen2, setIsModalOpen2] = useState(false);
     const [userList, setUserList] = useState([] as any[])
     const [selectedUsers, setSelectedUsers] = useState(new Set<string>());
-    const [chatroomName, setChatroomName] = useState('');    
+    const [chatroomName, setChatroomName] = useState('');
     const file = useRef(null as any);
 
     function handleOpenModal() {
@@ -103,10 +103,11 @@ export default function Chat() {
 
     useEffect(() => {
         if (temp) {
-            const test:messageResponseDTO[] = [...messageList];
+            const test: messageResponseDTO[] = [...messageList];
             test.push(temp);
+            console.log("test");
             console.log(test);
-            setMessageList(test);            
+            setMessageList(test);
             // setChatDetail(temp);
             setTemp(null);
         }
@@ -159,8 +160,9 @@ export default function Chat() {
         }
     };
 
-    function ChatList({ Chatroom, ChatDetail}: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO }) {
+    function ChatList({ Chatroom, ChatDetail }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO }) {
         const joinMembers: number = Chatroom.users.length;
+        const [updateMessageList, setUpdateMessageList] = useState<messageResponseDTO[]>([]);
         function getValue(confirm: number) {
 
             switch (joinMembers) {
@@ -199,30 +201,44 @@ export default function Chat() {
             if (isReady) {
                 if (chatroom) {
                     socket.unsubscribe("/api/sub/message/" + chatroom.chatroom?.id);
+                    socket.unsubscribe("/api/sub/read/" + chatroom.chatroom?.id);
                 }
                 setChatroom(Chatroom);
-                // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
-                socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
-                    const message = JSON.parse(e.body).body;
-                    const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, username: message?.username, messageType: message.messageType } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
-                    setTemp(temp);
-                });
-                socket.subscribe("/api/sub/read/"+Chatroom?.id, (e: any) => {
-                    
-                    
-                    
-                });
-
                 getChatDetail(Chatroom?.id).then(r => {
-            
                     setMessageList(r);
-                    console.log(r);
-                    console.log(r);
-
                     const timer = setInterval(() => {
                         document.getElementById((r?.length - 1).toString())?.scrollIntoView();
                         clearInterval(timer);
                     }, 100);
+
+
+                    // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
+                    socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
+                        const message = JSON.parse(e.body).body;
+                        const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, username: message?.username, messageType: message.messageType } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
+                        setTemp(temp);
+                        socket.publish({
+                            destination: "/api/pub/read/" + Chatroom?.id,
+                            body: JSON.stringify({ username: user?.username })
+                        });
+                    });
+                    socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
+                        const data = JSON.parse(e.body);
+
+                        getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
+                            const index = r.findIndex((e: messageResponseDTO) => e.id === updateMessageList[0].id);
+                            const qweqwe = [...r];
+                            // qweqwe.splice(index, qweqwe.length - 1, updateMessageList);
+                            qweqwe.splice(index, qweqwe.length - index, ...updateMessageList);
+                            // setUpdateMessageList(qweqwe);
+                            setMessageList(qweqwe);
+                        }));
+                    }, JSON.stringify({ username: user?.username }));
+
+                    // socket.publish({
+                    //     destination: "/api/pub/read/" + Chatroom?.id,
+                    //     body: JSON.stringify({ username: user?.username })
+                    // });
                 }).catch(e => console.log(e));
             }
         }}>
@@ -243,17 +259,21 @@ export default function Chat() {
                             ))
                     )}
                 </div>
-                <div className="flex justify-between mt-2">
-                    <p className="text-black text-sm">{Chatroom?.latestMessage?.message}</p>
+                <div className="flex justify-between mt-2 text-black">
+                    {Chatroom?.latestMessage?.messageType === 0
+                        ? Chatroom?.latestMessage?.message
+                        : <p>사진을 보냈습니다.</p> // todo:타입이 추가되면 설정해야 한다
+                    }
                 </div>
             </div>
             <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
                 <div>
                     <p className="text-gray-300 whitespace-nowrap">{getChatShowDateTimeFormat(Chatroom?.latestMessage?.sendTime)}</p>
                 </div>
-                <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
+                {Chatroom?.alarmCount == 0 ? "" : <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
                     <p className="text-white text-sm">{Chatroom?.alarmCount}</p>
-                </div>
+                </div>}
+
             </div>
         </div>
     }
@@ -263,6 +283,13 @@ export default function Chat() {
         const [message, setMessage] = useState('');
         const [roomName, setRoomName] = useState(chatroom?.name);
         const [messageType, setMessageType] = useState(0);
+
+        // useEffect(() => {
+        //     socket.publish({
+        //         destination: "/api/pub/read/" + chatroom?.id,
+        //         body: JSON.stringify({ username: user?.username })
+        //     });
+        // }, [])
 
         return <div>
             <div className="flex w-full justify-between border-b-2">
@@ -364,7 +391,7 @@ export default function Chat() {
                 </div>
             </div>
             {/* 공지 */}
-            <div className="w-full flex justify-center">
+            {/* <div className="w-full flex justify-center">
                 <div className="bg-[#abcdae] w-[59%] h-[70px] rounded-md flex items-center fixed z-50 absolute p-4">
                     <img src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="" />
                     <p className="w-full text-white" style={{ opacity: 1 }}>
@@ -374,7 +401,7 @@ export default function Chat() {
                         ⨯
                     </button>
                 </div>
-            </div>
+            </div> */}
 
             <div className="h-[600px] w-[100%] overflow-x-hidden overflow-y-scroll">
                 {/* 날짜 */}
@@ -390,13 +417,15 @@ export default function Chat() {
                             <div className="flex w-full justify-end" id={index.toString()}>
                                 <div className="w-6/12 flex justify-end mr-2">
 
+                                    <p className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap"> {joinMembers - (t?.readUsers ?? 0)}</p>
+
                                     <button
                                         className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
                                         onClick={() => {
 
                                             notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
                                                 .then((r) => {
-            
+
                                                     chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
                                                     setChatrooms([...chatrooms]);
                                                     setChatroom(r);
@@ -427,8 +456,8 @@ export default function Chat() {
                                     <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
                                         <div className="mt-2 mb-2 ml-3 mr-3">
                                             {t?.messageType == 0
-                                            ? <><div>{t?.message}</div></>
-                                            : <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
+                                                ? <><div>{t?.message}</div></>
+                                                : <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
                                             }
                                         </div>
                                     </div>
@@ -444,13 +473,13 @@ export default function Chat() {
                                     <div className="w-full flex">
                                         <p className="text-black ml-2">
                                             {t?.messageType == 0
-                                            ? t?.message
-                                            : <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
+                                                ? t?.message
+                                                : <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
                                             }
                                         </p>
                                         <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
-                                        <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">읽음</p>
                                         <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">삭제</p>
+
                                         <button
                                             className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
                                             onClick={() => {
@@ -473,6 +502,7 @@ export default function Chat() {
                                         >
                                             공지 설정
                                         </button>
+                                        <p className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap"> {joinMembers - (t?.readUsers ?? 0)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -483,18 +513,23 @@ export default function Chat() {
             <div className="flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[6/12] items-start">
                 <div className="h-[100px] m-2 w-[98%]">
                     <textarea placeholder="내용을 입력하세요" className="bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
-                    value={message}
+                        value={message}
 
                         onKeyDown={e => {
                             if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
-                                console.log("============> message Type");                                
+                                console.log("============> message Type");
                                 e.preventDefault(); // 폼 제출 방지
                                 if (isReady) {
                                     socket.publish({
                                         destination: "/api/pub/message/" + chatroom?.id,
                                         body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
                                     });
-                                    
+
+                                    // socket.publish({
+                                    //     destination: "/api/pub/read/" + chatroom?.id,
+                                    //     body: JSON.stringify({ username: user?.username })
+                                    // });
+
                                     setMessage(''); // 메시지 전송 후 입력 필드 초기화        
                                 }
                             }
@@ -543,6 +578,7 @@ export default function Chat() {
                                     destination: "/api/pub/message/" + chatroom?.id,
                                     body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
                                 });
+
                         }} />
                     </button>
                 </div>

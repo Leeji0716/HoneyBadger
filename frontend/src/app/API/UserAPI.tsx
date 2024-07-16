@@ -122,7 +122,7 @@ export const getChatDetail = async (chatroomId: number) => {
 }
 
 export const getUpdateMessageList = async (chatroomId: number) => {
-    const response = await UserApi.get('/api/message/update', { headers: { chatroomId: chatroomId } });
+    const response = await UserApi.get('/api/message/update', { headers: { chatroomId: chatroomId }});
     return response.data;
 }
 
