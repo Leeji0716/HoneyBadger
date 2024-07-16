@@ -22,6 +22,8 @@ public class QDepartment extends EntityPathBase<Department> {
 
     public static final QDepartment department = new QDepartment("department");
 
+    public final ListPath<Department, QDepartment> child = this.<Department, QDepartment>createList("child", Department.class, QDepartment.class, PathInits.DIRECT2);
+
     public final DateTimePath<java.time.LocalDateTime> createDate = createDateTime("createDate", java.time.LocalDateTime.class);
 
     public final DateTimePath<java.time.LocalDateTime> modifyDate = createDateTime("modifyDate", java.time.LocalDateTime.class);
@@ -29,8 +31,6 @@ public class QDepartment extends EntityPathBase<Department> {
     public final StringPath name = createString("name");
 
     public final QDepartment parent;
-
-    public final ListPath<Department, QDepartment> subGroups = this.<Department, QDepartment>createList("subGroups", Department.class, QDepartment.class, PathInits.DIRECT2);
 
     public final ListPath<SiteUser, QSiteUser> users = this.<SiteUser, QSiteUser>createList("users", SiteUser.class, QSiteUser.class, PathInits.DIRECT2);
 

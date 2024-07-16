@@ -75,12 +75,12 @@ interface CreateEmail {
 }
 
 interface emailReservationUpdate {
-    id : number,
+    id: number,
     title: string,
     content: string,
     receiverIds: string[],
     sendTime?: Date | null,
-    files : string[]
+    files: string[]
 }
 
 interface chatroomResponseDTO {
@@ -88,15 +88,11 @@ interface chatroomResponseDTO {
     users: string[]
 }
 
-interface noticeRequestDTO{
+interface noticeRequestDTO {
     chatroomId: number,
     messageId: number
 }
 
-export const updateUser = async (data: UpdateProps) => {
-    const response = await UserApi.put('/api/user', data);
-    return response.data;
-}
 export const getEmail = async (status: number) => {
     const response = await UserApi.get('/api/email/list', {
         headers:
@@ -168,7 +164,7 @@ export const mailDelete = async (mailId: number) => {
     return response.data;
 }
 
-export const mailUpdate = async (email: emailReservationUpdate ) => {
+export const mailUpdate = async (email: emailReservationUpdate) => {
     const response = await UserApi.put('/api/emailReservation', email);
     return response.data;
 }
@@ -192,16 +188,16 @@ export const editChatroom = async ({ chatroomId, chatroomResponseDTO }: { chatro
     const response = await UserApi.put('/api/chatroom', chatroomResponseDTO, {
         headers:
         {
-            chatroomId:chatroomId
+            chatroomId: chatroomId
         }
-});
+    });
     return response.data;
 }
 
 
 
 export const notification = async (data: noticeRequestDTO) => {
-    const response = await UserApi.put('/api/chatroom/notification', data);    
+    const response = await UserApi.put('/api/chatroom/notification', data);
     return response.data;
 }
 
@@ -248,5 +244,32 @@ export const deleteProfileImage = async () => {
 }
 export const updatePassword = async (prePassword: string, newPassword: string) => {
     const response = await UserApi.put('/api/user', { prePassword: prePassword, newPassword: newPassword });
+    return response.data;
+}
+
+export const getDepartmentTopList = async () => {
+    const response = await UserApi.get('/api/department');
+    return response.data;
+}
+
+export const deleteDepartment = async (DepartmentId: string) => {
+    const response = await UserApi.delete('/api/department', { headers: { DepartmentId: DepartmentId } });
+    return response.data;
+}
+export const getDepartmentUsers = async (DepartmentId: string) => {
+    const response = await UserApi.get('/api/department/users', { headers: { DepartmentId: DepartmentId } });
+    return response.data;
+}
+interface userInfo {
+    username: string,
+    name: string,
+    role: number, 
+    password: string,
+    phoneNumber:string,
+    joinDate:any,
+    department_id:string
+}
+export const updateUser = async (data: userInfo) => {
+    const response = await UserApi.put('/api/user/info', data);
     return response.data;
 }

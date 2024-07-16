@@ -63,6 +63,10 @@ export function getDateTimeFormatInput(data: any) {
     const date = new Date(data);
     return date.getFullYear() + "-" + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "-" + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + "T" + (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ":" + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
 }
+export function getDateFormatInput(data: any) {
+    const date = new Date(data);
+    return date.getFullYear() + "-" + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "-" + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
+}
 export function transferLocalTime(date: Date) {
     return new Date(date.getTime() + 9 * 1000 * 60 * 60);
 
@@ -196,4 +200,11 @@ export function CardBack() {
         </div>
         <div className="bottom-[16px] absolute text-white text-xs">SEO | Web Devlopement | App Development </div>
     </div>
+}
+export function translateDex(num: number) {
+    num = num % 256;
+    if (num < 16)
+        return '0' + num.toString(16);
+    else
+        return num.toString(16);
 }
