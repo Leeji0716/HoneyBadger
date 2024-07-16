@@ -479,19 +479,6 @@ public class MultiService {
         return emailResponseDTO;
     }
 
-//    public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
-//        Email email = emailService.getEmail(emailReadRequestDTO.emailId());
-//        email.markAsRead(username);
-//        emailService.readSaveEmail(email);  // 변경사항 저장
-//
-//        List<EmailReadStatusDTO> recipientStatuses = email.getRecipients().stream()
-//                .map(recipient -> new EmailReadStatusDTO(recipient, email.isReadByUser(recipient)))
-//                .collect(Collectors.toList());
-//        EmailResponseDTO emailResponseDTO = getEmailDTO(recipientStatuses, email.getId());
-//
-//        return emailResponseDTO;
-//    }
-
     @Transactional
     public void deleteEmail(Long emailId, String username) {
         Email email = emailService.getEmail(emailId);

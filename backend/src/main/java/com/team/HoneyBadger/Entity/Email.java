@@ -47,12 +47,4 @@ public class Email {
 //        this.tag = tag;
         this.receiverList = new ArrayList<>();
     }
-
-    public void markAsRead(String username) {
-        readStatus.put(username, true);
-    }
-
-    public boolean isReadByUser(String username) {
-        return readStatus.getOrDefault(username, false);
-    }
 }
