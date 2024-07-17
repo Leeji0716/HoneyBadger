@@ -273,11 +273,11 @@ export const postDepartment = async (data: postDepartmentProps) => {
 }
 
 export const deleteDepartment = async (DepartmentId: string) => {
-    const response = await UserApi.delete('/api/department', { headers: { DepartmentId: DepartmentId } });
+    const response = await UserApi.delete('/api/department', { headers: { DepartmentId: encodeURIComponent(DepartmentId) } });
     return response.data;
 }
 export const getDepartmentUsers = async (DepartmentId?: string) => {
-    const response = await UserApi.get('/api/department/users', { headers: { DepartmentId: DepartmentId } });
+    const response = await UserApi.get('/api/department/users', { headers: { DepartmentId: DepartmentId ? encodeURIComponent(DepartmentId) : DepartmentId } });
     return response.data;
 }
 interface userInfo {
@@ -293,6 +293,11 @@ export const updateUser = async (data: userInfo) => {
     const response = await UserApi.put('/api/user/info', data);
     return response.data;
 }
+export const postUser = async (data: userInfo) => {
+    const response = await UserApi.post('/api/user', data);
+    return response.data;
+}
+
 
 export const makeChatroom = async (chatroomRequestDTO: chatroomRequestDTO) => {
     const response = await UserApi.post('/api/chatroom', chatroomRequestDTO);

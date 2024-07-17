@@ -20,7 +20,7 @@ class HoneyBadgerApplicationTests {
     @Test
 //    @Transactional
     void contextLoads() {
-//        userRepository.save(SiteUser.builder().username("admin").password(encoder.encode("1")).phoneNumber("01000000000").name("관리자").role(Role.ADMIN).build());
+//        userRepository.save(SiteUser.builder().username("admin").password(encoder.encode("1")).phoneNumber("01000000000").name("관리자").role(UserRole.ADMIN).build());
         for (int i = 0; i < 5; i++) {
             Department top = departmentRepository.save(Department.builder().name("top" + i).build());
             for (int j = 0; j < 5; j++) {
