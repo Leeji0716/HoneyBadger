@@ -610,7 +610,7 @@ public class MultiService {
      * Email Reservation
      */
 
-    @Scheduled(cron = "0 0 */1 * * *")
+    @Scheduled(cron = "0 0 0/1 * * *")
     @Transactional
     public void sendEmailReservation() throws RuntimeException{
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -857,7 +857,7 @@ public class MultiService {
     /*
      * MessageReservation or ChatReservation
      */
-    @Scheduled(cron = "0 0 */1 * * *")
+    @Scheduled(cron = "0 0 0/1 * * *")
     @Transactional
     public void sendReservation() {
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
