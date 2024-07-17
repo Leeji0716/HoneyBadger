@@ -9,6 +9,4 @@ import java.util.List;
 
 public interface LastReadMessageRepositoryCustom {
     LastReadMessage getLastMessage(SiteUser user, Chatroom chatroom);
-
-//    LastReadMessage findByUserAndChatroom(SiteUser user, Chatroom chatroom);
 }

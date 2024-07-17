@@ -250,19 +250,6 @@ public class MultiService {
         return getChatRoom(chatroom, loginUser);
     }
 
-//    @Transactional
-//    public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
-//        SiteUser siteUser = userService.get(username);
-//        Pageable pageable = PageRequest.of(page, 3);
-//        Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
-//        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
-//        Page<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
-//        for (Chatroom chatroom : chatroomPage) {
-//            chatroomResponseDTOList.add(getChatRoom(chatroom, username));
-//        }
-//        return chatroomResponseDTOList;
-//    }
-
     @Transactional
     public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
         SiteUser siteUser = userService.get(username);
@@ -363,6 +350,23 @@ public class MultiService {
                 .alarmCount(alarmCnt)
                 .build();
     }
+
+    @Transactional
+    public int alarmCount(Long chatroomId, Long endId) {
+        List<Message> messageList = messageService.getUpdatedList(chatroomId, endId);
+        return messageList.size() - 1;
+    }
+
+
+    @Transactional
+    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
+        Message message = messageService.getMessageById(noticeRequestDTO.messageId());
+        chatroomService.notification(chatroom, message);
+
+        return getChatRoom(chatroom, username);
+    }
+
 
     @Transactional
     public ChatroomResponseDTO getChatRoomById(Long chatroomId, String username) {
@@ -812,6 +816,28 @@ public class MultiService {
 //        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
     }
 
+    public List<String> getMessage(Long id) { //test
+        Message message = messageService.getMessageById(id);
+        List<String> users = message.getReadUsers();
+
+        return users;
+    }
+
+    public List<MessageResponseDTO> getImageMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getImageMessageList(chatroom);
+    }
+
+    public List<MessageResponseDTO> getLinkMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getLinkMessageList(chatroom);
+    }
+
+    public List<MessageResponseDTO> getFileMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getFileMessageList(chatroom);
+    }
+
     /*
      * MessageReservation or ChatReservation
      */
@@ -842,7 +868,15 @@ public class MultiService {
     @Transactional
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
         Long sendTime = this.dateTimeTransfer(messageReservation.getSendDate());
-        return MessageReservationResponseDTO.builder().id(messageReservation.getId()).chatroomId(messageReservation.getChatroom().getId()).message(messageReservation.getMessage()).username(messageReservation.getSender().getUsername()).sendDate(sendTime).messageType(messageReservation.getMessageType()).build();
+        return MessageReservationResponseDTO.builder()
+                .id(messageReservation.getId())
+                .chatroomId(messageReservation.getChatroom().getId())
+                .message(messageReservation.getMessage())
+                .username(messageReservation.getSender().getUsername())
+                .name(messageReservation.getSender().getName())
+                .sendDate(sendTime)
+                .messageType(messageReservation.getMessageType())
+                .build();
     }
 
 
@@ -853,29 +887,26 @@ public class MultiService {
     }
 
     @Transactional
-    public MessageReservationResponseDTO updateReservationMessage(Long id,
+    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId,
                                                                   MessageReservationRequestDTO messageReservationRequestDTO,
                                                                   String username) throws DataNotFoundException {
-        MessageReservation messageReservation = messageReservationService.getMessageReservation(id);
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
         if (messageReservation.getSender().getUsername().equals(username) && messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
             messageReservationService.update(messageReservation, messageReservationRequestDTO);
         }
         return getMessageReservation(messageReservation);
     }
 
-    @Transactional
-    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) {
-        Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
-        Message message = messageService.getMessageById(noticeRequestDTO.messageId());
-        chatroomService.notification(chatroom, message);
-
-        return getChatRoom(chatroom, username);
+    public MessageReservationResponseDTO getMessageReservationById(Long reservationMessageId) {
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
+        return getMessageReservation(messageReservation);
     }
 
-    @Transactional
-    public int alarmCount(Long chatroomId, Long endId) {
-        List<Message> messageList = messageService.getUpdatedList(chatroomId, endId);
-        return messageList.size() - 1;
+    public Page<MessageReservationResponseDTO> getMessageReservationByUser(String username, int page) {
+        SiteUser user = userService.get(username);
+        Pageable pageable = PageRequest.of(page, 10);
+
+        return messageReservationService.getMessageReservationByUser(user, pageable);
     }
     /*
      * Time
@@ -896,12 +927,6 @@ public class MultiService {
             }
             file.delete();
         }
-    }
-    public List<String> getMessage(Long id) {
-        Message message = messageService.getMessageById(id);
-        List<String> users = message.getReadUsers();
-
-        return users;
     }
     /*
      * Department
