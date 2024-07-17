@@ -39,7 +39,6 @@ public class EmailReceiverService {
     }
 
     public EmailReceiver getReadStatus(Email email, SiteUser user) {
-        System.out.println("Fetching read status for emailId: " + email.getId() + " and username: " + user.getUsername());
         return emailReceiverRepository.findByEmailAndUser(email, user);
     }
 
