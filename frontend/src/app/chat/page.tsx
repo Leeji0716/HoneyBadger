@@ -48,7 +48,7 @@ export default function Chat() {
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const [socket, setSocket] = useState(null as any);
     const [temp, setTemp] = useState(null as any);
-    const [isReady, setReady] = useState(false);
+    const [isReady, setIsReady] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModalOpen1, setIsModalOpen1] = useState(false);
     const [isModalOpen2, setIsModalOpen2] = useState(false);
@@ -57,7 +57,7 @@ export default function Chat() {
     const [chatroomName, setChatroomName] = useState('');
     const file = useRef(null as any);
     const [keyword, setKeyword] = useState('');
-    const [Page, setPage] = useState(0);
+    const [page, setPage] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [maxPage, setMaxPage] = useState(0);
     const chatBoxRef = useRef<HTMLDivElement>(null);
@@ -95,7 +95,7 @@ export default function Chat() {
                     setUserList(r);
 
                 }).catch(e => console.log(e))
-                getChat(keyword, Page).then(r => {
+                getChat(keyword, page).then(r => {
                     console.log('ddddddddddddddddddd');
                     console.log(r);
                     setChatrooms(r.content);
@@ -107,7 +107,7 @@ export default function Chat() {
 
     useEffect(() => {
         console.log("dfdfdfdfdfdf");
-        setSocket(getSocket([], () => setReady(true)));
+        setSocket(getSocket([], () => setIsReady(true)));
     }, [])
 
     useEffect(() => {
@@ -144,22 +144,27 @@ export default function Chat() {
             const maxScroll = chatBox.scrollHeight - chatBox.clientHeight;
     
 
-            if (!isLoading && scrollLocation >= maxScroll && Page < maxPage - 1) {
+            if (!isLoading && scrollLocation >= maxScroll && page < maxPage - 1) {
 
                 console.log("aaaaaaaaaaaaaa")
                 console.log("bbbbb" + maxPage)
-                console.log(Page)
+                console.log(page)
 
                 setIsLoading(true);  // 로딩 시작
-                getChatDetail(chatroom.id, Page + 1)
+
+                getChatDetail(chatroom.id, page + 1)
+               
                     .then(response => {
+                        console.log("설마 여기가 타니?????? 너???????")
                         // 데이터가 있는 경우 새 메시지 리스트에 추가
                         if (response.content.length > 0) {
+                            console.log(response.content);
+                            console.log(messageList);
                             const newMessageList = [...messageList, ...response.content];
                             setMessageList(newMessageList);
 
                             setMaxPage(response.totalPages);
-                            setPage(Page + 1);
+                            setPage(page + 1);
                         }
                         setIsLoading(false);  // 로딩 완료
                     })
@@ -209,13 +214,12 @@ export default function Chat() {
     };
     const handleSearch = () => {
         setPage(0);
-        getChat(keyword, Page).then(r => {
+        getChat(keyword, page).then(r => {
             setChatrooms(r.content);
         }).catch(error => {
             console.error("Search error:", error);
         });
     };
-
 
     function ChatList({ Chatroom, ChatDetail }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO }) {
         const joinMembers: number = Chatroom.users.length;
@@ -256,35 +260,40 @@ export default function Chat() {
         }
         return <div className="flex hover:bg-gray-400 text-white rounded-md cursor-pointer" onClick={() => {
             if (isReady) {
-                if (chatroom) {
-                    
+                let nowPage = page;
+                if (Chatroom) {
+                    setPage(0);
+                    nowPage = 0;
                     socket.unsubscribe("/api/sub/message/" + Chatroom?.id);
                     socket.unsubscribe("/api/sub/read/" + Chatroom?.id);
                     socket.unsubscribe("/api/sub/updateChatroom/" + Chatroom?.id);
                 }
                 setChatroom(Chatroom);
-                console.log("=-=-=-=-=-=-=-=");
-                console.log(Chatroom?.id);
-                console.log(Page);
-                getChatDetail(Chatroom?.id, Page).then(r => {
-                    console.log("asdsasaassdsads");
-                    console.log(r);
+            
+
+                getChatDetail(Chatroom?.id, nowPage).then(r => {
 
                     setMessageList(r.content);
                     setMaxPage(r.totalPages);
-                    console.log("r.totalPages="+r.totalPages);
-                    console.log("Chatroom.id="+Chatroom.id);
-
 
                     // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
                     socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
                         const message = JSON.parse(e.body).body;
                         const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, username: message?.username, messageType: message.messageType } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
+
                         socket.publish({
                             destination: "/api/pub/read/" + Chatroom?.id,
                             body: JSON.stringify({ username: user?.username })
                         });
+
+                        socket.publish({
+                           
+                            destination: "/api/pub/updateChatroom/" + Chatroom?.id,
+                            body: JSON.stringify({ username: user?.username})
+                        });
+                        
+
                     });
 
                     socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
@@ -298,22 +307,35 @@ export default function Chat() {
                             // setUpdateMessageList(qweqwe);
                             setMessageList(qweqwe);
                         }));
+
+
                     }, JSON.stringify({ username: user?.username }));
+
                 }).catch(e => console.log(e));
 
-                // 수정중
+                getChat(keyword, nowPage).then(resp => {
+                    console.log("여기부터 :" + resp);
+                    console.log(resp);
 
-                getChat(keyword, Page).then(r => {
                     socket.subscribe("/api/sub/updateChatroom/" + Chatroom?.id, (e: any) => {
                         const data = JSON.parse(e.body);
+                        console.log("aaaaaaasdasedwqadas");
+                        console.log(data);
 
-                        const index = r.findIndex((e: messageResponseDTO) => e.id === updateMessageList[0].id);
-                        const qweqwe = [...r];
-                        qweqwe.splice(index, qweqwe.length - index, ...updateMessageList);
-                        setMessageList(qweqwe);
+
+                        console.log("assad?????????????asa");
+                        console.log(data.body.id);
+                        // console.log(resp.content.id);
+                        const index = resp.content.findIndex((e:any) => e.id == data.body.id);
+                        
+                        chatroom[index]=data.body;
+                        setChatroom([...chatroom]);
 
                     }, JSON.stringify({ username: user?.username }));
+                    
                 })
+                
+                
             }
         }}>
             {getValue(joinMembers)}
@@ -368,8 +390,8 @@ export default function Chat() {
                                     <span>{chatroom.name}</span>
                                 ) : (
                                     chatroom?.users
-                                        .filter((username: any) => username !== user?.username) // 현재 사용자 제외
-                                        .map((username: any, index: number, array: []) => (
+                                        ?.filter((username: any) => username !== user?.username) // 현재 사용자 제외
+                                        ?.map((username: any, index: number, array: []) => (
                                             <span key={username}>
                                                 {username}
                                                 {index < array.length - 1 && ", "}
