@@ -1,6 +1,6 @@
 'use client';
 
-import { emailFiles, getUser, mailImage, mailUpdate, reservationEmail, reservationFiles, sendEmail } from "@/app/API/UserAPI";
+import { emailFiles, getUser, mailImage, mailUpdate, reservationEmail, reservationFiles, sendEmail, tempDelete } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
 import { eongetDateTimeFormat, eontransferLocalTime, getDateTimeFormatInput, transferLocalTime } from "@/app/Global/Method";
@@ -76,8 +76,7 @@ export default function EmailForm() {
                     setFiles(email?.email.files);
                     setFlag(2);
                 }
-                console.log(email);
-                console.log("플래그값 : " + flag);
+                tempDelete().catch(e =>  console.log(e));
             }
         }
         else

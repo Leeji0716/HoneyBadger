@@ -333,4 +333,9 @@ export const chatUploadFile = async ({ chatroomId, file }: { chatroomId: number,
     return response.data;
 };
 
+export const tempDelete = async () => {
+    const response = await UserApi.delete('/api/user/temp');
+    return response.data;
+}
+
 
