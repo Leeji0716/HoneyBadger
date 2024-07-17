@@ -10,5 +10,5 @@ import java.util.List;
 public interface EmailReservationRepositoryCustom {
     List<EmailReservation> findBySendTimeBeforeAndSendTimeIsNotNull(LocalDateTime now);
     Page<EmailReservation> findReservedEmailsByUserId(String userId, Pageable pageable);
-
+    List<EmailReservation> findBySendDate(LocalDateTime nowDate);
 }

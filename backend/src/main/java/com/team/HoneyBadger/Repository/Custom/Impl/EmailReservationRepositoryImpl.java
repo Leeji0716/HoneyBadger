@@ -44,4 +44,10 @@ public class EmailReservationRepositoryImpl implements EmailReservationRepositor
 
         return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
+
+    @Override
+    @Transactional
+    public List<EmailReservation> findBySendDate(LocalDateTime nowDate){
+        return jpaQueryFactory.select(qEmailReservation).from(qEmailReservation).where(qEmailReservation.sendTime.before(nowDate).and(qEmailReservation.sendTime.isNotNull())).fetch();
+    }
 }

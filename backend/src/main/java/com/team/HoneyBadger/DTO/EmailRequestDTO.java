@@ -4,3 +4,4 @@ import java.util.List;
 
 public record EmailRequestDTO(String title, String content, List<String> receiverIds, List<String> files) {
 }
+
