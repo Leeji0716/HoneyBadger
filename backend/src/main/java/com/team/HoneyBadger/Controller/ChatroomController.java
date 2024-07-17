@@ -12,6 +12,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -22,10 +24,10 @@ public class ChatroomController {
 
     @MessageMapping("/updateChatroom/{id}")
     @SendTo("/api/sub/updateChatroom/{id}") //업데이트 채팅룸 --> 갈아 끼울 채팅방 정보
-    public ResponseEntity<?> updateChatRoom(@DestinationVariable Long id, String username) {
+    public ResponseEntity<?> updateChatRoom(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
         // 추가하기 then r=> updateChatRoom();
         try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(id, username);
+            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(id, messageRequestDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
@@ -48,7 +50,7 @@ public class ChatroomController {
                                              @RequestHeader("Page") int page) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            Page<ChatroomResponseDTO> chatroomResponseDTOList = multiService.getChatRoomListByUser(tokenDTO.username(), keyword, page);
+            Page<ChatroomResponseDTO> chatroomResponseDTOList = multiService.getChatRoomListByUser(tokenDTO.username(), URLDecoder.decode(keyword, StandardCharsets.UTF_8), page);
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTOList);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());

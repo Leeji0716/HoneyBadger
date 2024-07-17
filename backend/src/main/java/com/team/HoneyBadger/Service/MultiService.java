@@ -415,12 +415,12 @@ public class MultiService {
      * Email
      */
 
-    @Transactional
+    @Transactional//이메일 파일 업로드
     public void emailFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         String keyValue = KeyPreset.EMAIL_MULTI.getValue(email_id.toString());
         MultiKey key = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
-        List<String> list = new ArrayList<>();
+        List<String> list = new ArrayList<>();//
         for (MultipartFile file : files) {
             UUID uuid = UUID.randomUUID();
             String fileName = "/api/email/" + email_id.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
@@ -612,10 +612,10 @@ public class MultiService {
     @Transactional
     public void sendEmailReservation() throws RuntimeException{
         List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
-        for (EmailReservation emailReservation : emailReservationList) {
-            if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) {
+        for (EmailReservation emailReservation : emailReservationList) { //예약 메일 꺼내기
+            if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) { //예약 메일의 전송 시간이 현재 시간보다 이전
                 try {
-                    sendEmail(emailReservation.getTitle(), emailReservation.getContent(), emailReservation.getSender().getUsername(), emailReservation.getReceiverList());
+                    Long sendEmailId = sendEmail(emailReservation.getTitle(), emailReservation.getContent(), emailReservation.getSender().getUsername(), emailReservation.getReceiverList());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -624,19 +624,21 @@ public class MultiService {
         }
     }
 
-    @Transactional
+    @Transactional //예약이메일 파일 업로드
     public void emailReservationFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(email_id.toString());
         MultiKey key = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
-        List<String> list = key.getKeyValues();
+        List<String> list = key.getKeyValues();//
         for (MultipartFile file : files) {
             UUID uuid = UUID.randomUUID();
             String fileName = "/api/user/email/" + email_id.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+
             String fileKey = KeyPreset.EMAIL_RESERVATION.getValue(email_id.toString() + "_" + list.size());
             fileSystemService.save(fileKey, fileName);
             fileSystemService.save(KeyPreset.EMAIL_RESERVATION_ORIGIN.getValue(fileKey), file.getOriginalFilename());
             list.add(fileKey);
+
             File dest = new File(path + fileName);
             if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
             file.transferTo(dest);
