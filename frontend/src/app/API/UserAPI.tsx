@@ -95,11 +95,12 @@ interface chatroomRequestDTO {
     users: string[]
 }
 
-export const getEmail = async (status: number) => {
+export const getEmail = async (status: number,page:number) => {
     const response = await UserApi.get('/api/email/list', {
         headers:
         {
-            status: status
+            status: status,
+            Page:page
         }
     });
     return response.data;
