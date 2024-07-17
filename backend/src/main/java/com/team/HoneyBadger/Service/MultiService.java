@@ -6,7 +6,7 @@ import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.DepartmentRole;
 import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
-import com.team.HoneyBadger.Enum.Role;
+import com.team.HoneyBadger.Enum.UserRole;
 import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
@@ -108,8 +108,13 @@ public class MultiService {
      * User
      */
     @Transactional
-    public void signup(SignupRequestDTO signupRequestDTO) throws DataDuplicateException {
-        userService.save(signupRequestDTO);
+    public UserResponseDTO signup(UserInfoRequestDTO requestDTO) throws DataDuplicateException {
+        Optional<SiteUser> _user = userService.getOptional(requestDTO.username());
+        if (_user.isPresent())
+            throw new DataDuplicateException("username");
+        Department department = requestDTO.department_id() != null ? departmentService.get(requestDTO.department_id()) : null;
+        SiteUser user = userService.save(requestDTO.username(), requestDTO.name(), requestDTO.password(), UserRole.values()[requestDTO.role()], requestDTO.phoneNumber(), requestDTO.joinDate(), department);
+        return getUserResponseDTO(user);
     }
 
     public UserResponseDTO getProfile(String username) {
@@ -179,11 +184,11 @@ public class MultiService {
         userService.update(user, passwordChangeDTO.newPassword());
     }
 
-    public UserResponseDTO changeUser(UserInfoRequestDTO userInfoRequestDTO) {
-        SiteUser user = userService.get(userInfoRequestDTO.username());
-        Department department = departmentService.get(userInfoRequestDTO.department_id());
-        Role role = userInfoRequestDTO.role() >= 0 && userInfoRequestDTO.role() < Role.values().length ? Role.values()[userInfoRequestDTO.role()] : null;
-        user = userService.update(user, userInfoRequestDTO.name(), role, userInfoRequestDTO.password(), userInfoRequestDTO.phoneNumber(), userInfoRequestDTO.joinDate(), department);
+    public UserResponseDTO changeUser(UserInfoRequestDTO requestDTO) {
+        SiteUser user = userService.get(requestDTO.username());
+        Department department = requestDTO.department_id() != null ? departmentService.get(requestDTO.department_id()) : null;
+        UserRole role = requestDTO.role() >= 0 && requestDTO.role() < UserRole.values().length ? UserRole.values()[requestDTO.role()] : null;
+        user = userService.update(user, requestDTO.name(), role, requestDTO.password(), requestDTO.phoneNumber(), requestDTO.joinDate(), department);
         return getUserResponseDTO(user);
     }
 
@@ -249,19 +254,6 @@ public class MultiService {
 
         return getChatRoom(chatroom, loginUser);
     }
-
-//    @Transactional
-//    public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
-//        SiteUser siteUser = userService.get(username);
-//        Pageable pageable = PageRequest.of(page, 3);
-//        Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
-//        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
-//        Page<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
-//        for (Chatroom chatroom : chatroomPage) {
-//            chatroomResponseDTOList.add(getChatRoom(chatroom, username));
-//        }
-//        return chatroomResponseDTOList;
-//    }
 
     @Transactional
     public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
@@ -363,6 +355,23 @@ public class MultiService {
                 .alarmCount(alarmCnt)
                 .build();
     }
+
+    @Transactional
+    public int alarmCount(Long chatroomId, Long endId) {
+        List<Message> messageList = messageService.getUpdatedList(chatroomId, endId);
+        return messageList.size() - 1;
+    }
+
+
+    @Transactional
+    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
+        Message message = messageService.getMessageById(noticeRequestDTO.messageId());
+        chatroomService.notification(chatroom, message);
+
+        return getChatRoom(chatroom, username);
+    }
+
 
     @Transactional
     public ChatroomResponseDTO getChatRoomById(Long chatroomId, String username) {
@@ -830,6 +839,28 @@ public class MultiService {
 //        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
     }
 
+    public List<String> getMessage(Long id) { //test
+        Message message = messageService.getMessageById(id);
+        List<String> users = message.getReadUsers();
+
+        return users;
+    }
+
+    public List<MessageResponseDTO> getImageMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getImageMessageList(chatroom);
+    }
+
+    public List<MessageResponseDTO> getLinkMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getLinkMessageList(chatroom);
+    }
+
+    public List<MessageResponseDTO> getFileMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getFileMessageList(chatroom);
+    }
+
     /*
      * MessageReservation or ChatReservation
      */
@@ -841,7 +872,7 @@ public class MultiService {
         for (MessageReservation messageReservation : messageReservationList) {
             if (messageReservation.getSendDate().toLocalTime().isBefore(LocalTime.now())) {
                 MessageRequestDTO messageRequestDTO = new MessageRequestDTO(messageReservation.getMessage(), messageReservation.getSender().getUsername(), messageReservation.getMessageType());
-                sendMessage(messageReservation.getId(), messageRequestDTO);
+                sendMessage(messageReservation.getChatroom().getId(), messageRequestDTO);
                 messageReservationService.delete(messageReservation);
             }
         }
@@ -860,7 +891,15 @@ public class MultiService {
     @Transactional
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
         Long sendTime = this.dateTimeTransfer(messageReservation.getSendDate());
-        return MessageReservationResponseDTO.builder().id(messageReservation.getId()).chatroomId(messageReservation.getChatroom().getId()).message(messageReservation.getMessage()).username(messageReservation.getSender().getUsername()).sendDate(sendTime).messageType(messageReservation.getMessageType()).build();
+        return MessageReservationResponseDTO.builder()
+                .id(messageReservation.getId())
+                .chatroomId(messageReservation.getChatroom().getId())
+                .message(messageReservation.getMessage())
+                .username(messageReservation.getSender().getUsername())
+                .name(messageReservation.getSender().getName())
+                .sendDate(sendTime)
+                .messageType(messageReservation.getMessageType())
+                .build();
     }
 
 
@@ -871,29 +910,26 @@ public class MultiService {
     }
 
     @Transactional
-    public MessageReservationResponseDTO updateReservationMessage(Long id,
+    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId,
                                                                   MessageReservationRequestDTO messageReservationRequestDTO,
                                                                   String username) throws DataNotFoundException {
-        MessageReservation messageReservation = messageReservationService.getMessageReservation(id);
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
         if (messageReservation.getSender().getUsername().equals(username) && messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
             messageReservationService.update(messageReservation, messageReservationRequestDTO);
         }
         return getMessageReservation(messageReservation);
     }
 
-    @Transactional
-    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) {
-        Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
-        Message message = messageService.getMessageById(noticeRequestDTO.messageId());
-        chatroomService.notification(chatroom, message);
-
-        return getChatRoom(chatroom, username);
+    public MessageReservationResponseDTO getMessageReservationById(Long reservationMessageId) {
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
+        return getMessageReservation(messageReservation);
     }
 
-    @Transactional
-    public int alarmCount(Long chatroomId, Long endId) {
-        List<Message> messageList = messageService.getUpdatedList(chatroomId, endId);
-        return messageList.size() - 1;
+    public Page<MessageReservationResponseDTO> getMessageReservationByUser(String username, int page) {
+        SiteUser user = userService.get(username);
+        Pageable pageable = PageRequest.of(page, 10);
+
+        return messageReservationService.getMessageReservationByUser(user, pageable);
     }
     /*
      * Time
@@ -916,7 +952,8 @@ public class MultiService {
         }
     }
 
-    public List<String> getMessage(Long id) {
+
+   public List<String> getMessage(Long id) {
         Message message = messageService.getMessageById(id);
         List<String> users = message.getReadUsers();
 
@@ -1011,6 +1048,6 @@ public class MultiService {
         List<DepartmentUserResponseDTO> list = new ArrayList<>();
         for (Department child : department.getChild())
             list.add(getDepartmentUserResponseDTO(child));
-        return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).build();
+        return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).role(department.getRole().ordinal()).build();
     }
 }

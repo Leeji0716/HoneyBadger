@@ -55,17 +55,7 @@ public class MessageService {
     }
 
     public Page<MessageResponseDTO> getMessageList(List<Message> messageList, Pageable pageable) { //메세지 리스트 메세지 ResponseDTO 변환
-        List<MessageResponseDTO> responseDTOList = messageList.stream()
-                .map(message -> new MessageResponseDTO(
-                        message.getId(),
-                        message.getMessage(),
-                        message.getSender().getUsername(),
-                        message.getSender().getName(),
-                        message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                        message.getMessageType().ordinal(),
-                        message.getReadUsers() != null ? message.getReadUsers().size() : 0
-                ))
-                .collect(Collectors.toList());
+        List<MessageResponseDTO> responseDTOList = convertMessagesToDTOs(messageList);
 
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), responseDTOList.size());
@@ -87,5 +77,34 @@ public class MessageService {
 
         // MessageResponseDTO로 변환 (MessageResponseDTO 생성자 또는 빌더 사용)
         return latestMessage;
+    }
+
+    public List<MessageResponseDTO> getImageMessageList(Chatroom chatroom) {
+        List<Message> imageMessageList = messageRepository.findImageMessagesByChatroom(chatroom);
+        return convertMessagesToDTOs(imageMessageList);
+    }
+
+    public List<MessageResponseDTO> getLinkMessageList(Chatroom chatroom) {
+        List<Message> linkMessageList = messageRepository.findLinkMessagesByChatroom(chatroom);
+        return convertMessagesToDTOs(linkMessageList);
+    }
+
+    public List<MessageResponseDTO> getFileMessageList(Chatroom chatroom) {
+        List<Message> fileMessageList = messageRepository.findFileMessagesByChatroom(chatroom);
+        return convertMessagesToDTOs(fileMessageList);
+    }
+
+    private List<MessageResponseDTO> convertMessagesToDTOs(List<Message> messages) {
+        return messages.stream()
+                .map(message -> new MessageResponseDTO(
+                        message.getId(),
+                        message.getMessage(),
+                        message.getSender().getUsername(),
+                        message.getSender().getName(),
+                        message.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                        message.getMessageType().ordinal(),
+                        message.getReadUsers() != null ? message.getReadUsers().size() : 0
+                ))
+                .collect(Collectors.toList());
     }
 }
