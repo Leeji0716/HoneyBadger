@@ -42,9 +42,9 @@ public class MessageController {
 
     @MessageMapping("/read/{id}")
     @SendTo("/api/sub/read/{id}") //메세지 읽기 -> readUsers 리스트에 추가
-    public ResponseEntity<?> readMessages(@DestinationVariable Long id, @Payload String username) {
+    public ResponseEntity<?> readMessages(@DestinationVariable Long id, @Payload MessageRequestDTO messageRequestDTO) {
         try {
-            multiService.readMessage(id, username);
+            multiService.readMessage(id, messageRequestDTO.username ());
             return ResponseEntity.status(HttpStatus.OK).body("Read OK");
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
