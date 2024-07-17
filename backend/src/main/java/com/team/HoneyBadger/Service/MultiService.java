@@ -609,6 +609,24 @@ public class MultiService {
     /*
      * Email Reservation
      */
+
+    @Scheduled(cron = "0 0 */1 * * *")
+    @Transactional
+    public void sendEmailReservation() throws RuntimeException{
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
+        for (EmailReservation emailReservation : emailReservationList) {
+            if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) {
+                try {
+                    sendEmail(emailReservation.getTitle(), emailReservation.getContent(), emailReservation.getSender().getUsername(), emailReservation.getReceiverList());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                emailReservationService.delete(emailReservation);
+            }
+        }
+    }
+
     @Transactional
     public void emailReservationFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
@@ -846,7 +864,7 @@ public class MultiService {
     /*
      * MessageReservation or ChatReservation
      */
-    @Scheduled(cron = "0 0 */1 * * *")
+    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void sendReservation() {
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -934,13 +952,13 @@ public class MultiService {
         }
     }
 
+
    public List<String> getMessage(Long id) {
         Message message = messageService.getMessageById(id);
         List<String> users = message.getReadUsers();
 
         return users;
     }
-
 
     /*
      * Department

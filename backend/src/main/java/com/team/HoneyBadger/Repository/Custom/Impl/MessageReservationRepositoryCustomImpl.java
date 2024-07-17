@@ -1,6 +1,8 @@
 package com.team.HoneyBadger.Repository.Custom.Impl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.team.HoneyBadger.Entity.MessageReservation;
+import com.team.HoneyBadger.Entity.QMessageReservation;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Repository.Custom.MessageReservationRepositoryCustom;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +11,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
