@@ -483,7 +483,7 @@ public class MultiService {
     }
 
     public Page<Object> getEmailsForUser(String username, int statusIndex, int page) {
-        Pageable pageable = PageRequest.of(page, 3);
+        Pageable pageable = PageRequest.of(page, 15);
         switch (statusIndex) {
             case 0:
                 Page<Email> senderEmails = emailReceiverService.getSentEmailsForUser(username, pageable);
