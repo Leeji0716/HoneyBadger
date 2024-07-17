@@ -424,12 +424,10 @@ public class MultiService {
         for (MultipartFile file : files) {
             UUID uuid = UUID.randomUUID();
             String fileName = "/api/email/" + email_id.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
-
             String fileKey = KeyPreset.EMAIL.getValue(email_id.toString() + "_" + list.size());
             fileSystemService.save(fileKey, fileName);
             fileSystemService.save(KeyPreset.EMAIL_ORIGIN.getValue(fileKey), file.getOriginalFilename());
             list.add(fileKey);
-
             File dest = new File(path + fileName);
             if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
             file.transferTo(dest);

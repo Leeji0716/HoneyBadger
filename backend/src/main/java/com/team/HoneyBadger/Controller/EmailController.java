@@ -37,7 +37,7 @@ public class EmailController {
         }
     }
 
-    @PostMapping("/upload") //이메일 파일 업로드
+    @PostMapping("/upload") //이메일 내용 업로드
     public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, MultipartFile file) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
