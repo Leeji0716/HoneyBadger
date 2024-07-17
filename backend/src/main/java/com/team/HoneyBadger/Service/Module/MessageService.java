@@ -37,6 +37,7 @@ public class MessageService {
         return messageRepository.findById(messageId).orElseThrow();
     }
 
+
     public List<Message> getList(Long startId) {
         return messageRepository.getList(startId);
     }
