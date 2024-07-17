@@ -849,7 +849,7 @@ public class MultiService {
         for (MessageReservation messageReservation : messageReservationList) {
             if (messageReservation.getSendDate().toLocalTime().isBefore(LocalTime.now())) {
                 MessageRequestDTO messageRequestDTO = new MessageRequestDTO(messageReservation.getMessage(), messageReservation.getSender().getUsername(), messageReservation.getMessageType());
-                sendMessage(messageReservation.getId(), messageRequestDTO);
+                sendMessage(messageReservation.getChatroom().getId(), messageRequestDTO);
                 messageReservationService.delete(messageReservation);
             }
         }
