@@ -51,14 +51,6 @@ dependencies {
 
 	//actuator
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-	// https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload
-	implementation 'commons-fileupload:commons-fileupload:1.5'
-
-	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test
-	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.3.1'
-
-
 }
 
 tasks.named('test') {
