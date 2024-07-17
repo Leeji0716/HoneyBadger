@@ -945,14 +945,6 @@ public class MultiService {
         }
     }
 
-
-   public List<String> getMessage(Long id) {
-        Message message = messageService.getMessageById(id);
-        List<String> users = message.getReadUsers();
-
-        return users;
-    }
-
     /*
      * Department
      */
