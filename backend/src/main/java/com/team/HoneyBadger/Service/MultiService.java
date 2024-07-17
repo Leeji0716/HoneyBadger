@@ -424,12 +424,12 @@ public class MultiService {
      * Email
      */
 
-    @Transactional
+    @Transactional//이메일 파일 업로드
     public void emailFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         String keyValue = KeyPreset.EMAIL_MULTI.getValue(email_id.toString());
         MultiKey key = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
-        List<String> list = new ArrayList<>();
+        List<String> list = new ArrayList<>();//
         for (MultipartFile file : files) {
             UUID uuid = UUID.randomUUID();
             String fileName = "/api/email/" + email_id.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
@@ -613,6 +613,7 @@ public class MultiService {
                         }
                         multiKeyService.delete(key);
                     }
+
                 }
                 {
                     String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(emailReservation.getId().toString());
@@ -652,52 +653,21 @@ public class MultiService {
         }
     }
 
-//    @Scheduled(cron = "0 0 0/1 * * *")
-//    @Transactional
-//    public void sendEmailReservation2() throws RuntimeException {
-//        List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
-//        for (EmailReservation emailReservation : emailReservationList) {
-//            if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) {
-//                try {
-//                    // FileSystem에서 경로 정보를 가져옴
-//                    Optional<FileSystem> fileSystemOptional = fileSystemService.get(emailReservation.getKey());
-//
-//                    if (fileSystemOptional.isPresent()) {
-//                        FileSystem fileSystem = fileSystemOptional.get();
-//                        String filePath = fileSystem.getV();
-//
-//                        // 파일 경로를 이메일 내용에 포함시키거나 활용
-//                        sendEmail(
-//                                emailReservation.getTitle(),
-//                                emailReservation.getContent() + "\nFile path: " + filePath,
-//                                emailReservation.getSender().getUsername(),
-//                                emailReservation.getReceiverList()
-//                        );
-//                    } else {
-//                        // 파일 경로가 존재하지 않는 경우 예외 처리
-//                        throw new RuntimeException("File path not found for key: " + fileSystemService.getKey());
-//                    }
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//                emailReservationService.delete(emailReservation);
-//            }
-//        }
-//    }
-
-    @Transactional
+    @Transactional //예약이메일 파일 업로드
     public void emailReservationFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(email_id.toString());
         MultiKey key = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
-        List<String> list = key.getKeyValues();
+        List<String> list = key.getKeyValues();//
         for (MultipartFile file : files) {
             UUID uuid = UUID.randomUUID();
             String fileName = "/api/user/email/" + email_id.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+
             String fileKey = KeyPreset.EMAIL_RESERVATION.getValue(email_id.toString() + "_" + list.size());
             fileSystemService.save(fileKey, fileName);
             fileSystemService.save(KeyPreset.EMAIL_RESERVATION_ORIGIN.getValue(fileKey), file.getOriginalFilename());
             list.add(fileKey);
+
             File dest = new File(path + fileName);
             if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
             file.transferTo(dest);
