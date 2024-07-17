@@ -6,7 +6,7 @@ import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.DepartmentRole;
 import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
-import com.team.HoneyBadger.Enum.Role;
+import com.team.HoneyBadger.Enum.UserRole;
 import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
@@ -108,8 +108,13 @@ public class MultiService {
      * User
      */
     @Transactional
-    public void signup(SignupRequestDTO signupRequestDTO) throws DataDuplicateException {
-        userService.save(signupRequestDTO);
+    public UserResponseDTO signup(UserInfoRequestDTO requestDTO) throws DataDuplicateException {
+        Optional<SiteUser> _user = userService.getOptional(requestDTO.username());
+        if (_user.isPresent())
+            throw new DataDuplicateException("username");
+        Department department = requestDTO.department_id() != null ? departmentService.get(requestDTO.department_id()) : null;
+        SiteUser user = userService.save(requestDTO.username(), requestDTO.name(), requestDTO.password(), UserRole.values()[requestDTO.role()], requestDTO.phoneNumber(), requestDTO.joinDate(), department);
+        return getUserResponseDTO(user);
     }
 
     public UserResponseDTO getProfile(String username) {
@@ -179,11 +184,11 @@ public class MultiService {
         userService.update(user, passwordChangeDTO.newPassword());
     }
 
-    public UserResponseDTO changeUser(UserInfoRequestDTO userInfoRequestDTO) {
-        SiteUser user = userService.get(userInfoRequestDTO.username());
-        Department department = departmentService.get(userInfoRequestDTO.department_id());
-        Role role = userInfoRequestDTO.role() >= 0 && userInfoRequestDTO.role() < Role.values().length ? Role.values()[userInfoRequestDTO.role()] : null;
-        user = userService.update(user, userInfoRequestDTO.name(), role, userInfoRequestDTO.password(), userInfoRequestDTO.phoneNumber(), userInfoRequestDTO.joinDate(), department);
+    public UserResponseDTO changeUser(UserInfoRequestDTO requestDTO) {
+        SiteUser user = userService.get(requestDTO.username());
+        Department department = requestDTO.department_id() != null ? departmentService.get(requestDTO.department_id()) : null;
+        UserRole role = requestDTO.role() >= 0 && requestDTO.role() < UserRole.values().length ? UserRole.values()[requestDTO.role()] : null;
+        user = userService.update(user, requestDTO.name(), role, requestDTO.password(), requestDTO.phoneNumber(), requestDTO.joinDate(), department);
         return getUserResponseDTO(user);
     }
 
@@ -928,6 +933,15 @@ public class MultiService {
             file.delete();
         }
     }
+
+   public List<String> getMessage(Long id) {
+        Message message = messageService.getMessageById(id);
+        List<String> users = message.getReadUsers();
+
+        return users;
+    }
+
+
     /*
      * Department
      */
@@ -1002,7 +1016,7 @@ public class MultiService {
     }
 
     public DepartmentUserResponseDTO getDepartmentUsers(String departmentId) {
-        if(departmentId==null)
+        if (departmentId == null)
             return DepartmentUserResponseDTO.builder().users(userService.getUsersDepartmentIsNull().stream().map(this::getUserResponseDTO).toList()).build();
 
         Department department = departmentService.get(departmentId);
@@ -1016,6 +1030,6 @@ public class MultiService {
         List<DepartmentUserResponseDTO> list = new ArrayList<>();
         for (Department child : department.getChild())
             list.add(getDepartmentUserResponseDTO(child));
-        return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).build();
+        return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).role(department.getRole().ordinal()).build();
     }
 }

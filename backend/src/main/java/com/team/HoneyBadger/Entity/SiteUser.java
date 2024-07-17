@@ -1,6 +1,6 @@
 package com.team.HoneyBadger.Entity;
 
-import com.team.HoneyBadger.Enum.Role;
+import com.team.HoneyBadger.Enum.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +17,7 @@ public class SiteUser {
     @Setter(AccessLevel.NONE)
     private String username;
     private String name;
-    private Role role;
+    private UserRole role;
     @Column(columnDefinition = "TEXT")
     private String password;
     @Column(length = 11)
@@ -31,7 +31,7 @@ public class SiteUser {
     private Department department;
 
     @Builder
-    public SiteUser(String username, String name, Role role, String password, String phoneNumber) {
+    public SiteUser(String username, String name, UserRole role, String password, String phoneNumber, LocalDateTime joinDate, Department department) {
         this.username = username;
         this.name = name;
         this.role = role;
@@ -39,5 +39,7 @@ public class SiteUser {
         this.phoneNumber = phoneNumber;
         this.createDate = LocalDateTime.now();
         this.modifyDate = createDate;
+        this.joinDate = joinDate;
+        this.department = department;
     }
 }
