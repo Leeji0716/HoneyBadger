@@ -9,6 +9,8 @@ export default function Home() {
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => setUser(r)).catch(e => console.log(e));
+        else
+            location.href = '/';
     }, [ACCESS_TOKEN])
 
     return <Main user={user}>

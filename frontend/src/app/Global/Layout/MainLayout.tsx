@@ -14,6 +14,7 @@ export default function Main(props: Readonly<pageInterface>) {
   const [open, setOpen] = useState(false);
   const [isSettingOpen, setSettingOpen] = useState(false);
   const user = props.user;
+  
   return (
     <main id='main' className={"flex relative flex-col h-screen max-h-screen " + (props.classname ? props.classname : '')}>
       <Side open={open} onClose={() => setOpen(false)} escClose={true} outlineClose={true} className="w-[250px] h-full">
@@ -22,7 +23,7 @@ export default function Main(props: Readonly<pageInterface>) {
           <a href="/email">메일</a>
           <a href="/email/EmailForm" onClick={() => localStorage.removeItem('email')}>메일쓰기</a>
           <a href="">결재</a>
-          {user?.role == 13 ? <a href="/hr">인사 관리</a> : ''}
+          {user?.role == 13 || user?.department?.role==1 ? <a href="/hr">인사 관리</a> : ''}
         </div>
       </Side>
       <div className="official-color flex items-center h-[50px] min-h-[50px] w-full ">

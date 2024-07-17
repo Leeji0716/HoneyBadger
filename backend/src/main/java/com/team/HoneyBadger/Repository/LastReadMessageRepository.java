@@ -11,6 +11,4 @@ import org.springframework.stereotype.Repository;
 public interface LastReadMessageRepository extends JpaRepository<LastReadMessage, Long>, LastReadMessageRepositoryCustom {
 
     LastReadMessage getLastMessage(SiteUser user, Chatroom chatroom);
-//    LastReadMessage findByUserAndChatroom(SiteUser user, Chatroom chatroom);
-
 }

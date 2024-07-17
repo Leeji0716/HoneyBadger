@@ -2,8 +2,8 @@ package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.DTO.DepartmentRequestDTO;
 import com.team.HoneyBadger.DTO.DepartmentTopResponseDTO;
+import com.team.HoneyBadger.DTO.DepartmentUserResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.DTO.UserResponseDTO;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Exception.RelatedException;
 import com.team.HoneyBadger.Service.MultiService;
@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -32,13 +34,15 @@ public class DepartmentController {
     }
 
     @PostMapping
-    public ResponseEntity<?> saveDepartmentImage(@RequestHeader("Authorization") String accessToken, @RequestBody DepartmentRequestDTO departmentRequestDTO) {
+    public ResponseEntity<?> saveDepartment(@RequestHeader("Authorization") String accessToken, @RequestBody DepartmentRequestDTO departmentRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             List<DepartmentTopResponseDTO> list = this.multiService.createDepartment(tokenDTO.username(), departmentRequestDTO);
             return ResponseEntity.status(HttpStatus.OK).body(list);
         } catch (IOException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("파일 저장에 오류가 발생");
+        } catch (DataDuplicateException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
@@ -59,20 +63,21 @@ public class DepartmentController {
     public ResponseEntity<?> deleteDepartment(@RequestHeader("Authorization") String accessToken, @RequestHeader("DepartmentId") String departmentId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            List<DepartmentTopResponseDTO> list = this.multiService.deleteDepartment(departmentId);
+            List<DepartmentTopResponseDTO> list = this.multiService.deleteDepartment(URLDecoder.decode(departmentId, StandardCharsets.UTF_8));
             return ResponseEntity.status(HttpStatus.OK).body(list);
         } catch (RelatedException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
+
     @GetMapping("/users")
-    public ResponseEntity<?> getDepartmentUser(@RequestHeader("Authorization") String accessToken, @RequestHeader("DepartmentId") String departmentId) {
+    public ResponseEntity<?> getDepartmentUser(@RequestHeader("Authorization") String accessToken, @RequestHeader(value = "DepartmentId", required = false) String departmentId) {
         TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
             try {
-                List<UserResponseDTO> list = multiService.getUsers(departmentId);
-                return ResponseEntity.status(HttpStatus.OK).body(list);
+                DepartmentUserResponseDTO response = multiService.getDepartmentUsers(departmentId != null ? URLDecoder.decode(departmentId, StandardCharsets.UTF_8) : departmentId);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             } catch (DataDuplicateException ex) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
             }

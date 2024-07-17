@@ -3,9 +3,10 @@ package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
+import com.team.HoneyBadger.Enum.DepartmentRole;
 import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.MessageType;
-import com.team.HoneyBadger.Enum.Role;
+import com.team.HoneyBadger.Enum.UserRole;
 import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
@@ -13,6 +14,10 @@ import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
 import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -103,8 +108,13 @@ public class MultiService {
      * User
      */
     @Transactional
-    public void signup(SignupRequestDTO signupRequestDTO) throws DataDuplicateException {
-        userService.save(signupRequestDTO);
+    public UserResponseDTO signup(UserInfoRequestDTO requestDTO) throws DataDuplicateException {
+        Optional<SiteUser> _user = userService.getOptional(requestDTO.username());
+        if (_user.isPresent())
+            throw new DataDuplicateException("username");
+        Department department = requestDTO.department_id() != null ? departmentService.get(requestDTO.department_id()) : null;
+        SiteUser user = userService.save(requestDTO.username(), requestDTO.name(), requestDTO.password(), UserRole.values()[requestDTO.role()], requestDTO.phoneNumber(), requestDTO.joinDate(), department);
+        return getUserResponseDTO(user);
     }
 
     public UserResponseDTO getProfile(String username) {
@@ -174,11 +184,11 @@ public class MultiService {
         userService.update(user, passwordChangeDTO.newPassword());
     }
 
-    public UserResponseDTO changeUser(UserInfoRequestDTO userInfoRequestDTO) {
-        SiteUser user = userService.get(userInfoRequestDTO.username());
-        Department department = departmentService.get(userInfoRequestDTO.department_id());
-        Role role = userInfoRequestDTO.role() >= 0 && userInfoRequestDTO.role() < Role.values().length ? Role.values()[userInfoRequestDTO.role()] : null;
-        user = userService.update(user, userInfoRequestDTO.name(), role, userInfoRequestDTO.password(), userInfoRequestDTO.phoneNumber(), userInfoRequestDTO.joinDate(), department);
+    public UserResponseDTO changeUser(UserInfoRequestDTO requestDTO) {
+        SiteUser user = userService.get(requestDTO.username());
+        Department department = requestDTO.department_id() != null ? departmentService.get(requestDTO.department_id()) : null;
+        UserRole role = requestDTO.role() >= 0 && requestDTO.role() < UserRole.values().length ? UserRole.values()[requestDTO.role()] : null;
+        user = userService.update(user, requestDTO.name(), role, requestDTO.password(), requestDTO.phoneNumber(), requestDTO.joinDate(), department);
         return getUserResponseDTO(user);
     }
 
@@ -246,20 +256,25 @@ public class MultiService {
     }
 
     @Transactional
-    public List<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword) {
+    public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
         SiteUser siteUser = userService.get(username);
-        List<Chatroom> chatroomList = chatroomService.getChatRoomListByUser(siteUser, keyword);
-        List<ChatroomResponseDTO> chatroomResponseDTOList = new ArrayList<>();
-        for (Chatroom chatroom : chatroomList) {
-            chatroomResponseDTOList.add(getChatRoom(chatroom, username));
-        }
-        return chatroomResponseDTOList;
+        Pageable pageable = PageRequest.of(page, 10);
+        Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
+
+        List<ChatroomResponseDTO> chatroomResponseDTOList = chatroomPage.stream()
+                .map(chatroom -> getChatRoom(chatroom, username))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(chatroomResponseDTOList, pageable, chatroomPage.getTotalElements());
     }
 
+
     @Transactional
-    public List<MessageResponseDTO> getMessageList(Long chatroomId) {
+    public Page<MessageResponseDTO> getMessageList(Long chatroomId, int page) {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        return messageService.getMessageList(chatroom.getMessageList());
+        Pageable pageable = PageRequest.of(page, 15);
+        Page<MessageResponseDTO> messagePage = messageService.getMessageList(chatroom.getMessageList(), pageable);
+        return messagePage;
     }
 
     @Transactional
@@ -340,6 +355,23 @@ public class MultiService {
                 .alarmCount(alarmCnt)
                 .build();
     }
+
+    @Transactional
+    public int alarmCount(Long chatroomId, Long endId) {
+        List<Message> messageList = messageService.getUpdatedList(chatroomId, endId);
+        return messageList.size() - 1;
+    }
+
+
+    @Transactional
+    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) {
+        Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
+        Message message = messageService.getMessageById(noticeRequestDTO.messageId());
+        chatroomService.notification(chatroom, message);
+
+        return getChatRoom(chatroom, username);
+    }
+
 
     @Transactional
     public ChatroomResponseDTO getChatRoomById(Long chatroomId, String username) {
@@ -429,7 +461,7 @@ public class MultiService {
     @Transactional
     public Long sendEmail(String title, String content, String senderId, List<String> receiverIds) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
-        if(receiverIds.isEmpty()){
+        if (receiverIds.isEmpty()) {
             throw new EmailReceiverNotFoundException("email not found");
         }
         SiteUser sender = userService.get(senderId);
@@ -459,37 +491,47 @@ public class MultiService {
         return email.getId();
     }
 
-    public Object getEmailsForUser(String username, int statusIndex) {
+    public Page<Object> getEmailsForUser(String username, int statusIndex, int page) {
+        Pageable pageable = PageRequest.of(page, 15);
         switch (statusIndex) {
             case 0:
-                List<Email> senderEmails = emailReceiverService.getSentEmailsForUser(username);
+                Page<Email> senderEmails = emailReceiverService.getSentEmailsForUser(username, pageable);
                 if (senderEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve sent emails for user: " + username);
                 }
-                senderEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
-                return senderEmails.stream()
-                        .map(email -> getEmailDTO(email, username))
-                        .collect(Collectors.toList());
+                return new PageImpl<>(
+                        senderEmails.stream()
+                                .map(email -> getEmailDTO(email, username))
+                                .collect(Collectors.toList()),
+                        pageable,
+                        senderEmails.getTotalElements()
+                );
 
             case 1:
-                List<Email> receiverEmails = emailReceiverService.getReceivedEmailsForUser(username);
+                Page<Email> receiverEmails = emailReceiverService.getReceivedEmailsForUser(username, pageable);
                 if (receiverEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve received emails for user: " + username);
                 }
-                receiverEmails.sort(Comparator.comparing(Email::getCreateDate).reversed());
-                return receiverEmails.stream()
-                        .map(email -> getEmailDTO(email, username))
-                        .collect(Collectors.toList());
+                return new PageImpl<>(
+                        receiverEmails.stream()
+                                .map(email -> getEmailDTO(email, username))
+                                .collect(Collectors.toList()),
+                        pageable,
+                        receiverEmails.getTotalElements()
+                );
 
             case 2:
-                List<EmailReservation> reservationEmails = emailReservationService.getReservedEmailsForUser(username);
+                Page<EmailReservation> reservationEmails = emailReservationService.getReservedEmailsForUser(username, pageable);
                 if (reservationEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve reserved emails for user: " + username);
                 }
-                reservationEmails.sort(Comparator.comparing(EmailReservation::getCreateTime).reversed());
-                return reservationEmails.stream()
-                        .map(this::getEmailReservationDTO)
-                        .collect(Collectors.toList());
+                return new PageImpl<>(
+                        reservationEmails.stream()
+                                .map(this::getEmailReservationDTO)
+                                .collect(Collectors.toList()),
+                        pageable,
+                        reservationEmails.getTotalElements()
+                );
 
             default:
                 throw new IllegalArgumentException("Invalid status index: " + statusIndex);
@@ -499,9 +541,9 @@ public class MultiService {
     @Transactional
     public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
-        EmailResponseDTO emailResponseDTO = getEmailDTO(email, username);
+        emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
+        EmailResponseDTO emailResponseDTO = getEmailDTO(email, emailReadRequestDTO.receiverId()); // receiverId 사용
         return emailResponseDTO;
-
     }
 
     @Transactional
@@ -510,47 +552,7 @@ public class MultiService {
         emailService.findByUsernameDelete(email, username);
     }
 
-//    private EmailResponseDTO getEmailDTO(Email email, String username) {
-//        List<FileResponseDTO> filePathList = new ArrayList<>();
-//        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
-//        if (_multiKey.isPresent()) //
-//            for (String key : _multiKey.get().getKeyValues()) {
-//                FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
-//                fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
-//                fileSystemService.get(KeyPreset.EMAIL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
-//                builder.key(key); // key
-//                filePathList.add(builder.build());
-//            }
-//
-//        SiteUser user = userService.get(username);
-//        EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
-//
-//        List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
-//                .map(receiver -> EmailReceiverDTO.builder()
-//                        .receiverUsername(receiver.getReceiver().getUsername())
-//                        .status(receiver.isStatus())
-//                        .build())
-//                .collect(Collectors.toList());
-//
-//        return EmailResponseDTO //
-//                .builder() //
-//                .id(email.getId()) //
-//                .title(email.getTitle()) //
-//                .content(email.getContent()) //
-//                .senderId(email.getSender().getUsername()) //
-//                .senderName(email.getSender().getUsername()) //
-//                .receiverIds(email.getReceiverList() //
-//                        .stream() //
-//                        .map(er -> er.getReceiver().getUsername()) //
-//                        .toList()) //
-//                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
-//                .files(filePathList) //
-//                .status(emailReceiver != null ? emailReceiver.isStatus() : false)
-//                .receiverStatus(receiverStatus)
-//                .build();
-//    }
-
-    private EmailResponseDTO getEmailDTO(Email email, String username) {
+    private EmailResponseDTO getEmailDTO(Email email, String receiverId) {
         List<FileResponseDTO> filePathList = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
         if (_multiKey.isPresent()) {
@@ -563,11 +565,12 @@ public class MultiService {
             }
         }
 
-        SiteUser user = userService.get(username);
+        SiteUser user = userService.get(receiverId);
         if (user == null) {
-            throw new DataNotFoundException("User not found with username: " + username);
+            throw new DataNotFoundException("User not found with receiverId: " + receiverId);
         }
 
+        // receiverId를 기반으로 읽음 상태를 조회
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
 
         List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
@@ -604,6 +607,23 @@ public class MultiService {
     /*
      * Email Reservation
      */
+
+    @Scheduled(cron = "0 0 0/1 * * *")
+    @Transactional
+    public void sendEmailReservation() throws RuntimeException{
+        List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
+        for (EmailReservation emailReservation : emailReservationList) {
+            if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) {
+                try {
+                    sendEmail(emailReservation.getTitle(), emailReservation.getContent(), emailReservation.getSender().getUsername(), emailReservation.getReceiverList());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                emailReservationService.delete(emailReservation);
+            }
+        }
+    }
+
     @Transactional
     public void emailReservationFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
@@ -732,9 +752,9 @@ public class MultiService {
 //        int readUsers = message.getReadUsers().size();
 
         int readUsers;
-        if (message.getReadUsers() == null){
+        if (message.getReadUsers() == null) {
             readUsers = 0;
-        }else {
+        } else {
             readUsers = message.getReadUsers().size();
         }
 
@@ -761,10 +781,9 @@ public class MultiService {
             messageService.deleteMessage(message);
 
             // 삭제된 메시지에 대한 응답을 생성합니다.
-            System.out.println("Message deleted");
+            //TODO:'삭제된메시지입니다'로 변경 or 메세지 아예 삭제
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
-            System.out.println("Cannot delete message older than 5 minutes");
             throw new RuntimeException("Cannot delete message older than 5 minutes");
         }
     }
@@ -820,18 +839,32 @@ public class MultiService {
 //        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
     }
 
+    public List<MessageResponseDTO> getImageMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getImageMessageList(chatroom);
+    }
+
+    public List<MessageResponseDTO> getLinkMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getLinkMessageList(chatroom);
+    }
+
+    public List<MessageResponseDTO> getFileMessageList(Long chatroomId) {
+        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        return messageService.getFileMessageList(chatroom);
+    }
+
     /*
      * MessageReservation or ChatReservation
      */
-    @Scheduled(cron = "0 0 */1 * * *")
+    @Scheduled(cron = "0 0 0/1 * * *")
     @Transactional
     public void sendReservation() {
-        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         List<MessageReservation> messageReservationList = messageReservationService.getMessageReservationFromDate(LocalDateTime.now());
         for (MessageReservation messageReservation : messageReservationList) {
             if (messageReservation.getSendDate().toLocalTime().isBefore(LocalTime.now())) {
                 MessageRequestDTO messageRequestDTO = new MessageRequestDTO(messageReservation.getMessage(), messageReservation.getSender().getUsername(), messageReservation.getMessageType());
-                sendMessage(messageReservation.getId(), messageRequestDTO);
+                sendMessage(messageReservation.getChatroom().getId(), messageRequestDTO);
                 messageReservationService.delete(messageReservation);
             }
         }
@@ -850,7 +883,15 @@ public class MultiService {
     @Transactional
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
         Long sendTime = this.dateTimeTransfer(messageReservation.getSendDate());
-        return MessageReservationResponseDTO.builder().id(messageReservation.getId()).chatroomId(messageReservation.getChatroom().getId()).message(messageReservation.getMessage()).username(messageReservation.getSender().getUsername()).sendDate(sendTime).messageType(messageReservation.getMessageType()).build();
+        return MessageReservationResponseDTO.builder()
+                .id(messageReservation.getId())
+                .chatroomId(messageReservation.getChatroom().getId())
+                .message(messageReservation.getMessage())
+                .username(messageReservation.getSender().getUsername())
+                .name(messageReservation.getSender().getName())
+                .sendDate(sendTime)
+                .messageType(messageReservation.getMessageType())
+                .build();
     }
 
 
@@ -861,29 +902,26 @@ public class MultiService {
     }
 
     @Transactional
-    public MessageReservationResponseDTO updateReservationMessage(Long id,
+    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId,
                                                                   MessageReservationRequestDTO messageReservationRequestDTO,
                                                                   String username) throws DataNotFoundException {
-        MessageReservation messageReservation = messageReservationService.getMessageReservation(id);
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
         if (messageReservation.getSender().getUsername().equals(username) && messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
             messageReservationService.update(messageReservation, messageReservationRequestDTO);
         }
         return getMessageReservation(messageReservation);
     }
 
-    @Transactional
-    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) {
-        Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
-        Message message = messageService.getMessageById(noticeRequestDTO.messageId());
-        chatroomService.notification(chatroom, message);
-
-        return getChatRoom(chatroom, username);
+    public MessageReservationResponseDTO getMessageReservationById(Long reservationMessageId) {
+        MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
+        return getMessageReservation(messageReservation);
     }
 
-    @Transactional
-    public int alarmCount(Long chatroomId, Long endId) {
-        List<Message> messageList = messageService.getUpdatedList(chatroomId, endId);
-        return messageList.size() - 1;
+    public Page<MessageReservationResponseDTO> getMessageReservationByUser(String username, int page) {
+        SiteUser user = userService.get(username);
+        Pageable pageable = PageRequest.of(page, 10);
+
+        return messageReservationService.getMessageReservationByUser(user, pageable);
     }
     /*
      * Time
@@ -905,23 +943,24 @@ public class MultiService {
             file.delete();
         }
     }
-    public List<String> getMessage(Long id) {
-        Message message = messageService.getMessageById(id);
-        List<String> users = message.getReadUsers();
 
-        return users;
-    }
     /*
      * Department
      */
     @Transactional
     public List<DepartmentTopResponseDTO> createDepartment(String username, DepartmentRequestDTO requestDTO) throws IOException {
         Department parent = departmentService.get(requestDTO.parentId());
-        Department department = departmentService.save(requestDTO.name(), parent);
+        if (departmentService.get(requestDTO.name()) != null)
+            throw new DataDuplicateException("department already exist");
+
+        Department department = departmentService.save(requestDTO.name(), parent, DepartmentRole.values()[requestDTO.role()]);
         if (requestDTO.url() != null) {
-            Path pre = Paths.get(requestDTO.url());
+            String path = HoneyBadgerApplication.getOsType().getLoc();
+            Path pre = Paths.get(path + requestDTO.url());
             String newUrl = requestDTO.url().replaceAll("/user/" + username + "/temp/depart_", "/department/" + department.getName() + "/");
-            Path now = Paths.get(newUrl);
+            Path now = Paths.get(path + newUrl);
+            if (!now.getParent().toFile().exists())
+                now.getParent().toFile().mkdirs();
             Files.move(pre, now, StandardCopyOption.REPLACE_EXISTING);
             fileSystemService.save(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()), newUrl);
         }
@@ -950,13 +989,13 @@ public class MultiService {
         if (department == null) return null;
         DepartmentResponseDTO parent = department.getParent() != null ? getDepartmentDTO(department.getParent()) : null;
         Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()));
-        return DepartmentResponseDTO.builder().name(department.getName()).parent(parent).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).build();
+        return DepartmentResponseDTO.builder().name(department.getName()).parent(parent).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).role(department.getRole().ordinal()).build();
     }
 
     private DepartmentTopResponseDTO getDepartmentTopDTO(Department department) {
         if (department == null) return null;
         Optional<FileSystem> _fileSystem = fileSystemService.get(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()));
-        return DepartmentTopResponseDTO.builder().name(department.getName()).child(department.getChild().stream().map(this::getDepartmentTopDTO).toList()).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).build();
+        return DepartmentTopResponseDTO.builder().name(department.getName()).child(department.getChild().stream().map(this::getDepartmentTopDTO).toList()).createDate(this.dateTimeTransfer(department.getCreateDate())).modifyDate(this.dateTimeTransfer(department.getModifyDate())).url(_fileSystem.map(FileSystem::getV).orElse(null)).role(department.getRole().ordinal()).build();
     }
 
     public List<DepartmentTopResponseDTO> getDepartmentTree() {
@@ -978,10 +1017,21 @@ public class MultiService {
             check(child);
     }
 
-    public List<UserResponseDTO> getUsers(String departmentId) {
+    public DepartmentUserResponseDTO getDepartmentUsers(String departmentId) {
+        if (departmentId == null)
+            return DepartmentUserResponseDTO.builder().users(userService.getUsersDepartmentIsNull().stream().map(this::getUserResponseDTO).toList()).build();
+
         Department department = departmentService.get(departmentId);
         if (department == null)
             throw new DataNotFoundException("해당 부서는 존재하지 않습니다.");
-        return department.getUsers().stream().map(this::getUserResponseDTO).toList();
+        return getDepartmentUserResponseDTO(department);
+    }
+
+    private DepartmentUserResponseDTO getDepartmentUserResponseDTO(Department department) {
+        List<UserResponseDTO> users = department.getUsers().stream().map(this::getUserResponseDTO).toList();
+        List<DepartmentUserResponseDTO> list = new ArrayList<>();
+        for (Department child : department.getChild())
+            list.add(getDepartmentUserResponseDTO(child));
+        return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).role(department.getRole().ordinal()).build();
     }
 }
