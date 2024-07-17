@@ -14,11 +14,14 @@ import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
 import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
@@ -617,13 +620,6 @@ public class MultiService {
             if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) { //예약 메일의 전송 시간이 현재 시간보다 이전
                 try {
                     Long sendEmailId = sendEmail(emailReservation.getTitle(), emailReservation.getContent(), emailReservation.getSender().getUsername(), emailReservation.getReceiverList());
-//                    updateFilePaths(sendEmailId, emailReservation.getId());
-//                    // 파일 경로 지정
-//                    String directoryPath = "/api/email/" + emailReservation.getId().toString();
-//                    // 파일 읽어오기
-//                    List<MultipartFile> files = getMultipartFilesFromDirectory(directoryPath);
-//
-//                    emailFilesUpload(sendEmailId, files);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
