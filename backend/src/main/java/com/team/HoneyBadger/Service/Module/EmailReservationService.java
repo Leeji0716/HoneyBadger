@@ -18,14 +18,18 @@ public class EmailReservationService {
     private final EmailReservationRepository emailReservationRepository;
 
 
-    public EmailReservation save(EmailReservationRequestDTO reservationRequestDTO, SiteUser sender) {
+    public EmailReservation save(String title, List<String> receiverIds, SiteUser sender, LocalDateTime sendTime) {
         return emailReservationRepository.save(EmailReservation.builder()
-                .title(reservationRequestDTO.title())
-                .content(reservationRequestDTO.content())
+                .title(title)
                 .sender(sender)
-                .receiverList(reservationRequestDTO.receiverIds())
-                .sendTime(reservationRequestDTO.sendTime())
+                .receiverList(receiverIds)
+                .sendTime(sendTime)
                 .build());
+    }
+
+    public void update(EmailReservation reservation, String content) {
+        reservation.setContent(content);
+        emailReservationRepository.save(reservation);
     }
 
     public EmailReservation getEmailReservation(Long reservationId) {

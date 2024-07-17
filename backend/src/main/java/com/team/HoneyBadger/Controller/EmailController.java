@@ -42,9 +42,10 @@ public class EmailController {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
         if (tokenDTO.isOK()) try {
-            String fileName = multiService.fileUpload(tokenDTO.username(), file);
+            String fileName = multiService.emailContentUpload(tokenDTO.username(), file);
             return ResponseEntity.status(HttpStatus.OK).body(fileName);
         } catch (IOException e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 업로드 실패");
         } catch (DataNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

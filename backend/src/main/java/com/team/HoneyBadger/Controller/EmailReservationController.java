@@ -53,6 +53,8 @@ public class EmailReservationController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch(IOException ex){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 저장 오류");
         }
         else return tokenDTO.getResponseEntity();
     }

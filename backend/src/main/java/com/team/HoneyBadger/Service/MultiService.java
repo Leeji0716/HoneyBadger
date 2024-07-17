@@ -110,8 +110,7 @@ public class MultiService {
     @Transactional
     public UserResponseDTO signup(UserInfoRequestDTO requestDTO) throws DataDuplicateException {
         Optional<SiteUser> _user = userService.getOptional(requestDTO.username());
-        if (_user.isPresent())
-            throw new DataDuplicateException("username");
+        if (_user.isPresent()) throw new DataDuplicateException("username");
         Department department = requestDTO.department_id() != null ? departmentService.get(requestDTO.department_id()) : null;
         SiteUser user = userService.save(requestDTO.username(), requestDTO.name(), requestDTO.password(), UserRole.values()[requestDTO.role()], requestDTO.phoneNumber(), requestDTO.joinDate(), department);
         return getUserResponseDTO(user);
@@ -192,6 +191,25 @@ public class MultiService {
         return getUserResponseDTO(user);
     }
 
+    public void deleteUserTemp(String username) {
+        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(username));
+        if (_multiKey.isPresent()) {
+            MultiKey multiKey = _multiKey.get();
+            String path = HoneyBadgerApplication.getOsType().getLoc();
+            ;
+            for (String k : multiKey.getKeyValues()) {
+                Optional<FileSystem> _fileSystem = fileSystemService.get(k);
+                if (_fileSystem.isPresent()) {
+                    FileSystem fileSystem = _fileSystem.get();
+                    File file = new File(path + fileSystem.getV());
+                    deleteFileWithFolder(file);
+                    fileSystemService.deleteByKey(fileSystem);
+                }
+            }
+            multiKeyService.delete(multiKey);
+        }
+    }
+
     /*
      * ChatRoom
      */
@@ -261,9 +279,7 @@ public class MultiService {
         Pageable pageable = PageRequest.of(page, 10);
         Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
 
-        List<ChatroomResponseDTO> chatroomResponseDTOList = chatroomPage.stream()
-                .map(chatroom -> getChatRoom(chatroom, username))
-                .collect(Collectors.toList());
+        List<ChatroomResponseDTO> chatroomResponseDTOList = chatroomPage.stream().map(chatroom -> getChatRoom(chatroom, username)).collect(Collectors.toList());
 
         return new PageImpl<>(chatroomResponseDTOList, pageable, chatroomPage.getTotalElements());
     }
@@ -346,14 +362,7 @@ public class MultiService {
             alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
         }
 
-        return ChatroomResponseDTO.builder()
-                .id(chatroom.getId())
-                .name(chatroom.getName())
-                .users(users)
-                .latestMessage(latestMessageDTO)
-                .notification(notificationDTO)
-                .alarmCount(alarmCnt)
-                .build();
+        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).alarmCount(alarmCnt).build();
     }
 
     @Transactional
@@ -447,7 +456,7 @@ public class MultiService {
         MultiKey key = _key.orElseGet(() -> multiKeyService.save(keyString));
 
         // 파일 저장
-        FileSystem fileSystem = fileSystemService.save(KeyPreset.USER_TEMP.getValue(key.getKeyValues().size() + ""), fileName);
+        FileSystem fileSystem = fileSystemService.save(KeyPreset.USER_TEMP.getValue(username + "_" + key.getKeyValues().size()), fileName);
         multiKeyService.updateOne(key, fileSystem.getK());
 
         File dest = new File(path + fileName);
@@ -465,7 +474,7 @@ public class MultiService {
         SiteUser sender = userService.get(senderId);
         Email email = emailService.save(title, sender);
         if (content != null)
-            emailService.update(email, content.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
+            emailService.update(email, content.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()).replaceAll("/temp/", "/").replaceAll("/emailReservation", "/email/" + email.getId().toString()));
         Optional<MultiKey> _key = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(senderId));
         if (_key.isPresent()) {
             MultiKey key = _key.get();
@@ -473,9 +482,10 @@ public class MultiService {
                 Optional<FileSystem> _fileSystem = fileSystemService.get(k);
                 if (_fileSystem.isPresent()) {
                     FileSystem fileSystem = _fileSystem.get();
-                    String value = path + fileSystem.getV();
-                    Path prePath = Paths.get(value);
-                    Path newPath = Paths.get(value.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()));
+                    String value = fileSystem.getV();
+                    Path prePath = Paths.get(path + value);
+                    Path newPath = Paths.get(path + value.replaceAll("/user/" + sender.getUsername(), "/email/" + email.getId().toString()).replaceAll("/temp/", "/"));
+                    if (!newPath.getParent().toFile().exists()) newPath.getParent().toFile().mkdirs();
                     Files.move(prePath, newPath, StandardCopyOption.REPLACE_EXISTING);
                     fileSystemService.deleteByKey(fileSystem);
                 }
@@ -497,39 +507,21 @@ public class MultiService {
                 if (senderEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve sent emails for user: " + username);
                 }
-                return new PageImpl<>(
-                        senderEmails.stream()
-                                .map(email -> getEmailDTO(email, username))
-                                .collect(Collectors.toList()),
-                        pageable,
-                        senderEmails.getTotalElements()
-                );
+                return new PageImpl<>(senderEmails.stream().map(email -> getEmailDTO(email, username)).collect(Collectors.toList()), pageable, senderEmails.getTotalElements());
 
             case 1:
                 Page<Email> receiverEmails = emailReceiverService.getReceivedEmailsForUser(username, pageable);
                 if (receiverEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve received emails for user: " + username);
                 }
-                return new PageImpl<>(
-                        receiverEmails.stream()
-                                .map(email -> getEmailDTO(email, username))
-                                .collect(Collectors.toList()),
-                        pageable,
-                        receiverEmails.getTotalElements()
-                );
+                return new PageImpl<>(receiverEmails.stream().map(email -> getEmailDTO(email, username)).collect(Collectors.toList()), pageable, receiverEmails.getTotalElements());
 
             case 2:
                 Page<EmailReservation> reservationEmails = emailReservationService.getReservedEmailsForUser(username, pageable);
                 if (reservationEmails == null) {
                     throw new DataNotFoundException("Failed to retrieve reserved emails for user: " + username);
                 }
-                return new PageImpl<>(
-                        reservationEmails.stream()
-                                .map(this::getEmailReservationDTO)
-                                .collect(Collectors.toList()),
-                        pageable,
-                        reservationEmails.getTotalElements()
-                );
+                return new PageImpl<>(reservationEmails.stream().map(this::getEmailReservationDTO).collect(Collectors.toList()), pageable, reservationEmails.getTotalElements());
 
             default:
                 throw new IllegalArgumentException("Invalid status index: " + statusIndex);
@@ -571,30 +563,15 @@ public class MultiService {
         // receiverId를 기반으로 읽음 상태를 조회
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
 
-        List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream()
-                .map(receiver -> EmailReceiverDTO.builder()
-                        .receiverUsername(receiver.getReceiver().getUsername())
-                        .status(receiver.isStatus())
-                        .build())
-                .collect(Collectors.toList());
+        List<EmailReceiverDTO> receiverStatus = email.getReceiverList().stream().map(receiver -> EmailReceiverDTO.builder().receiverUsername(receiver.getReceiver().getUsername()).status(receiver.isStatus()).build()).collect(Collectors.toList());
 
         boolean status = false;
         if (emailReceiver != null) {
             status = emailReceiver.isStatus();
         }
 
-        return EmailResponseDTO.builder()
-                .id(email.getId())
-                .title(email.getTitle())
-                .content(email.getContent())
-                .senderId(email.getSender().getUsername())
-                .senderName(email.getSender().getUsername())
-                .receiverIds(email.getReceiverList().stream().map(er -> er.getReceiver().getUsername()).toList())
-                .senderTime(this.dateTimeTransfer(email.getCreateDate()))
-                .files(filePathList)
-                .status(status) // emailReceiver가 null인 경우 기본값으로 false 설정
-                .receiverStatus(receiverStatus)
-                .build();
+        return EmailResponseDTO.builder().id(email.getId()).title(email.getTitle()).content(email.getContent()).senderId(email.getSender().getUsername()).senderName(email.getSender().getUsername()).receiverIds(email.getReceiverList().stream().map(er -> er.getReceiver().getUsername()).toList()).senderTime(this.dateTimeTransfer(email.getCreateDate())).files(filePathList).status(status) // emailReceiver가 null인 경우 기본값으로 false 설정
+                .receiverStatus(receiverStatus).build();
     }
 
     public EmailResponseDTO getEmailDTO(Long emailId, String username) {
@@ -606,21 +583,107 @@ public class MultiService {
      * Email Reservation
      */
 
-    @Scheduled(cron = "0 0 0/1 * * *")
+    @Scheduled(cron = "0 0/1 * * * *")
     @Transactional
-    public void sendEmailReservation() throws RuntimeException{
+    public void sendEmailReservation() throws IOException {
         List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
         for (EmailReservation emailReservation : emailReservationList) {
             if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) {
-                try {
-                    sendEmail(emailReservation.getTitle(), emailReservation.getContent(), emailReservation.getSender().getUsername(), emailReservation.getReceiverList());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+
+                Long emailId = sendEmail(emailReservation.getTitle(), emailReservation.getContent().replaceAll("/emailReservation/" + emailReservation.getId().toString(), "/emailReservation"), emailReservation.getSender().getUsername(), emailReservation.getReceiverList());
+                String path = HoneyBadgerApplication.getOsType().getLoc();
+                {
+                    String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI_TEMP.getValue(emailReservation.getId().toString());
+                    Optional<MultiKey> _key = multiKeyService.get(keyValue);
+                    if (_key.isPresent()) {
+                        MultiKey key = _key.get();
+                        for (String k : key.getKeyValues()) {
+                            Optional<FileSystem> _fileSystem = fileSystemService.get(k);
+                            if (_fileSystem.isPresent()) {
+                                FileSystem fileSystem = _fileSystem.get();
+                                String preUrl = fileSystem.getV();
+                                String newUrl = preUrl.replaceAll("/emailReservation/" + emailReservation.getId().toString(), "/email/" + emailId.toString());
+                                Path prePath = Paths.get(path + preUrl);
+                                Path newPath = Paths.get(path + newUrl);
+                                if (!newPath.getParent().toFile().exists()) newPath.getParent().toFile().mkdirs();
+                                Files.move(prePath, newPath, StandardCopyOption.REPLACE_EXISTING);
+                                deleteFileWithFolder(prePath.getParent().toFile());
+                                fileSystemService.deleteByKey(fileSystem);
+                            }
+                        }
+                        multiKeyService.delete(key);
+                    }
                 }
+                {
+                    String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(emailReservation.getId().toString());
+                    Optional<MultiKey> _key = multiKeyService.get(keyValue);
+                    if (_key.isPresent()) {
+                        MultiKey key = _key.get();
+                        for (String k : key.getKeyValues()) {
+                            Optional<FileSystem> _fileSystem = fileSystemService.get(k);
+                            if (_fileSystem.isPresent()) {
+                                FileSystem fileSystem = _fileSystem.get();
+                                String preUrl = fileSystem.getV();
+                                String newUrl = preUrl.replaceAll("/user/email/" + emailReservation.getId().toString(), "/email/" + emailId.toString());
+                                Path prePath = Paths.get(path + preUrl);
+                                Path newPath = Paths.get(path + newUrl);
+                                if (!newPath.getParent().toFile().exists()) newPath.getParent().toFile().mkdirs();
+                                Files.move(prePath, newPath, StandardCopyOption.REPLACE_EXISTING);
+                                deleteFileWithFolder(prePath.getParent().toFile());
+                                fileSystemService.deleteByKey(fileSystem);
+                                String fileKey = k.replaceAll("_RESERVATION_" + emailReservation.getId().toString(), "_"+emailId.toString());
+                                fileSystemService.save(fileKey, newUrl);
+
+                                Optional<FileSystem> _preOrigin = fileSystemService.get(KeyPreset.EMAIL_RESERVATION_ORIGIN.getValue(k));
+                                if (_preOrigin.isPresent()) {
+                                    FileSystem preOrigin = _fileSystem.get();
+                                    fileSystemService.save(KeyPreset.EMAIL_ORIGIN.getValue(fileKey), preOrigin.getV());
+                                    fileSystemService.deleteByKey(preOrigin);
+                                }
+                            }
+                        }
+                        multiKeyService.delete(key);
+                    }
+                }
+
+
                 emailReservationService.delete(emailReservation);
             }
         }
     }
+
+//    @Scheduled(cron = "0 0 0/1 * * *")
+//    @Transactional
+//    public void sendEmailReservation2() throws RuntimeException {
+//        List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
+//        for (EmailReservation emailReservation : emailReservationList) {
+//            if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) {
+//                try {
+//                    // FileSystem에서 경로 정보를 가져옴
+//                    Optional<FileSystem> fileSystemOptional = fileSystemService.get(emailReservation.getKey());
+//
+//                    if (fileSystemOptional.isPresent()) {
+//                        FileSystem fileSystem = fileSystemOptional.get();
+//                        String filePath = fileSystem.getV();
+//
+//                        // 파일 경로를 이메일 내용에 포함시키거나 활용
+//                        sendEmail(
+//                                emailReservation.getTitle(),
+//                                emailReservation.getContent() + "\nFile path: " + filePath,
+//                                emailReservation.getSender().getUsername(),
+//                                emailReservation.getReceiverList()
+//                        );
+//                    } else {
+//                        // 파일 경로가 존재하지 않는 경우 예외 처리
+//                        throw new RuntimeException("File path not found for key: " + fileSystemService.getKey());
+//                    }
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                }
+//                emailReservationService.delete(emailReservation);
+//            }
+//        }
+//    }
 
     @Transactional
     public void emailReservationFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
@@ -642,6 +705,7 @@ public class MultiService {
         multiKeyService.updateAll(key, list);
     }
 
+
     @Transactional
     public void deleteEmailReservation(Long reservationId, String username) {
         EmailReservation emailReservation = emailReservationService.getEmailReservation(reservationId);
@@ -651,9 +715,42 @@ public class MultiService {
     }
 
     @Transactional
-    public Long reservationEmail(EmailReservationRequestDTO emailReservationRequestDTO, String username) {
+    public Long reservationEmail(EmailReservationRequestDTO requestDTO, String username) throws IOException {
         SiteUser sender = userService.get(username);
-        EmailReservation emailReservation = emailReservationService.save(emailReservationRequestDTO, sender);
+        if (requestDTO.receiverIds().isEmpty()) {
+            throw new EmailReceiverNotFoundException("email not found");
+        }
+        EmailReservation emailReservation = emailReservationService.save(requestDTO.title(), requestDTO.receiverIds(), sender, requestDTO.sendTime());
+
+        String content = requestDTO.content();
+        if (content != null)
+            emailReservationService.update(emailReservation, content.replaceAll("/user/" + sender.getUsername(), "/emailReservation/" + emailReservation.getId().toString()).replaceAll("/temp/", "/"));
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        Optional<MultiKey> _key = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(username));
+        if (_key.isPresent()) {
+            MultiKey key = _key.get();
+            String newMultiKey = KeyPreset.EMAIL_RESERVATION_MULTI_TEMP.getValue(emailReservation.getId().toString());
+            MultiKey newMulti = multiKeyService.get(newMultiKey).orElseGet(() -> multiKeyService.save(newMultiKey));
+            List<String> newKeys = newMulti.getKeyValues();
+            for (String k : key.getKeyValues()) {
+                Optional<FileSystem> _fileSystem = fileSystemService.get(k);
+                if (_fileSystem.isPresent()) {
+                    FileSystem fileSystem = _fileSystem.get();
+                    String value = fileSystem.getV();
+                    Path prePath = Paths.get(path + value);
+                    String newUrl = value.replaceAll("/user/" + sender.getUsername(), "/emailReservation/" + emailReservation.getId().toString()).replaceAll("/temp/", "/");
+                    Path newPath = Paths.get(path + newUrl);
+                    if (!newPath.getParent().toFile().exists()) newPath.getParent().toFile().mkdirs();
+                    Files.move(prePath, newPath, StandardCopyOption.REPLACE_EXISTING);
+                    fileSystemService.deleteByKey(fileSystem);
+                    String newKey = KeyPreset.EMAIL_RESERVATION_TEMP.getValue(emailReservation.getId().toString() + "_" + newKeys.size());
+                    fileSystemService.save(newKey, newUrl);
+                    newKeys.add(newKey);
+                }
+            }
+            multiKeyService.delete(key);
+            multiKeyService.updateAll(newMulti, newKeys);
+        }
         return emailReservation.getId();
     }
 
@@ -717,22 +814,25 @@ public class MultiService {
     @Transactional
     private MessageType getMessageType(int MessageTypeInt) {
         MessageType messageType;
-        switch (MessageTypeInt) {
-            case 0:
+        return switch (MessageTypeInt) {
+            case 0 -> {
                 messageType = MessageType.TEXT;
-                return messageType;
-            case 1:
+                yield messageType;
+            }
+            case 1 -> {
                 messageType = MessageType.IMAGE;
-                return messageType;
-            case 2:
+                yield messageType;
+            }
+            case 2 -> {
                 messageType = MessageType.LINK;
-                return messageType;
-            case 3:
+                yield messageType;
+            }
+            case 3 -> {
                 messageType = MessageType.FILE;
-                return messageType;
-            default:
-                throw new IllegalArgumentException("Unknown message type: " + MessageTypeInt);
-        }
+                yield messageType;
+            }
+            default -> throw new IllegalArgumentException("Unknown message type: " + MessageTypeInt);
+        };
     }
 
     @Transactional
@@ -756,15 +856,7 @@ public class MultiService {
             readUsers = message.getReadUsers().size();
         }
 
-        return MessageResponseDTO.builder()
-                .id(message.getId())
-                .sendTime(sendTime)
-                .username(message.getSender().getUsername())
-                .name(message.getSender().getName())
-                .message(message.getMessage())
-                .messageType(message.getMessageType().ordinal())
-                .readUsers(readUsers)
-                .build();
+        return MessageResponseDTO.builder().id(message.getId()).sendTime(sendTime).username(message.getSender().getUsername()).name(message.getSender().getName()).message(message.getMessage()).messageType(message.getMessageType().ordinal()).readUsers(readUsers).build();
     }
 
     @Transactional
@@ -794,21 +886,6 @@ public class MultiService {
         String fileName = "/api/chatroom/" + chatroomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
         // 너굴맨이 해치우고 갔어요!
-        File dest = new File(path + fileName);
-
-        if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
-        file.transferTo(dest);
-
-        return fileName;
-    }
-
-    @Transactional
-    public String fileUpload(String username, MultipartFile file) throws IOException {
-
-        String path = HoneyBadgerApplication.getOsType().getLoc();
-        UUID uuid = UUID.randomUUID();
-        String fileName = "/api/user/" + username + "/temp/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
-
         File dest = new File(path + fileName);
 
         if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
@@ -877,15 +954,7 @@ public class MultiService {
     @Transactional
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
         Long sendTime = this.dateTimeTransfer(messageReservation.getSendDate());
-        return MessageReservationResponseDTO.builder()
-                .id(messageReservation.getId())
-                .chatroomId(messageReservation.getChatroom().getId())
-                .message(messageReservation.getMessage())
-                .username(messageReservation.getSender().getUsername())
-                .name(messageReservation.getSender().getName())
-                .sendDate(sendTime)
-                .messageType(messageReservation.getMessageType())
-                .build();
+        return MessageReservationResponseDTO.builder().id(messageReservation.getId()).chatroomId(messageReservation.getChatroom().getId()).message(messageReservation.getMessage()).username(messageReservation.getSender().getUsername()).name(messageReservation.getSender().getName()).sendDate(sendTime).messageType(messageReservation.getMessageType()).build();
     }
 
 
@@ -896,9 +965,7 @@ public class MultiService {
     }
 
     @Transactional
-    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId,
-                                                                  MessageReservationRequestDTO messageReservationRequestDTO,
-                                                                  String username) throws DataNotFoundException {
+    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
         if (messageReservation.getSender().getUsername().equals(username) && messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
             messageReservationService.update(messageReservation, messageReservationRequestDTO);
@@ -953,8 +1020,7 @@ public class MultiService {
             Path pre = Paths.get(path + requestDTO.url());
             String newUrl = requestDTO.url().replaceAll("/user/" + username + "/temp/depart_", "/department/" + department.getName() + "/");
             Path now = Paths.get(path + newUrl);
-            if (!now.getParent().toFile().exists())
-                now.getParent().toFile().mkdirs();
+            if (!now.getParent().toFile().exists()) now.getParent().toFile().mkdirs();
             Files.move(pre, now, StandardCopyOption.REPLACE_EXISTING);
             fileSystemService.save(KeyPreset.DEPARTMENT_PROFILE.getValue(department.getName()), newUrl);
         }
@@ -1005,8 +1071,7 @@ public class MultiService {
     }
 
     public void check(Department department) {
-        if (!department.getUsers().isEmpty())
-            throw new RelatedException("부서에 인원이 남아있습니다.");
+        if (!department.getUsers().isEmpty()) throw new RelatedException("부서에 인원이 남아있습니다.");
         for (Department child : department.getChild())
             check(child);
     }
@@ -1016,8 +1081,7 @@ public class MultiService {
             return DepartmentUserResponseDTO.builder().users(userService.getUsersDepartmentIsNull().stream().map(this::getUserResponseDTO).toList()).build();
 
         Department department = departmentService.get(departmentId);
-        if (department == null)
-            throw new DataNotFoundException("해당 부서는 존재하지 않습니다.");
+        if (department == null) throw new DataNotFoundException("해당 부서는 존재하지 않습니다.");
         return getDepartmentUserResponseDTO(department);
     }
 
@@ -1028,4 +1092,6 @@ public class MultiService {
             list.add(getDepartmentUserResponseDTO(child));
         return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).role(department.getRole().ordinal()).build();
     }
+
+
 }
