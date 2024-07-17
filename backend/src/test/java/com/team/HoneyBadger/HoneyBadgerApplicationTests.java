@@ -2,7 +2,7 @@ package com.team.HoneyBadger;
 
 import com.team.HoneyBadger.Entity.Department;
 import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Enum.Role;
+import com.team.HoneyBadger.Enum.UserRole;
 import com.team.HoneyBadger.Repository.DepartmentRepository;
 import com.team.HoneyBadger.Repository.UserRepository;
 import org.junit.jupiter.api.Test;
