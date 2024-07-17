@@ -857,7 +857,7 @@ public class MultiService {
     /*
      * MessageReservation or ChatReservation
      */
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 */1 * * *")
     @Transactional
     public void sendReservation() {
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
