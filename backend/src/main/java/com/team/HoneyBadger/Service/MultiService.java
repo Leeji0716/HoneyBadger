@@ -583,8 +583,6 @@ public class MultiService {
         boolean status = false;
         if (emailReceiver != null) {
             status = emailReceiver.isStatus();
-        } else {
-            System.out.println("emailReceiver is null for emailId: " + email.getId() + " and receiverId: " + receiverId);
         }
 
         return EmailResponseDTO.builder()
@@ -613,7 +611,6 @@ public class MultiService {
     @Scheduled(cron = "0 0 0/1 * * *")
     @Transactional
     public void sendEmailReservation() throws RuntimeException{
-        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
         for (EmailReservation emailReservation : emailReservationList) {
             if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) {
@@ -860,7 +857,6 @@ public class MultiService {
     @Scheduled(cron = "0 0 0/1 * * *")
     @Transactional
     public void sendReservation() {
-        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + LocalDateTime.now() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         List<MessageReservation> messageReservationList = messageReservationService.getMessageReservationFromDate(LocalDateTime.now());
         for (MessageReservation messageReservation : messageReservationList) {
             if (messageReservation.getSendDate().toLocalTime().isBefore(LocalTime.now())) {

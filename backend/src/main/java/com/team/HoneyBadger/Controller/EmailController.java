@@ -84,7 +84,6 @@ public class EmailController {
     public ResponseEntity<?> sendEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailRequestDTO emailRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            System.out.println("Received email send request");
             Long emailId = multiService.sendEmail(emailRequestDTO.title(), emailRequestDTO.content(), tokenDTO.username(), emailRequestDTO.receiverIds());
             return ResponseEntity.status(HttpStatus.OK).body(emailId);
         } catch (DataNotFoundException ex) {
