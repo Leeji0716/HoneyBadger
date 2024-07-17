@@ -839,13 +839,6 @@ public class MultiService {
 //        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
     }
 
-    public List<String> getMessage(Long id) { //test
-        Message message = messageService.getMessageById(id);
-        List<String> users = message.getReadUsers();
-
-        return users;
-    }
-
     public List<MessageResponseDTO> getImageMessageList(Long chatroomId) {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         return messageService.getImageMessageList(chatroom);
