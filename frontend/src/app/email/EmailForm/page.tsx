@@ -46,15 +46,37 @@ export default function EmailForm() {
         if (ACCESS_TOKEN) {
             getUser().then(r => setUser(r)).catch(e => console.log(e));
             if (localStorage.getItem('email')) {
-                const email = JSON.parse(localStorage.getItem('email') as string);
-                setEmail(email);
-                setId(email.id);
-                setReceiverIds(email?.receiverIds);
-                setTitle(email?.title);
-                setContent(email?.content);
-                setSenderTime(email?.senderTime);
-                setFiles(email?.files);
-                setFlag(2);
+                // const email = JSON.parse(localStorage.getItem('email') as string);
+                const storedEmail = localStorage.getItem('email') || 'null';
+                const email = JSON.parse(storedEmail);
+                if (email.index == 0) {
+                    setEmail(email?.email);
+                    setId(email?.email.id);
+                    setTitle("FW: "+email?.email?.title);
+                    setContent("-----Original Message-----"+email?.email?.content);
+                    setFiles(email?.email?.files);
+                    setFlag(0)
+                } else if (email.index == 1) {
+                    setEmail(email?.email);
+                    const re = [...receiverIds];
+                    re.push(email?.email?.senderId);
+                    setReceiverIds(re);
+                    setId(email?.email?.id);
+                    setTitle("FW: "+email?.email?.title);
+                    setContent("-----Original Message-----"+email?.email?.content);
+                    setFiles(email?.email?.files);
+                    setFlag(0)
+                } else {
+                    setEmail(email?.email);
+                    setId(email?.email.id);
+                    setReceiverIds(email?.email.receiverIds);
+                    setTitle(email?.email.title);
+                    setContent(email?.email.content);
+                    setSenderTime(email?.email.senderTime);
+                    setFiles(email?.email.files);
+                    setFlag(2);
+                }
+                console.log(email);
                 console.log("플래그값 : " + flag);
             }
         }
@@ -113,16 +135,20 @@ export default function EmailForm() {
     function getEmail() {
         return { content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: time, attachments: fileList }
     }
-
+    console.log({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files });
     function test() {
         if (flag == 2) {
             if (fileList.length == 0) {
-                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).then(r => window.location.href="/email").catch(e => console.log(e));
+                const updateFiles:string[] = [];
+                files.map((f:MailFile,index:number) => updateFiles.push(f.value));
+                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: updateFiles }).then(r => window.location.href = "/email").catch(e => console.log(e));
             } else {
+                const updateFiles:string[] = [];
+                files.map((f:MailFile,index:number) => updateFiles.push(f.value));
                 const form = new FormData();
                 for (const file of fileList)
                     form.append('attachments', file);
-                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files }).then(r => reservationFiles({ attachments: form, emailId: email.id }).then(r => window.location.href = "/email").catch(e => console.log(e))).catch(e => console.log(e));
+                mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: updateFiles }).then(r => reservationFiles({ attachments: form, emailId: email.id }).then(r => window.location.href = "/email").catch(e => console.log(e))).catch(e => console.log(e));
             }
         }
         else if (flag == 0) {
@@ -157,22 +183,22 @@ export default function EmailForm() {
     }
 
     const finderror = () => {
-        if(receiverIds.length == 0){
+        if (receiverIds.length == 0) {
             setError("받는사람을 입력해 주세요.");
-        }else if(title.length == 0){
+        } else if (title.length == 0) {
             setError("제목을 입력해주세요");
-        }else if(content.length == 0){
+        } else if (content.length == 0) {
             setError("내용을 입력해주세요");
-        }else{
+        } else {
             setError(null);
         }
     }
 
     useEffect(() => {
-        if(error == null){
+        if (error == null) {
             test();
         }
-    },[error]);
+    }, [error]);
 
     return <Main user={user}>
         <div className="flex flex-col items-center gap-5 bg-white w-full p-6">
@@ -196,7 +222,7 @@ export default function EmailForm() {
             <div className="flex w-[1400px] gap-5 w-full">
                 <label htmlFor="" className="w-[5%]  whitespace-nowrap">받는 사람</label>
                 <div className="w-full flex border-solid border-b-2">
-                    {receiverIds.length == 0 ? <></> : receiverIds.map((recever, index) => (ShowReciver(index, recever)))}
+                    {receiverIds?.length == 0 ? <></> : receiverIds?.map((recever, index) => (ShowReciver(index, recever)))}
                     <input type="text" className="w-full whitespace-nowrap" onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                             const receiver: string[] = [...receiverIds];
@@ -224,13 +250,13 @@ export default function EmailForm() {
             <div className="w-[1400px] h-[150px] border border-gary-500 overflow-y-scroll relative">
                 {/* <button className="btn btn-sm absolute top-[5px] right-[5px]" onClick={() => document.getElementById('file')?.click()}>파일 선택</button> */}
                 <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" onClick={() => document.getElementById('file')?.click()}></img>
-                {files.length != 0 ? files.map((f: MailFile, index: number) => <ul key={index}>
+                {/* {files?.length != 0 ? files?.map((f: MailFile, index: number) => <ul key={index}>
                     <div className="flex items-center bg-white p-2">
                         <img src="/x.png" alt="" className="mr-2 w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...files]; removeFile.splice(index, 1); setFiles(removeFile); }}></img>
                         <img src={"/" + sliceText(f.original_name) + ".PNG"} className="w-[26px] h-[31px] mr-2" alt="" />
                         <p>{f.original_name}</p>
                     </div>
-                </ul>) : <></>}
+                </ul>) : <></>} */}
                 {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}>
                     <div className="flex items-center bg-white p-2">
                         <img src="/x.png" alt="" className="mr-2  w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...fileList]; removeFile.splice(index, 1); setFileList(removeFile); }}></img>
