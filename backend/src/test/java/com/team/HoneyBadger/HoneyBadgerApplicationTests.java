@@ -1,6 +1,8 @@
 package com.team.HoneyBadger;
 
 import com.team.HoneyBadger.Entity.Department;
+import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Enum.Role;
 import com.team.HoneyBadger.Repository.DepartmentRepository;
 import com.team.HoneyBadger.Repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -20,7 +22,7 @@ class HoneyBadgerApplicationTests {
     @Test
 //    @Transactional
     void contextLoads() {
-//        userRepository.save(SiteUser.builder().username("admin").password(encoder.encode("1")).phoneNumber("01000000000").name("관리자").role(Role.ADMIN).build());
+//        userRepository.save(SiteUser.builder().username("admin6").password(encoder.encode("6")).phoneNumber("01066666666").name("관리자").role(Role.PRESIDENT).build());
         for (int i = 0; i < 5; i++) {
             Department top = departmentRepository.save(Department.builder().name("top" + i).build());
             for (int j = 0; j < 5; j++) {

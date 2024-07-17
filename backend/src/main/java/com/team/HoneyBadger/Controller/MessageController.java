@@ -55,22 +55,22 @@ public class MessageController {
         }
     }
 
-    @PutMapping("/readTest") //메세지 읽기 테스트 -> readUsers 리스트에 추가
-    public ResponseEntity<?> readMessagesTest(@RequestHeader Long id, @RequestHeader String username) {
-        try {
-            multiService.readMessage(id, username);
-            return ResponseEntity.status(HttpStatus.OK).body("Read OK");
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
-        }
-    }
+//    @PutMapping("/readTest") //메세지 읽기 테스트 -> readUsers 리스트에 추가
+//    public ResponseEntity<?> readMessagesTest(@RequestHeader Long id, @RequestHeader String username) {
+//        try {
+//            multiService.readMessage(id, username);
+//            return ResponseEntity.status(HttpStatus.OK).body("Read OK");
+//        } catch (DataNotFoundException ex) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
+//        } catch (IllegalArgumentException ex) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
+//        } catch (Exception ex) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+//        }
+//    }
 
     @GetMapping("/update") //메세지 읽음 처리 업데이트 -> LastMessage 저장
-    public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId) {
+    public ResponseEntity<?> updateMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             List<MessageResponseDTO> list = multiService.updateMessageList(tokenDTO.username(), chatroomId);
@@ -85,15 +85,14 @@ public class MessageController {
         else return tokenDTO.getResponseEntity();
     }
 
-
-    @GetMapping("/readUsers") //readUsers 출력 테스트
-    public ResponseEntity readUsersTest(@RequestHeader Long id){
-        List<String> messageResponseDTO = multiService.getMessage(id);
-        return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
-    }
+//    @GetMapping("/readUsers") //readUsers 출력 테스트
+//    public ResponseEntity readUsersTest(@RequestHeader Long id){
+//        List<String> messageResponseDTO = multiService.getMessage(id);
+//        return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
+//    }
 
     @PostMapping("/upload") //메세지 파일 업로드
-    public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, MultipartFile file) {
+    public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId, MultipartFile file) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (file.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
@@ -114,7 +113,7 @@ public class MessageController {
     }
 
     @DeleteMapping //메세지 삭제
-    public ResponseEntity<?> deleteMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader Long messageId) {
+        public ResponseEntity<?> deleteMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader("messageId") Long messageId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             multiService.deleteMessage(messageId);

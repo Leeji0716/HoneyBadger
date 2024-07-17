@@ -20,7 +20,7 @@ public class ParticipantController {
     private final MultiService multiService;
 
     @PostMapping //채팅방에 유저 추가
-    public ResponseEntity<?> plusParticipant(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader String username) {
+    public ResponseEntity<?> plusParticipant(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId, @RequestHeader("username") String username) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             ChatroomResponseDTO chatroomResponseDTO = multiService.plusParticipant(chatroomId, username, tokenDTO.username());
@@ -36,7 +36,7 @@ public class ParticipantController {
     }
 
     @DeleteMapping //채팅방에 유저 차감
-    public ResponseEntity<?> minusParticipant(@RequestHeader("Authorization") String accessToken, @RequestHeader Long chatroomId, @RequestHeader String username) {
+    public ResponseEntity<?> minusParticipant(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId, @RequestHeader("username") String username) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             ChatroomResponseDTO chatroomResponseDTO = multiService.minusParticipant(chatroomId, username, tokenDTO.username());
