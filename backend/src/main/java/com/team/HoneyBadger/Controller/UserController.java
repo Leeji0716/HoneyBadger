@@ -1,6 +1,9 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.DTO.*;
+import com.team.HoneyBadger.DTO.PasswordChangeDTO;
+import com.team.HoneyBadger.DTO.TokenDTO;
+import com.team.HoneyBadger.DTO.UserInfoRequestDTO;
+import com.team.HoneyBadger.DTO.UserResponseDTO;
 import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.DataNotSameException;
@@ -23,13 +26,16 @@ public class UserController {
     private final MultiService multiService;
 
     @PostMapping
-    public ResponseEntity<?> signup(@RequestBody SignupRequestDTO signupRequestDTO) {
-        try {
-            multiService.signup(signupRequestDTO);
-            return ResponseEntity.status(HttpStatus.OK).body(null);
-        } catch (DataDuplicateException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-        }
+    public ResponseEntity<?> createUser(@RequestHeader("Authorization") String accessToken, @RequestBody UserInfoRequestDTO requestDTO) {
+        TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            try {
+                UserResponseDTO dto = multiService.signup(requestDTO);
+                return ResponseEntity.status(HttpStatus.OK).body(dto);
+            } catch (DataDuplicateException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            }
+        } else return tokenDTO.getResponseEntity();
     }
 
     @GetMapping
@@ -123,6 +129,15 @@ public class UserController {
             } catch (DataNotSameException ex) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
             }
+        } else return tokenDTO.getResponseEntity();
+    }
+
+    @DeleteMapping("/temp")
+    public ResponseEntity<?> deleteTempFiles(@RequestHeader("Authorization") String accessToken) {
+        TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            multiService.deleteUserTemp(tokenDTO.username());
+            return ResponseEntity.status(HttpStatus.OK).body("deleted");
         } else return tokenDTO.getResponseEntity();
     }
 }

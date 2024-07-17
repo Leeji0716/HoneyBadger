@@ -1,6 +1,7 @@
 package com.team.HoneyBadger.Repository.Custom.Impl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.Participant;
 import com.team.HoneyBadger.Entity.QParticipant;
 import com.team.HoneyBadger.Entity.SiteUser;
@@ -15,8 +16,7 @@ public class ParticipantRepositoryCustomImpl implements ParticipantRepositoryCus
 
     QParticipant qParticipant = QParticipant.participant;
 
-    public List<Participant> findByUserIn(List<SiteUser> users){
-        return jpaQueryFactory.select(qParticipant).from(qParticipant).where(qParticipant.user.in(users)).fetch();
+    public Participant findByUserAndChatroom(SiteUser user, Chatroom chatroom){
+        return jpaQueryFactory.selectFrom(qParticipant).where(qParticipant.user.eq(user).and(qParticipant.chatroom.eq(chatroom))).fetchOne();
     }
-
 }

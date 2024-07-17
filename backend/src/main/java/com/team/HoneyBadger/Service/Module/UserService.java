@@ -1,10 +1,9 @@
 package com.team.HoneyBadger.Service.Module;
 
 
-import com.team.HoneyBadger.DTO.SignupRequestDTO;
 import com.team.HoneyBadger.Entity.Department;
 import com.team.HoneyBadger.Entity.SiteUser;
-import com.team.HoneyBadger.Enum.Role;
+import com.team.HoneyBadger.Enum.UserRole;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,17 +22,15 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public void save(SignupRequestDTO signupRequestDTO) {
-        userRepository.save(SiteUser.builder()
-//                .username(signupRequestDTO.getUsername())
-//                .name(signupRequestDTO.getName())
-//                .password(passwordEncoder.encode(signupRequestDTO.getPassword()))
-//                .nickname(signupRequestDTO.getNickname())
-//                .email(signupRequestDTO.getEmail())
-//                .gender(Gender.values()[signupRequestDTO.getGender()])
-//                .role(UserRole.values()[signupRequestDTO.getRole()])
-//                .birthday(signupRequestDTO.getBirthday())
-//                .phoneNumber(signupRequestDTO.getPhoneNumber())
+    public SiteUser save(String username, String name, String password, UserRole role, String phoneNumber, LocalDateTime joinDate, Department department) {
+        return userRepository.save(SiteUser.builder()//
+                .username(username)//
+                .name(name)//
+                .password(passwordEncoder.encode(password))//
+                .role(role)//
+                .phoneNumber(phoneNumber)//
+                .joinDate(joinDate)//
+                .department(department)//
                 .build());
     }
 
@@ -44,13 +42,13 @@ public class UserService {
     }
 
     @Transactional
-    public SiteUser update(SiteUser user, String name, Role role, String password, String phoneNumber, LocalDateTime joinDate, Department department) {
+    public SiteUser update(SiteUser user, String name, UserRole role, String password, String phoneNumber, LocalDateTime joinDate, Department department) {
         if (name != null && !name.isBlank()) user.setName(name);
         if (role != null) user.setRole(role);
         if (password != null && !password.isBlank()) user.setPassword(passwordEncoder.encode(password));
         if (phoneNumber != null && !phoneNumber.isBlank()) user.setPhoneNumber(phoneNumber);
         if (joinDate != null) user.setJoinDate(joinDate);
-        if (department != null) user.setDepartment(department);
+        user.setDepartment(department);
         user.setModifyDate(LocalDateTime.now());
         return userRepository.save(user);
     }
@@ -61,6 +59,10 @@ public class UserService {
 
     public SiteUser get(String username) throws IllegalArgumentException {
         return this.userRepository.findById(username).orElseThrow(() -> new DataNotFoundException("user not found"));
+    }
+
+    public Optional<SiteUser> getOptional(String username) {
+        return this.userRepository.findById(username);
     }
 
     public List<SiteUser> getUsernameAll(String username) {

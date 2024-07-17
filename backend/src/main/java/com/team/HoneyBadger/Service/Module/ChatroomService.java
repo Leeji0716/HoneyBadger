@@ -24,7 +24,7 @@ public class ChatroomService {
 
     @Transactional
     public Chatroom save(Chatroom chatroom) {
-        return this.chatroomRepository.save(chatroom);
+        return chatroomRepository.save(chatroom);
     }
 
     @Transactional
@@ -53,14 +53,15 @@ public class ChatroomService {
         if (keyword == null || keyword.isEmpty()) {
             // 키워드가 없을 경우, 기본적으로 유저의 모든 채팅방을 반환
             return chatroomRepository.findChatroomsByUser(user, pageable);
+
         } else {
             // 키워드가 있을 경우, 키워드를 포함한 채팅방을 반환
             return chatroomRepository.findChatroomsByUserAndKeyword(user, keyword, pageable);
         }
     }
 
-    public Chatroom notification(Chatroom chatroom, Message message) {
+    public void notification(Chatroom chatroom, Message message) {
         chatroom.setNotification(message);
-        return chatroomRepository.save(chatroom);
+        chatroomRepository.save(chatroom);
     }
 }

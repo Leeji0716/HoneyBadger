@@ -36,7 +36,7 @@ public class QSiteUser extends EntityPathBase<SiteUser> {
 
     public final StringPath phoneNumber = createString("phoneNumber");
 
-    public final EnumPath<com.team.HoneyBadger.Enum.Role> role = createEnum("role", com.team.HoneyBadger.Enum.Role.class);
+    public final EnumPath<com.team.HoneyBadger.Enum.UserRole> role = createEnum("role", com.team.HoneyBadger.Enum.UserRole.class);
 
     public final StringPath username = createString("username");
 

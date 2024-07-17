@@ -10,7 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -40,7 +39,6 @@ public class EmailReceiverService {
     }
 
     public EmailReceiver getReadStatus(Email email, SiteUser user) {
-        System.out.println("Fetching read status for emailId: " + email.getId() + " and username: " + user.getUsername());
         return emailReceiverRepository.findByEmailAndUser(email, user);
     }
 
