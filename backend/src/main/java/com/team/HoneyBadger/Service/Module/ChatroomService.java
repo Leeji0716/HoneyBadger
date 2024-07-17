@@ -24,7 +24,7 @@ public class ChatroomService {
 
     @Transactional
     public Chatroom save(Chatroom chatroom) {
-        return this.chatroomRepository.save(chatroom);
+        return chatroomRepository.save(chatroom);
     }
 
     @Transactional
@@ -60,8 +60,8 @@ public class ChatroomService {
         }
     }
 
-    public Chatroom notification(Chatroom chatroom, Message message) {
+    public void notification(Chatroom chatroom, Message message) {
         chatroom.setNotification(message);
-        return chatroomRepository.save(chatroom);
+        chatroomRepository.save(chatroom);
     }
 }

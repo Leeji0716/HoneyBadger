@@ -784,10 +784,9 @@ public class MultiService {
             messageService.deleteMessage(message);
 
             // 삭제된 메시지에 대한 응답을 생성합니다.
-            System.out.println("Message deleted");
+            //TODO:'삭제된메시지입니다'로 변경 or 메세지 아예 삭제
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
-            System.out.println("Cannot delete message older than 5 minutes");
             throw new RuntimeException("Cannot delete message older than 5 minutes");
         }
     }
