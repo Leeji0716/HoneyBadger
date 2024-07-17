@@ -56,6 +56,11 @@ export default function Chat() {
     const [selectedUsers, setSelectedUsers] = useState(new Set<string>());
     const [chatroomName, setChatroomName] = useState('');
     const file = useRef(null as any);
+    const [keyword, setKeyword] = useState('');
+    const [Page, setPage] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const [maxPage, setMaxPage] = useState(0);
+    const chatBoxRef = useRef<HTMLDivElement>(null);
 
     function handleOpenModal() {
         setIsModalOpen(true);
@@ -84,13 +89,16 @@ export default function Chat() {
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
+                console.log("Sdfsdfgfhcvbfcvbcvb");
                 setUser(r);
                 getUsers().then(r => {
                     setUserList(r);
 
                 }).catch(e => console.log(e))
-                getChat().then(r => {
-                    setChatrooms(r);
+                getChat(keyword, Page).then(r => {
+                    console.log('ddddddddddddddddddd');
+                    console.log(r);
+                    setChatrooms(r.content);
                 }).catch(e => console.log(e))
             }).catch(e => console.log(e));
         else
@@ -98,6 +106,7 @@ export default function Chat() {
     }, [ACCESS_TOKEN])
 
     useEffect(() => {
+        console.log("dfdfdfdfdfdf");
         setSocket(getSocket([], () => setReady(true)));
     }, [])
 
@@ -124,6 +133,45 @@ export default function Chat() {
         };
         fetchData();
     }, []);
+
+
+    const loadPage = () => {
+        const chatBox = chatBoxRef.current;
+
+
+        if (chatBox != null) {
+            const scrollLocation = chatBox?.scrollTop;
+            const maxScroll = chatBox.scrollHeight - chatBox.clientHeight;
+    
+
+            if (!isLoading && scrollLocation >= maxScroll && Page < maxPage - 1) {
+
+                console.log("aaaaaaaaaaaaaa")
+                console.log("bbbbb" + maxPage)
+                console.log(Page)
+
+                setIsLoading(true);  // 로딩 시작
+                getChatDetail(chatroom.id, Page + 1)
+                    .then(response => {
+                        // 데이터가 있는 경우 새 메시지 리스트에 추가
+                        if (response.content.length > 0) {
+                            const newMessageList = [...messageList, ...response.content];
+                            setMessageList(newMessageList);
+
+                            setMaxPage(response.totalPages);
+                            setPage(Page + 1);
+                        }
+                        setIsLoading(false);  // 로딩 완료
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        setIsLoading(false);  // 에러 시 로딩 중지
+                    });
+            }
+        }
+    };
+
+
 
     const handleCheckboxChange = (username: string) => {
         setSelectedUsers(prevSelectedUsers => {
@@ -159,6 +207,15 @@ export default function Chat() {
             console.error("이름이나 유저를 선택해주세요");
         }
     };
+    const handleSearch = () => {
+        setPage(0);
+        getChat(keyword, Page).then(r => {
+            setChatrooms(r.content);
+        }).catch(error => {
+            console.error("Search error:", error);
+        });
+    };
+
 
     function ChatList({ Chatroom, ChatDetail }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO }) {
         const joinMembers: number = Chatroom.users.length;
@@ -200,16 +257,23 @@ export default function Chat() {
         return <div className="flex hover:bg-gray-400 text-white rounded-md cursor-pointer" onClick={() => {
             if (isReady) {
                 if (chatroom) {
-                    socket.unsubscribe("/api/sub/message/" + chatroom.chatroom?.id);
-                    socket.unsubscribe("/api/sub/read/" + chatroom.chatroom?.id);
+                    
+                    socket.unsubscribe("/api/sub/message/" + Chatroom?.id);
+                    socket.unsubscribe("/api/sub/read/" + Chatroom?.id);
+                    socket.unsubscribe("/api/sub/updateChatroom/" + Chatroom?.id);
                 }
                 setChatroom(Chatroom);
-                getChatDetail(Chatroom?.id).then(r => {
-                    setMessageList(r);
-                    const timer = setInterval(() => {
-                        document.getElementById((r?.length - 1).toString())?.scrollIntoView();
-                        clearInterval(timer);
-                    }, 100);
+                console.log("=-=-=-=-=-=-=-=");
+                console.log(Chatroom?.id);
+                console.log(Page);
+                getChatDetail(Chatroom?.id, Page).then(r => {
+                    console.log("asdsasaassdsads");
+                    console.log(r);
+
+                    setMessageList(r.content);
+                    setMaxPage(r.totalPages);
+                    console.log("r.totalPages="+r.totalPages);
+                    console.log("Chatroom.id="+Chatroom.id);
 
 
                     // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
@@ -222,24 +286,34 @@ export default function Chat() {
                             body: JSON.stringify({ username: user?.username })
                         });
                     });
+
                     socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
                         const data = JSON.parse(e.body);
 
                         getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                            const index = r.findIndex((e: messageResponseDTO) => e.id === updateMessageList[0].id);
-                            const qweqwe = [...r];
+                            const index = r.content.findIndex((e: messageResponseDTO) => e.id === updateMessageList[0].id);
+                            const qweqwe = [...r.content];
                             // qweqwe.splice(index, qweqwe.length - 1, updateMessageList);
                             qweqwe.splice(index, qweqwe.length - index, ...updateMessageList);
                             // setUpdateMessageList(qweqwe);
                             setMessageList(qweqwe);
                         }));
                     }, JSON.stringify({ username: user?.username }));
-
-                    // socket.publish({
-                    //     destination: "/api/pub/read/" + Chatroom?.id,
-                    //     body: JSON.stringify({ username: user?.username })
-                    // });
                 }).catch(e => console.log(e));
+
+                // 수정중
+
+                getChat(keyword, Page).then(r => {
+                    socket.subscribe("/api/sub/updateChatroom/" + Chatroom?.id, (e: any) => {
+                        const data = JSON.parse(e.body);
+
+                        const index = r.findIndex((e: messageResponseDTO) => e.id === updateMessageList[0].id);
+                        const qweqwe = [...r];
+                        qweqwe.splice(index, qweqwe.length - index, ...updateMessageList);
+                        setMessageList(qweqwe);
+
+                    }, JSON.stringify({ username: user?.username }));
+                })
             }
         }}>
             {getValue(joinMembers)}
@@ -283,14 +357,6 @@ export default function Chat() {
         const [message, setMessage] = useState('');
         const [roomName, setRoomName] = useState(chatroom?.name);
         const [messageType, setMessageType] = useState(0);
-
-        // useEffect(() => {
-        //     socket.publish({
-        //         destination: "/api/pub/read/" + chatroom?.id,
-        //         body: JSON.stringify({ username: user?.username })
-        //     });
-        // }, [])
-
         return <div>
             <div className="flex w-full justify-between border-b-2">
                 <div className="text-black flex w-[50%]">
@@ -391,7 +457,7 @@ export default function Chat() {
                 </div>
             </div>
             {/* 공지 */}
-            {/* <div className="w-full flex justify-center">
+            <div className="w-full flex justify-center">
                 <div className="bg-[#abcdae] w-[59%] h-[70px] rounded-md flex items-center fixed z-50 absolute p-4">
                     <img src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="" />
                     <p className="w-full text-white" style={{ opacity: 1 }}>
@@ -401,9 +467,9 @@ export default function Chat() {
                         ⨯
                     </button>
                 </div>
-            </div> */}
+            </div>
 
-            <div className="h-[600px] w-[100%] overflow-x-hidden overflow-y-scroll">
+            <div ref={chatBoxRef} onScroll={loadPage} className="h-[600px] w-[100%] overflow-x-hidden overflow-y-scroll">
                 {/* 날짜 */}
                 <div className="flex justify-center">
                     <div className="inline-flex bg-gray-400 rounded-full text-white font-bold px-4 py-2 text-sm justify-center mt-2 bg-opacity-55">
@@ -525,11 +591,6 @@ export default function Chat() {
                                         body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
                                     });
 
-                                    // socket.publish({
-                                    //     destination: "/api/pub/read/" + chatroom?.id,
-                                    //     body: JSON.stringify({ username: user?.username })
-                                    // });
-
                                     setMessage(''); // 메시지 전송 후 입력 필드 초기화        
                                 }
                             }
@@ -640,8 +701,15 @@ export default function Chat() {
                 <div className="flex flex-col items-center">
                     <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[50px] mb-5">
                         <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
-                        <input type="text" placeholder="대화방, 참여자 검색" className="bolder-0 outline-none bg-white text-black w-[80%] " />
-                        <button className="text-gray-300 whitespace-nowrap">
+                        <input
+                            type="text"
+                            placeholder="대화방, 참여자 검색"
+                            className="bolder-0 outline-none bg-white text-black w-[80%]"
+                            value={keyword}
+                            onChange={e => setKeyword(e.target.value)}
+                        />
+                        <button className="text-gray-300 whitespace-nowrap"
+                            onClick={handleSearch} >
                             검색
                         </button>
                     </div>

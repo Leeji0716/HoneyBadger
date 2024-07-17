@@ -111,13 +111,19 @@ export const sendEmail = async (data: CreateEmail) => {
     return response.data;
 }
 
-export const getChat = async () => {
-    const response = await UserApi.get('/api/chatroom/list');
+export const getChat = async (keyword: string, Page: number) => {
+    const response = await UserApi.get('/api/chatroom/list',{
+        headers: {
+            keyword: keyword,
+            Page: Page
+        }
+    });
     return response.data;
 }
 
-export const getChatDetail = async (chatroomId: number) => {
-    const response = await UserApi.get('/api/chatroom', { headers: { chatroomId: chatroomId } });
+
+export const getChatDetail = async (chatroomId: number, Page: number) => {
+    const response = await UserApi.get('/api/chatroom', { headers: { chatroomId: chatroomId, Page: Page} });
     return response.data;
 }
 
