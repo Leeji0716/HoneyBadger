@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,7 +41,7 @@ public class MessageController {
 
     @MessageMapping("/read/{id}")
     @SendTo("/api/sub/read/{id}") //메세지 읽기 -> readUsers 리스트에 추가
-    public ResponseEntity<?> readMessages(@DestinationVariable Long id, @Payload MessageRequestDTO messageRequestDTO) {
+    public ResponseEntity<?> readMessages(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
         try {
             multiService.readMessage(id, messageRequestDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body("Read OK");
