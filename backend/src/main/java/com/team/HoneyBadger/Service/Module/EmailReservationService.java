@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Service.Module;
 import com.team.HoneyBadger.DTO.EmailReservationRequestDTO;
 import com.team.HoneyBadger.Entity.EmailReservation;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.EmailReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,18 +19,22 @@ public class EmailReservationService {
     private final EmailReservationRepository emailReservationRepository;
 
 
-    public EmailReservation save(EmailReservationRequestDTO reservationRequestDTO, SiteUser sender) {
+    public EmailReservation save(String title, List<String> receiverIds, SiteUser sender, LocalDateTime sendTime) {
         return emailReservationRepository.save(EmailReservation.builder()
-                .title(reservationRequestDTO.title())
-                .content(reservationRequestDTO.content())
+                .title(title)
                 .sender(sender)
-                .receiverList(reservationRequestDTO.receiverIds())
-                .sendTime(reservationRequestDTO.sendTime())
+                .receiverList(receiverIds)
+                .sendTime(sendTime)
                 .build());
     }
 
+    public void update(EmailReservation reservation, String content) {
+        reservation.setContent(content);
+        emailReservationRepository.save(reservation);
+    }
+
     public EmailReservation getEmailReservation(Long reservationId) {
-        return emailReservationRepository.findById(reservationId).orElseThrow();
+        return emailReservationRepository.findById(reservationId).orElseThrow(() -> new DataNotFoundException("없는 예약 메일 입니다."));
     }
 
     public void update(EmailReservation emailReservation, EmailReservationRequestDTO emailReservationRequestDTO) {
