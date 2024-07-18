@@ -694,7 +694,7 @@ public class MultiService {
     }
 
     @Transactional
-    public void deleteEmailReservation(Long reservationId, String username) {
+    public void deleteEmailReservation(Long reservationId, String username) throws DataNotFoundException {
         EmailReservation emailReservation = emailReservationService.getEmailReservation(reservationId);
         if (emailReservation.getSender().getUsername().equals(username)) {
             emailReservationService.delete(emailReservation);
