@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, RefObject } from "react";
 import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
 import Modal from "../Global/Modal";
@@ -60,6 +60,7 @@ export default function Chat() {
     const [page, setPage] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [maxPage, setMaxPage] = useState(0);
+    const [tempChatroom, setTempChatroom] = useState(null as any);
     const chatBoxRef = useRef<HTMLDivElement>(null);
 
     function handleOpenModal() {
@@ -89,15 +90,13 @@ export default function Chat() {
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
-                console.log("Sdfsdfgfhcvbfcvbcvb");
                 setUser(r);
                 getUsers().then(r => {
                     setUserList(r);
 
+
                 }).catch(e => console.log(e))
                 getChat(keyword, page).then(r => {
-                    console.log('ddddddddddddddddddd');
-                    console.log(r);
                     setChatrooms(r.content);
                 }).catch(e => console.log(e))
             }).catch(e => console.log(e));
@@ -106,16 +105,31 @@ export default function Chat() {
     }, [ACCESS_TOKEN])
 
     useEffect(() => {
-        console.log("dfdfdfdfdfdf");
         setSocket(getSocket([], () => setIsReady(true)));
     }, [])
 
     useEffect(() => {
+        console.log('chatBox load');
+        console.log('===>', chatBoxRef);
+        console.log('===>', chatBoxRef.current);
+        
+    }, [chatBoxRef])
+
+    useEffect(() => {
+        console.log("temp:" + tempChatroom);
+        console.log( tempChatroom);
+
+        if (tempChatroom) {
+            const index = chatrooms.findIndex((e: any) => e.id == tempChatroom?.id);
+            chatrooms[index] = tempChatroom;
+            setChatrooms([...chatrooms]);
+        }
+    }, [tempChatroom])
+    
+    useEffect(() => {
         if (temp) {
             const test: messageResponseDTO[] = [...messageList];
             test.push(temp);
-            console.log("test");
-            console.log(test);
             setMessageList(test);
             // setChatDetail(temp);
             setTemp(null);
@@ -137,25 +151,20 @@ export default function Chat() {
 
     const loadPage = () => {
         const chatBox = chatBoxRef.current;
-
+        console.log('sdfsdf');
 
         if (chatBox != null) {
             const scrollLocation = chatBox?.scrollTop;
             const maxScroll = chatBox.scrollHeight - chatBox.clientHeight;
-    
+            console.log('scrollLoc ', scrollLocation);
+            console.log('maxScroll ', maxScroll);
 
             if (!isLoading && scrollLocation >= maxScroll && page < maxPage - 1) {
-
-                console.log("aaaaaaaaaaaaaa")
-                console.log("bbbbb" + maxPage)
-                console.log(page)
-
                 setIsLoading(true);  // 로딩 시작
 
                 getChatDetail(chatroom.id, page + 1)
-               
+
                     .then(response => {
-                        console.log("설마 여기가 타니?????? 너???????")
                         // 데이터가 있는 경우 새 메시지 리스트에 추가
                         if (response.content.length > 0) {
                             console.log(response.content);
@@ -175,8 +184,6 @@ export default function Chat() {
             }
         }
     };
-
-
 
     const handleCheckboxChange = (username: string) => {
         setSelectedUsers(prevSelectedUsers => {
@@ -221,7 +228,7 @@ export default function Chat() {
         });
     };
 
-    function ChatList({ Chatroom, ChatDetail }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO }) {
+    function ChatList({ Chatroom, ChatDetail, innerRef }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO, innerRef:RefObject<HTMLDivElement> }) {
         const joinMembers: number = Chatroom.users.length;
         const [updateMessageList, setUpdateMessageList] = useState<messageResponseDTO[]>([]);
         function getValue(confirm: number) {
@@ -269,7 +276,7 @@ export default function Chat() {
                     socket.unsubscribe("/api/sub/updateChatroom/" + Chatroom?.id);
                 }
                 setChatroom(Chatroom);
-            
+
 
                 getChatDetail(Chatroom?.id, nowPage).then(r => {
 
@@ -288,11 +295,11 @@ export default function Chat() {
                         });
 
                         socket.publish({
-                           
+
                             destination: "/api/pub/updateChatroom/" + Chatroom?.id,
-                            body: JSON.stringify({ username: user?.username})
+                            body: JSON.stringify({ username: user?.username })
                         });
-                        
+
 
                     });
 
@@ -300,42 +307,27 @@ export default function Chat() {
                         const data = JSON.parse(e.body);
 
                         getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
+                            console.log("==========><><<><><><><");
                             const index = r.content.findIndex((e: messageResponseDTO) => e.id === updateMessageList[0].id);
+                            console.log(r.content);
                             const qweqwe = [...r.content];
-                            // qweqwe.splice(index, qweqwe.length - 1, updateMessageList);
                             qweqwe.splice(index, qweqwe.length - index, ...updateMessageList);
-                            // setUpdateMessageList(qweqwe);
                             setMessageList(qweqwe);
                         }));
+
+                       
 
 
                     }, JSON.stringify({ username: user?.username }));
 
                 }).catch(e => console.log(e));
 
-                getChat(keyword, nowPage).then(resp => {
-                    console.log("여기부터 :" + resp);
-                    console.log(resp);
 
-                    socket.subscribe("/api/sub/updateChatroom/" + Chatroom?.id, (e: any) => {
-                        const data = JSON.parse(e.body);
-                        console.log("aaaaaaasdasedwqadas");
-                        console.log(data);
+                socket.subscribe("/api/sub/updateChatroom/" + Chatroom?.id, (e: any) => {
+                    const data = JSON.parse(e.body);
+                    setTempChatroom(data.body);
+                }, JSON.stringify({ username: user?.username }));
 
-
-                        console.log("assad?????????????asa");
-                        console.log(data.body.id);
-                        // console.log(resp.content.id);
-                        const index = resp.content.findIndex((e:any) => e.id == data.body.id);
-                        
-                        chatroom[index]=data.body;
-                        setChatroom([...chatroom]);
-
-                    }, JSON.stringify({ username: user?.username }));
-                    
-                })
-                
-                
             }
         }}>
             {getValue(joinMembers)}
@@ -374,11 +366,24 @@ export default function Chat() {
         </div>
     }
 
-    function ChatDetil({ Chatroom, messageList }: { Chatroom: chatroomResponseDTO, messageList: messageResponseDTO[] }) {
-        const joinMembers = Array.isArray(chatroom.users) ? chatroom.users.length : 0;
+    function ChatDetail({ Chatroom, messageList }: { Chatroom: chatroomResponseDTO, messageList: messageResponseDTO[]}){
+        console.log("ssssssssssssssssssssssssss");
+        console.log(chatroom?.users?.length);
+        console.log(Chatroom?.users?.length);
+        const joinMembers = Array.isArray(Chatroom.users) ? Chatroom.users.length : 0;
         const [message, setMessage] = useState('');
         const [roomName, setRoomName] = useState(chatroom?.name);
         const [messageType, setMessageType] = useState(0);
+        const boxRef = useRef<HTMLDivElement>(null);
+
+        useEffect(() => {
+            if(boxRef.current) {
+                const height = boxRef.current.scrollHeight;
+                boxRef.current.scrollTop = height;
+            }
+        }, [boxRef]);
+    
+    
         return <div>
             <div className="flex w-full justify-between border-b-2">
                 <div className="text-black flex w-[50%]">
@@ -491,7 +496,7 @@ export default function Chat() {
                 </div>
             </div>
 
-            <div ref={chatBoxRef} onScroll={loadPage} className="h-[600px] w-[100%] overflow-x-hidden overflow-y-scroll">
+            <div ref={boxRef} onScroll={loadPage} className="h-[600px] w-[100%] overflow-x-hidden overflow-y-scroll">
                 {/* 날짜 */}
                 <div className="flex justify-center">
                     <div className="inline-flex bg-gray-400 rounded-full text-white font-bold px-4 py-2 text-sm justify-center mt-2 bg-opacity-55">
@@ -607,9 +612,12 @@ export default function Chat() {
                             if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
                                 console.log("============> message Type");
                                 e.preventDefault(); // 폼 제출 방지
+
                                 if (isReady) {
+                                    console.log("ddddd: "+Chatroom?.id);
+                                    
                                     socket.publish({
-                                        destination: "/api/pub/message/" + chatroom?.id,
+                                        destination: "/api/pub/message/" + Chatroom?.id,
                                         body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
                                     });
 
@@ -658,7 +666,7 @@ export default function Chat() {
                         <img src="/send.png" className="send w-[40px] h-[40px] items-center justify-center m-1" onClick={() => {
                             if (isReady)
                                 socket.publish({
-                                    destination: "/api/pub/message/" + chatroom?.id,
+                                    destination: "/api/pub/message/" + Chatroom?.id,
                                     body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
                                 });
 
@@ -759,7 +767,7 @@ export default function Chat() {
                         </p>
                     </div>
                     <div className="w-full justify-end h-[550px] overflow-x-hidden overflow-y-scroll">
-                        {chatrooms?.map((chatroom: chatroomResponseDTO, index: number) => <ChatList key={index} Chatroom={chatroom} ChatDetail={chatDetail} />)}
+                        {chatrooms?.map((chatroom: chatroomResponseDTO, index: number) => <ChatList key={index} Chatroom={chatroom} ChatDetail={chatDetail} innerRef={chatBoxRef} />)}
                     </div>
                 </div>
             </div>
@@ -768,7 +776,7 @@ export default function Chat() {
         {/* 오른쪽 부분 */}
         <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-11/12 w-11/12 bg-white h-full flex flex-col shadow">
-                {chatroom != null ? <ChatDetil Chatroom={chatroom} messageList={messageList} /> : <></>}
+                {chatroom != null ? <ChatDetail Chatroom={chatroom} messageList={messageList}/> : <></>}
             </div>
         </div>
     </Main>
