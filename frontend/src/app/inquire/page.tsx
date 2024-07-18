@@ -43,16 +43,16 @@ export default function Home() {
                 .then(r => {
                     if (r.role == 13 || r.department?.role == 1) {
                         setAdmin(true);
-                        const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 500);
+                        const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
                     } else
                         location.href = '/main';
                 })
                 .catch(e => {
-                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 500);
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
                     console.log(e);
                 });
         else{
-            const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 500);
+            const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
         }
     }, [ACCESS_TOKEN])
 

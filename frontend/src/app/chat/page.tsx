@@ -100,7 +100,7 @@ export default function Chat() {
                     console.log('ddddddddddddddddddd');
                     console.log(r);
                     setChatrooms(r.content);
-                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 100);
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
                 }).catch(e => {console.log(e); setClientLoading(false);})
             }).catch(e => console.log(e));
         else

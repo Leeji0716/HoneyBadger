@@ -66,7 +66,7 @@ export default function Email() {
                     setSort(1);
                     setMaxPage(r.totalPages);
                     setPage(page + 1);
-                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 100);
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
                 }).catch(e => { setClientLoading(false); console.log(e); })
             }).catch(e => console.log(e));
     }, [ACCESS_TOKEN])

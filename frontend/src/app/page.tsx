@@ -11,7 +11,7 @@ export default function Home() {
   const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
   const [isClientLoading, setClientLoading] = useState(true);
   useEffect(() => {
-    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 100);
+    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
   }, []);
   useEffect(() => {
     if (ACCESS_TOKEN)
