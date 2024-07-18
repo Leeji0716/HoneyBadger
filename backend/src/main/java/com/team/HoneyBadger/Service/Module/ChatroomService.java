@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Service.Module;
 import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.Message;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.ChatroomRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class ChatroomService {
 
     @Transactional
     public Chatroom getChatRoomById(Long chatroomId) {
-        return chatroomRepository.findById(chatroomId).orElse(null);
+        return chatroomRepository.findById(chatroomId).orElseThrow(()-> new DataNotFoundException("없는 채팅방입니다."));
     }
 
     @Transactional
