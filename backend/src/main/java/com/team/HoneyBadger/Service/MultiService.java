@@ -570,7 +570,15 @@ public class MultiService {
             status = emailReceiver.isStatus();
         }
 
-        return EmailResponseDTO.builder().id(email.getId()).title(email.getTitle()).content(email.getContent()).senderId(email.getSender().getUsername()).senderName(email.getSender().getUsername()).receiverIds(email.getReceiverList().stream().map(er -> er.getReceiver().getUsername()).toList()).senderTime(this.dateTimeTransfer(email.getCreateDate())).files(filePathList).status(status) // emailReceiver가 null인 경우 기본값으로 false 설정
+        return EmailResponseDTO.builder() //
+                .id(email.getId()) //
+                .title(email.getTitle()) //
+                .content(email.getContent()) //
+                .senderId(email.getSender().getUsername()) //
+                .senderName(email.getSender().getUsername()) //
+                .receiverIds(email.getReceiverList().stream().map(er -> er.getReceiver().getUsername()).toList()) //
+                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
+                .files(filePathList).status(status) // emailReceiver가 null인 경우 기본값으로 false 설정
                 .receiverStatus(receiverStatus).build();
     }
 
@@ -589,7 +597,6 @@ public class MultiService {
         List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
         for (EmailReservation emailReservation : emailReservationList) {
             if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) {
-
                 Long emailId = sendEmail(emailReservation.getTitle(), emailReservation.getContent().replaceAll("/emailReservation/" + emailReservation.getId().toString(), "/emailReservation"), emailReservation.getSender().getUsername(), emailReservation.getReceiverList());
                 String path = HoneyBadgerApplication.getOsType().getLoc();
                 {
@@ -632,7 +639,7 @@ public class MultiService {
                                 Files.move(prePath, newPath, StandardCopyOption.REPLACE_EXISTING);
                                 deleteFileWithFolder(prePath.getParent().toFile());
                                 fileSystemService.deleteByKey(fileSystem);
-                                String fileKey = k.replaceAll("_RESERVATION_" + emailReservation.getId().toString(), "_"+emailId.toString());
+                                String fileKey = k.replaceAll("_RESERVATION_" + emailReservation.getId().toString(), "_" + emailId.toString());
                                 fileSystemService.save(fileKey, newUrl);
 
                                 Optional<FileSystem> _preOrigin = fileSystemService.get(KeyPreset.EMAIL_RESERVATION_ORIGIN.getValue(k));
@@ -646,8 +653,6 @@ public class MultiService {
                         multiKeyService.delete(key);
                     }
                 }
-
-
                 emailReservationService.delete(emailReservation);
             }
         }
@@ -675,7 +680,6 @@ public class MultiService {
         multiKeyService.updateAll(key, list);
     }
 
-
     @Transactional
     public void deleteEmailReservation(Long reservationId, String username) {
         EmailReservation emailReservation = emailReservationService.getEmailReservation(reservationId);
@@ -691,25 +695,29 @@ public class MultiService {
             throw new EmailReceiverNotFoundException("email not found");
         }
         EmailReservation emailReservation = emailReservationService.save(requestDTO.title(), requestDTO.receiverIds(), sender, requestDTO.sendTime());
-
         String content = requestDTO.content();
+
         if (content != null)
             emailReservationService.update(emailReservation, content.replaceAll("/user/" + sender.getUsername(), "/emailReservation/" + emailReservation.getId().toString()).replaceAll("/temp/", "/"));
         String path = HoneyBadgerApplication.getOsType().getLoc();
         Optional<MultiKey> _key = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(username));
+
         if (_key.isPresent()) {
             MultiKey key = _key.get();
             String newMultiKey = KeyPreset.EMAIL_RESERVATION_MULTI_TEMP.getValue(emailReservation.getId().toString());
             MultiKey newMulti = multiKeyService.get(newMultiKey).orElseGet(() -> multiKeyService.save(newMultiKey));
             List<String> newKeys = newMulti.getKeyValues();
+
             for (String k : key.getKeyValues()) {
                 Optional<FileSystem> _fileSystem = fileSystemService.get(k);
+
                 if (_fileSystem.isPresent()) {
                     FileSystem fileSystem = _fileSystem.get();
                     String value = fileSystem.getV();
                     Path prePath = Paths.get(path + value);
                     String newUrl = value.replaceAll("/user/" + sender.getUsername(), "/emailReservation/" + emailReservation.getId().toString()).replaceAll("/temp/", "/");
                     Path newPath = Paths.get(path + newUrl);
+
                     if (!newPath.getParent().toFile().exists()) newPath.getParent().toFile().mkdirs();
                     Files.move(prePath, newPath, StandardCopyOption.REPLACE_EXISTING);
                     fileSystemService.deleteByKey(fileSystem);
@@ -728,6 +736,7 @@ public class MultiService {
     private EmailReservationResponseDTO getEmailReservationDTO(EmailReservation reservation) {
         List<FileResponseDTO> fileslist = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_RESERVATION_MULTI.getValue(reservation.getId().toString()));
+
         if (_multiKey.isPresent()) for (String key : _multiKey.get().getKeyValues()) {
             FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
             fileSystemService.get(key).ifPresent(file -> builder.value(file.getV()));
@@ -872,10 +881,10 @@ public class MultiService {
         LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
         Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
 
-        Message testMessage = messageService.getMessageById (startId + 1);
-        System.out.println (testMessage);
+        Message testMessage = messageService.getMessageById(startId + 1);
+        System.out.println(testMessage);
 
-        System.out.println ( messageService.getList(startId).size());
+        System.out.println(messageService.getList(startId).size());
         for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
             HashSet<String> sets = new HashSet<>(message.getReadUsers());
             sets.add(reader.getUsername());
