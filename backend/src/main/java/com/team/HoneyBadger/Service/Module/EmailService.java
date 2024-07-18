@@ -25,7 +25,7 @@ public class EmailService {
     }
 
     public Email getEmail(Long emailId) {
-        return emailRepository.findById(emailId).orElseThrow(() -> new RuntimeException("Email not found with id: " + emailId));
+        return emailRepository.findById(emailId).orElseThrow(() -> new RuntimeException("이메일번호가 없습니다."));
     }
 
     public void findByUsernameDelete(Email email, String username) {
