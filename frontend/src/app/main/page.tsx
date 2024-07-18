@@ -11,7 +11,7 @@ export default function Home() {
         if (ACCESS_TOKEN)
             getUser().then(r => {
                 setUser(r);
-                const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 100);
+                const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
             }).catch(e => {setClientLoading(false); console.log(e);});
         else
             location.href = '/';

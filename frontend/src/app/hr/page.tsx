@@ -42,7 +42,7 @@ export default function Page() {
                 setUser(r);
                 getDepartmentTopList().then(r => {
                     setDepartmentList(r);
-                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 100);
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
                 }).catch(e => {
                     setClientLoading(false);
                     console.log(e);

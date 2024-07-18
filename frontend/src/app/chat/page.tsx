@@ -91,7 +91,7 @@ export default function Chat() {
                 }).catch(e => console.log(e))
                 getChat().then(r => {
                     setChatrooms(r);
-                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 100);
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
                 }).catch(e => {console.log(e); setClientLoading(false);})
             }).catch(e => console.log(e));
         else
