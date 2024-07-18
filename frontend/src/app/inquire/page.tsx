@@ -112,7 +112,7 @@ export default function Home() {
                                 <div className="flex flex-col">
                                     <label className="text-lg font-bold text-sm">답변</label>
                                     <div className="border-2 border-gray-300 rounded-lg p-4 flex flex-col">
-                                        <div dangerouslySetInnerHTML={{ __html: question?.content }}></div>
+                                        <div dangerouslySetInnerHTML={{ __html: question?.answer }}></div>
                                         <label className="text-xs self-end">{getDateTimeKorean(question?.modifyDate)}</label>
                                     </div>
                                 </div>
