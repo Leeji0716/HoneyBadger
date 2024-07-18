@@ -1,10 +1,7 @@
 package com.team.HoneyBadger.Service.Module;
 
-import com.team.HoneyBadger.DTO.ChatroomRequestDTO;
-import com.team.HoneyBadger.DTO.ChatroomResponseDTO;
 import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.Message;
-import com.team.HoneyBadger.Entity.Participant;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Repository.ChatroomRepository;
 import jakarta.transaction.Transactional;
@@ -12,10 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +27,7 @@ public class ChatroomService {
 
     @Transactional
     public Chatroom getChatRoomById(Long chatroomId) {
-        return chatroomRepository.findById(chatroomId).orElseThrow();
+        return chatroomRepository.findById(chatroomId).orElse(null);
     }
 
     @Transactional

@@ -215,7 +215,7 @@ public class MultiService {
      */
 
     @Transactional
-    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) {
+    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) throws NotAllowedException{
         ChatroomResponseDTO chatroomResponseDTO;
         int userCount = chatroomRequestDTO.users().size();
         // 1:1 채팅 처리
@@ -227,7 +227,7 @@ public class MultiService {
         } else if (userCount >= 3) { // 단체 채팅방 처리
             chatroomResponseDTO = createChatroom(chatroomRequestDTO, loginUser);
         } else {
-            return null;
+            throw new NotAllowedException("채팅방에 참여할 유저를 선택해주세요.");
         }
         return chatroomResponseDTO;
     }
@@ -286,8 +286,11 @@ public class MultiService {
 
 
     @Transactional
-    public Page<MessageResponseDTO> getMessageList(Long chatroomId, int page) {
+    public Page<MessageResponseDTO> getMessageList(Long chatroomId, int page) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        if (chatroom == null) {
+            throw new DataNotFoundException("없는 채팅방입니다.");
+        }
         Pageable pageable = PageRequest.of(page, 15);
         Page<MessageResponseDTO> messagePage = messageService.getMessageList(chatroom.getMessageList(), pageable);
         return messagePage;
@@ -362,7 +365,14 @@ public class MultiService {
             alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
         }
 
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).alarmCount(alarmCnt).build();
+        return ChatroomResponseDTO.builder()
+                .id(chatroom.getId())
+                .name(chatroom.getName())
+                .users(users)
+                .latestMessage(latestMessageDTO)
+                .notification(notificationDTO)
+                .alarmCount(alarmCnt)
+                .build();
     }
 
     @Transactional
@@ -395,8 +405,11 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) {
+    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) throws DataNotFoundException{
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        if (chatroom == null) {
+            throw new DataNotFoundException("없는 채팅방입니다.");
+        }
         chatroom = chatroomService.updateChatroom(chatroom, chatroomRequestDTO.name());
         return getChatRoom(chatroom, username);
     }

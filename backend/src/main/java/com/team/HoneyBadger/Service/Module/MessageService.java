@@ -1,6 +1,5 @@
 package com.team.HoneyBadger.Service.Module;
 
-import com.team.HoneyBadger.DTO.MessageRequestDTO;
 import com.team.HoneyBadger.DTO.MessageResponseDTO;
 import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.Message;
@@ -11,10 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -97,6 +93,7 @@ public class MessageService {
 
     private List<MessageResponseDTO> convertMessagesToDTOs(List<Message> messages) {
         return messages.stream()
+                .sorted(Comparator.comparing(Message::getCreateDate).reversed()) //내림차순
                 .map(message -> new MessageResponseDTO(
                         message.getId(),
                         message.getMessage(),
