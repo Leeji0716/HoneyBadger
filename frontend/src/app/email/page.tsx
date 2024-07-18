@@ -55,6 +55,8 @@ export default function Email() {
     const maxLength = 30;
     const router = useRouter();
 
+    const [isClientLoading, setClientLoading] = useState(true);
+
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
@@ -63,8 +65,9 @@ export default function Email() {
                     setEmailList(r.content);
                     setSort(1);
                     setMaxPage(r.totalPages);
-                    setPage(page+1);
-                }).catch(e => console.log(e))
+                    setPage(page + 1);
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 100);
+                }).catch(e => { setClientLoading(false); console.log(e); })
             }).catch(e => console.log(e));
     }, [ACCESS_TOKEN])
     console.log("기존 이메일 리스트 ==");
@@ -72,7 +75,7 @@ export default function Email() {
 
     const loadPage = () => {
         const mailBox = mailBoxRef.current;
-        
+
         if (mailBox != null) {
             const scrollLocation = mailBox?.scrollTop;
             const maxScroll = mailBox.scrollHeight - mailBox.clientHeight;
@@ -200,12 +203,12 @@ export default function Email() {
         </div>
     }
 
-    return <Main user={user}>
+    return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-4/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-full w-11/12 bg-white shadow p-2">
                 <div className="w-full h-30 flex flex-row">
                     <div className="flex mr-20 items-center gap-2">
-                        {sort == 1 ?<button className="official-color text-white" onClick={() => {setPage(1); setStatus(1); getEmail(1, 0).then(r => { setSort(1); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>받은 메일</button>  : <button onClick={() => {setPage(1); setStatus(1); getEmail(1, 0).then(r => { setSort(1); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>받은 메일</button>}
+                        {sort == 1 ? <button className="official-color text-white" onClick={() => { setPage(1); setStatus(1); getEmail(1, 0).then(r => { setSort(1); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>받은 메일</button> : <button onClick={() => { setPage(1); setStatus(1); getEmail(1, 0).then(r => { setSort(1); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>받은 메일</button>}
                         <img src="/plus.png" id="button1" className="w-[20px] h-[20px]" onClick={() => { open1 == false ? "" : setOpen1(!open1); setOpen(!open); }} alt="" />
                         <DropDown open={open} onClose={() => setOpen(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button1">
                             <button className="bg-white">중요</button>
@@ -214,7 +217,7 @@ export default function Email() {
                         </DropDown>
                     </div>
                     <div className="flex mr-20 items-center gap-2">
-                      {sort == 0 ? <button className="official-color text-white" onClick={() => { setPage(1); setStatus(0); getEmail(0, 0).then(r => { setSort(0), setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>보낸 메일</button> : <button className="" onClick={() => { setPage(1); setStatus(0); getEmail(0, 0).then(r => { setSort(0), setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>보낸 메일</button>}  
+                        {sort == 0 ? <button className="official-color text-white" onClick={() => { setPage(1); setStatus(0); getEmail(0, 0).then(r => { setSort(0), setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>보낸 메일</button> : <button className="" onClick={() => { setPage(1); setStatus(0); getEmail(0, 0).then(r => { setSort(0), setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>보낸 메일</button>}
                         <img src="/plus.png" id="button2" className="w-[20px] h-[20px]" onClick={() => { open == false ? "" : setOpen(!open); setOpen1(!open1); }} alt="" />
                         <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button2">
                             <button>중요</button>
@@ -222,7 +225,7 @@ export default function Email() {
                             <button>태그</button>
                         </DropDown>
                     </div>
-                    {sort == 2 ? <button className="official-color text-white" onClick={() => {setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button> : <button className="" onClick={() => {setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button>}
+                    {sort == 2 ? <button className="official-color text-white" onClick={() => { setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button> : <button className="" onClick={() => { setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button>}
                 </div>
                 <div ref={mailBoxRef} onScroll={loadPage} id="mailBox" className="h-[800px] overflow-y-scroll">
                     {emailList?.map((email: EmailResponseDTO, index: number) => <MailBox key={index} email={email} />)}

@@ -26,7 +26,9 @@ public class AuthController {
     }
 
     @GetMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@RequestHeader("REFRESH_TOKEN") String refreshToken) {
+    public ResponseEntity<?> refreshToken(@RequestHeader(value = "REFRESH_TOKEN", required = false) String refreshToken) {
+        if(refreshToken==null)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("not login");
         String newAccessToken = this.multiService.refreshToken(refreshToken);
         return ResponseEntity.status(HttpStatus.OK).body(newAccessToken);
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Side from "../Side";
 import DropDown, { Direcion } from "../DropDown";
 
@@ -8,22 +8,26 @@ interface pageInterface {
   children: React.ReactNode,
   classname?: string,
   user: any;
+  isClientLoading: boolean; 
 }
 
 export default function Main(props: Readonly<pageInterface>) {
   const [open, setOpen] = useState(false);
   const [isSettingOpen, setSettingOpen] = useState(false);
   const user = props.user;
-  
   return (
-    <main id='main' className={"flex relative flex-col h-screen max-h-screen " + (props.classname ? props.classname : '')}>
+    <main id='main' className={"flex relative flex-col h-[953px] w-[1920px] " + (props.classname ? props.classname : '')}>
+      <div className={"absolute text-8xl font-bold flex flex-col items-center justify-center h-[953px] w-[1920px] bg-white z-[1000]" + (props?.isClientLoading ? '' : ' hidden')}>
+        <img src="/logo.png" />
+      </div>
       <Side open={open} onClose={() => setOpen(false)} escClose={true} outlineClose={true} className="w-[250px] h-full">
         <div className="flex flex-col">
           <a href="/chat">채팅</a>
           <a href="/email">메일</a>
           <a href="/email/EmailForm" onClick={() => localStorage.removeItem('email')}>메일쓰기</a>
           <a href="">결재</a>
-          {user?.role == 13 || user?.department?.role==1 ? <a href="/hr">인사 관리</a> : ''}
+          {user?.role == 13 || user?.department?.role == 1 ? <a href="/hr">인사관리</a> : <></>}
+          {user?.role == 13 || user?.department?.role == 1 ? <a href="/inquire">문의관리</a> : <></>}
         </div>
       </Side>
       <div className="official-color flex items-center h-[50px] min-h-[50px] w-full ">

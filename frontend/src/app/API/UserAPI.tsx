@@ -71,7 +71,7 @@ interface emailReservationUpdate {
     content: string,
     receiverIds: string[],
     sendTime?: Date | null,
-    files : string[]
+    files: string[]
 }
 
 interface MailFile {
@@ -95,12 +95,12 @@ interface chatroomRequestDTO {
     users: string[]
 }
 
-export const getEmail = async (status: number,page:number) => {
+export const getEmail = async (status: number, page: number) => {
     const response = await UserApi.get('/api/email/list', {
         headers:
         {
             status: status,
-            Page:page
+            Page: page
         }
     });
     return response.data;
@@ -123,7 +123,7 @@ export const getChatDetail = async (chatroomId: number) => {
 }
 
 export const getUpdateMessageList = async (chatroomId: number) => {
-    const response = await UserApi.get('/api/message/update', { headers: { chatroomId: chatroomId }});
+    const response = await UserApi.get('/api/message/update', { headers: { chatroomId: chatroomId } });
     return response.data;
 }
 
@@ -298,6 +298,10 @@ export const updateUser = async (data: userInfo) => {
     const response = await UserApi.put('/api/user/info', data);
     return response.data;
 }
+export const updateActiveUser = async (data: string) => {
+    const response = await UserApi.put('/api/user/status', {}, { headers: { Username: data } });
+    return response.data;
+}
 export const postUser = async (data: userInfo) => {
     const response = await UserApi.post('/api/user', data);
     return response.data;
@@ -334,3 +338,33 @@ export const chatUploadFile = async ({ chatroomId, file }: { chatroomId: number,
 };
 
 
+// Question
+interface createQuestionProp {
+    title: string,
+    content: string,
+    author: string,
+    password: string,
+    lock:boolean
+}
+export const createQuestion = async (data: createQuestionProp) => {
+    const response = await UserApi.post('/api/question', data);
+    return response.data;
+};
+
+export const getQuestions = async (page: number, keyword: string) => {
+    const response = await UserApi.get('/api/question', {
+        headers: {
+            page: page,
+            keyword: keyword ? encodeURIComponent(keyword) : ''
+        }
+    });
+    return response.data;
+};
+export const checkQuestion = async (data: {password:string, id:number}) => {
+    const response = await UserApi.post('/api/question/check', data);
+    return response.data;
+};
+export const updateQuestionAnswer = async (data: {answer:string, id:number}) => {
+    const response = await UserApi.put('/api/question', data);
+    return response.data;
+};

@@ -131,4 +131,17 @@ public class UserController {
             }
         } else return tokenDTO.getResponseEntity();
     }
+
+    @PutMapping("/status")
+    public ResponseEntity<?> changeInfo(@RequestHeader("Authorization") String accessToken, @RequestHeader("Username") String username) {
+        TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            try {
+                UserResponseDTO dto= multiService.changeUserStatus(username);
+                return ResponseEntity.status(HttpStatus.OK).body(dto);
+            } catch (DataNotFoundException ex) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+            }
+        } else return tokenDTO.getResponseEntity();
+    }
 }

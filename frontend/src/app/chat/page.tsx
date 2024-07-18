@@ -56,6 +56,7 @@ export default function Chat() {
     const [selectedUsers, setSelectedUsers] = useState(new Set<string>());
     const [chatroomName, setChatroomName] = useState('');
     const file = useRef(null as any);
+    const [isClientLoading, setClientLoading] = useState(true);
 
     function handleOpenModal() {
         setIsModalOpen(true);
@@ -87,11 +88,11 @@ export default function Chat() {
                 setUser(r);
                 getUsers().then(r => {
                     setUserList(r);
-
                 }).catch(e => console.log(e))
                 getChat().then(r => {
                     setChatrooms(r);
-                }).catch(e => console.log(e))
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 100);
+                }).catch(e => {console.log(e); setClientLoading(false);})
             }).catch(e => console.log(e));
         else
             window.location.href = "/";
@@ -586,7 +587,7 @@ export default function Chat() {
         </div >
     }
 
-    return <Main user={user}>
+    return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-4/12 flex items-center justify-center h-full pt-10 pb-4">
             {/* 왼쪽 부분 */}
             <div className=" h-11/12 w-11/12 bg-white h-full shadow">
