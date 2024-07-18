@@ -1151,18 +1151,43 @@ public class MultiService {
      * PersonalCycle
      */
 
-    public void createPersonalCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) throws IllegalArgumentException{
-       SiteUser user = userService.get(username);
-       if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()){
-           throw new IllegalArgumentException("제목을 입력해주세요.");
-       }else if(personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()){
-           throw new IllegalArgumentException("내용을 입력해주세요.");
-       }else if(personalCycleRequestDTO.startDate() == null){
-           throw new IllegalArgumentException("시작 시간을 입력해주세요.");
-       }else if(personalCycleRequestDTO.endDate() == null){
-           throw new IllegalArgumentException("종료 시간을 입력해주세요.");
-       }
-       personalCycleService.save(user,personalCycleRequestDTO);
+    public void createPersonalCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) throws NotAllowedException {
+        SiteUser user = userService.get(username);
+        if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
+            throw new NotAllowedException("제목을 입력해주세요.");
+        } else if (personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()) {
+            throw new NotAllowedException("내용을 입력해주세요.");
+        } else if (personalCycleRequestDTO.startDate() == null) {
+            throw new NotAllowedException("시작 시간을 입력해주세요.");
+        } else if (personalCycleRequestDTO.endDate() == null) {
+            throw new NotAllowedException("종료 시간을 입력해주세요.");
+        }
+        personalCycleService.save(user, personalCycleRequestDTO);
+    }
 
+    public void updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
+        SiteUser user = userService.get(username);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if (personalCycle.getUser() != user) {
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }else if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
+            throw new NotAllowedException("제목을 입력해주세요.");
+        } else if (personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()) {
+            throw new NotAllowedException("내용을 입력해주세요.");
+        } else if (personalCycleRequestDTO.startDate() == null) {
+            throw new NotAllowedException("시작 시간을 입력해주세요.");
+        } else if (personalCycleRequestDTO.endDate() == null) {
+            throw new NotAllowedException("종료 시간을 입력해주세요.");
+        }
+        personalCycleService.upDate(personalCycle,personalCycleRequestDTO);
+    }
+
+    public void deletePersonalCycle(String username, Long id) {
+        SiteUser user = userService.get(username);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if(personalCycle.getUser() != user){
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }
+        personalCycleService.delete(personalCycle);
     }
 }
