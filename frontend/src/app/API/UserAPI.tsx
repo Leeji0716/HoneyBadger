@@ -214,8 +214,6 @@ export const editChatroom = async ({ chatroomId, chatroomResponseDTO }: { chatro
     return response.data;
 }
 
-
-
 export const notification = async (data: noticeRequestDTO) => {
     const response = await UserApi.put('/api/chatroom/notification', data);
     return response.data;

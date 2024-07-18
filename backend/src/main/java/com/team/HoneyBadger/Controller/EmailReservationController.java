@@ -2,6 +2,7 @@ package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.*;
+import com.team.HoneyBadger.Exception.EmailReceiverNotFoundException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -50,11 +51,11 @@ public class EmailReservationController {
             Long emailReservationResponseDTO = multiService.reservationEmail(emailReservationRequestDTO, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(emailReservationResponseDTO);
         } catch (DataNotFoundException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("파일 업로드에 문제");
+        } catch (EmailReceiverNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-        } catch(IOException ex){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 저장 오류");
         }
         else return tokenDTO.getResponseEntity();
     }
