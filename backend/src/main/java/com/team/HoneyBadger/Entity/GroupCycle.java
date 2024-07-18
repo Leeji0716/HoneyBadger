@@ -21,6 +21,7 @@ public class GroupCycle {
     private String content;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+    private LocalDateTime createDate;
     @ManyToOne(fetch = FetchType.LAZY)
     private Department group;
 
@@ -30,6 +31,7 @@ public class GroupCycle {
         this.content = content;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.createDate = LocalDateTime.now();
         this.group = group;
     }
 }
