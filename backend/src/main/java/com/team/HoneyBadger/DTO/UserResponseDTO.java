@@ -4,6 +4,6 @@ import lombok.Builder;
 
 @Builder
 public record UserResponseDTO(String username, String name, String phoneNumber, int role, Long createDate,
-                              Long joinDate, String url, DepartmentResponseDTO department) {
+                              Long joinDate, String url, DepartmentResponseDTO department,boolean active) {
 
 }

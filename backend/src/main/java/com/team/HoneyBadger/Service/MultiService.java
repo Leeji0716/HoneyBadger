@@ -54,8 +54,9 @@ public class MultiService {
     private final MultiKeyService multiKeyService;
     private final LastReadMessageService lastReadMessageService;
     private final DepartmentService departmentService;
+    private final QuestionService questionService;
     private final PersonalCycleService personalCycleService;
-
+  
     /**
      * Auth
      */
@@ -93,13 +94,11 @@ public class MultiService {
     @Transactional
     public AuthResponseDTO login(AuthRequestDTO requestDto) {
         SiteUser user = this.userService.get(requestDto.username());
-        if (user == null) {
-            throw new IllegalArgumentException("username");
-        }
+        if (user == null) throw new IllegalArgumentException("username");
 
-        if (!this.userService.isMatch(requestDto.password(), user.getPassword())) {
+        if (!this.userService.isMatch(requestDto.password(), user.getPassword()))
             throw new IllegalArgumentException("password");
-        }
+        if (!user.isActive()) throw new IllegalArgumentException("disabled");
         String accessToken = this.jwtTokenProvider.generateAccessToken(new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), user.getPassword()));
         String refreshToken = this.jwtTokenProvider.generateRefreshToken(new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), user.getPassword()));
         return AuthResponseDTO.builder().tokenType("Bearer").accessToken(accessToken).refreshToken(refreshToken).build();
@@ -133,6 +132,7 @@ public class MultiService {
                 .name(user.getName()) //
                 .url(_fileSystem.map(FileSystem::getV).orElse(null)) //
                 .department(getDepartmentDTO(user.getDepartment())) //
+                .active(user.isActive()) //
                 .build();
     }
 
@@ -189,6 +189,13 @@ public class MultiService {
         Department department = requestDTO.department_id() != null ? departmentService.get(requestDTO.department_id()) : null;
         UserRole role = requestDTO.role() >= 0 && requestDTO.role() < UserRole.values().length ? UserRole.values()[requestDTO.role()] : null;
         user = userService.update(user, requestDTO.name(), role, requestDTO.password(), requestDTO.phoneNumber(), requestDTO.joinDate(), department);
+        return getUserResponseDTO(user);
+    }
+
+
+    public UserResponseDTO changeUserStatus(String username) {
+        SiteUser user = userService.get(username);
+        user = userService.changeStatus(user);
         return getUserResponseDTO(user);
     }
 
@@ -363,14 +370,7 @@ public class MultiService {
             alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
         }
 
-        return ChatroomResponseDTO.builder()
-                .id(chatroom.getId())
-                .name(chatroom.getName())
-                .users(users)
-                .latestMessage(latestMessageDTO)
-                .notification(notificationDTO)
-                .alarmCount(alarmCnt)
-                .build();
+        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).alarmCount(alarmCnt).build();
     }
 
     @Transactional
@@ -598,6 +598,7 @@ public class MultiService {
 
     @Scheduled(cron = "0 0/1 * * * *")
     @Transactional
+
     public void sendEmailReservation() throws IOException {
         List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
         for (EmailReservation emailReservation : emailReservationList) {
@@ -976,6 +977,7 @@ public class MultiService {
     }
 
     @Transactional
+
     public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException, NotAllowedException {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
 
@@ -1109,6 +1111,41 @@ public class MultiService {
         return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).role(department.getRole().ordinal()).build();
     }
 
+    /*
+     * Question
+     */
+    public Page<QuestionDTO> getQuestions(int page, String keyword) {
+        return questionService.getList(page, keyword).map(this::getQuestionDTO);
+    }
+
+    public void createQuestion(QuestionDTO questionDTO) {
+        questionService.save(questionDTO.title(), questionDTO.content(), questionDTO.author(), questionDTO.password(), questionDTO.lock());
+    }
+
+    public QuestionDTO createAnswer(QuestionDTO requestDto) throws DataNotFoundException {
+        Question question = questionService.get(requestDto.id());
+        question = questionService.update(question, requestDto.answer());
+        return getQuestionDTO(question);
+    }
+
+    private QuestionDTO getQuestionDTO(Question question) {
+        return QuestionDTO.builder()//
+                .id(question.getId())
+                .title(question.getTitle())//
+                .content(question.getContent())//
+                .answer(question.getAnswer())//
+                .author(question.getAuthor())//
+                .createDate(this.dateTimeTransfer(question.getCreateDate())) //
+                .modifyDate(this.dateTimeTransfer(question.getModifyDate())) //
+                .lock(question.isLock())//
+                .build();
+
+    }
+
+    public boolean checkQuestion(QuestionDTO requestDto) {
+        Question question = questionService.get(requestDto.id());
+        return questionService.checkPassword(question, requestDto.password());
+    }
 
     /*
      * PersonalCycle
@@ -1126,5 +1163,6 @@ public class MultiService {
            throw new IllegalArgumentException("종료 시간을 입력해주세요.");
        }
        personalCycleService.save(user,personalCycleRequestDTO);
+
     }
 }

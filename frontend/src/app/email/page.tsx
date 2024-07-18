@@ -55,6 +55,8 @@ export default function Email() {
     const maxLength = 30;
     const router = useRouter();
 
+    const [isClientLoading, setClientLoading] = useState(true);
+
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
@@ -63,14 +65,15 @@ export default function Email() {
                     setEmailList(r.content);
                     setSort(1);
                     setMaxPage(r.totalPages);
-                    setPage(page+1);
-                }).catch(e => console.log(e))
+                    setPage(page + 1);
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 100);
+                }).catch(e => { setClientLoading(false); console.log(e); })
             }).catch(e => console.log(e));
     }, [ACCESS_TOKEN])
   
     const loadPage = () => {
         const mailBox = mailBoxRef.current;
-        
+
         if (mailBox != null) {
             const scrollLocation = mailBox?.scrollTop;
             const maxScroll = mailBox.scrollHeight - mailBox.clientHeight;
@@ -193,7 +196,7 @@ export default function Email() {
         </div>
     }
 
-    return <Main user={user}>
+    return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-4/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-full w-11/12 bg-white shadow p-2">
                 <div className="w-full h-30 flex flex-row">

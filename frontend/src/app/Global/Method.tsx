@@ -1,4 +1,4 @@
-import html2canvas from "html2canvas-pro";
+import html2canvas from 'html2canvas-pro';
 
 export function Move(id: string) {
     document.getElementById(id)?.focus();
@@ -15,7 +15,7 @@ export function KeyDownCheck({ preKey, setPreKey, e, pre, next }: { preKey: stri
 }
 
 export function PhoneString(phone: string) {
-    return phone?.slice(0, 3) + "-" + phone?.slice(3, 7) + "-" + phone?.slice(7);
+    return phone?.slice(0, 3) + '-' + phone?.slice(3, 7) + '-' + phone?.slice(7);
 }
 export function checkInput(check: any, pattern: string, True: () => void, False: () => void) {
     if (new RegExp(pattern).test(check.target.value))
@@ -49,23 +49,27 @@ export function getDate(data: any) {
 }
 export function getDateKorean(data: any) {
     const date = new Date(data);
-    return date.getFullYear() + '년 ' + (date.getMonth() + 1) + '월 ' + date.getDate() + "일";
+    return date.getFullYear() + '년 ' + (date.getMonth() + 1) + '월 ' + date.getDate() + '일';
+}
+export function getDateTimeKorean(data: any) {
+    const date = new Date(data);
+    return date.getFullYear() + '년 ' + (date.getMonth() + 1) + '월 ' + date.getDate() + '일 ' + date.getHours() + '시 ' + date.getMinutes() + '분 ' + date.getSeconds() + '초';
 }
 export function getDateTime(data: any) {
     const date = new Date(data);
-    return date.getFullYear() + "" + (date.getMonth() + 1) + "" + date.getDate() + "" + date.getHours() + "" + date.getMinutes();
+    return date.getFullYear() + '' + (date.getMonth() + 1) + '' + date.getDate() + '' + date.getHours() + '' + date.getMinutes();
 }
 export function getDateTimeFormat(data: any) {
     const date = new Date(data);
-    return date.getFullYear() + "-" + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "-" + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + " " + (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ":" + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+    return date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ' + (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':' + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
 }
 export function getDateTimeFormatInput(data: any) {
     const date = new Date(data);
-    return date.getFullYear() + "-" + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "-" + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + "T" + (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ":" + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+    return date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + 'T' + (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':' + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
 }
 export function getDateFormatInput(data: any) {
     const date = new Date(data);
-    return date.getFullYear() + "-" + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "-" + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
+    return date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
 }
 export function transferLocalTime(date: Date) {
     return new Date(date.getTime() + 9 * 1000 * 60 * 60);
@@ -97,7 +101,7 @@ export function getChatDateTimeFormat(data: any) {
     const amPm = hours >= 12 ? '오후' : '오전';
     const formattedHour = hours % 12 || 12;  // 0시는 12시로 표현
 
-    const formattedTime = amPm + " " + (formattedHour < 10 ? '0' + formattedHour : formattedHour) + ":"
+    const formattedTime = amPm + ' ' + (formattedHour < 10 ? '0' + formattedHour : formattedHour) + ':'
         + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
 
     if (isToday) {
@@ -105,9 +109,9 @@ export function getChatDateTimeFormat(data: any) {
         return formattedTime;
     } else {
         // 오늘이 아닌 경우 날짜와 시간 모두 반환
-        return date.getFullYear() + "-" +
-            (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "-"
-            + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + " "
+        return date.getFullYear() + '-' +
+            (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
+            + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' '
             + formattedTime;
     }
 }
@@ -123,7 +127,7 @@ export function getChatShowDateTimeFormat(data: any) {
     const amPm = hours >= 12 ? '오후' : '오전';
     const formattedHour = hours % 12 || 12;  // 0시는 12시로 표현
 
-    const formattedTime = amPm + " " + (formattedHour < 10 ? '0' + formattedHour : formattedHour) + ":"
+    const formattedTime = amPm + ' ' + (formattedHour < 10 ? '0' + formattedHour : formattedHour) + ':'
         + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
 
     if (isToday) {
@@ -131,8 +135,8 @@ export function getChatShowDateTimeFormat(data: any) {
         return formattedTime;
     } else {
         // 오늘이 아닌 경우 날짜만 반환
-        return date.getFullYear() + "-" +
-            (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "-"
+        return date.getFullYear() + '-' +
+            (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
             + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
     }
 }
@@ -152,98 +156,98 @@ export function getDateEmailTime(data: any) {
 
 export function getDepartmentRole(role: number) {
     switch (role) {
-        case 0: return "일반";
-        case 1: return "인사"
+        case 0: return '일반';
+        case 1: return '인사'
     }
 }
 export function getRole(role: number) {
     switch (role) {
-        case 0: return "사장"
-        case 1: return "부사장"
-        case 2: return "전무"
-        case 3: return "상무"
-        case 4: return "이사"
-        case 5: return "사외 이사"
-        case 6: return "고문"
-        case 7: return "감사"
-        case 8: return "부장"
-        case 9: return "과장"
-        case 10: return "대리"
-        case 11: return "주임"
-        case 12: return "직원"
-        case 13: return "관리자"
+        case 0: return '사장'
+        case 1: return '부사장'
+        case 2: return '전무'
+        case 3: return '상무'
+        case 4: return '이사'
+        case 5: return '사외 이사'
+        case 6: return '고문'
+        case 7: return '감사'
+        case 8: return '부장'
+        case 9: return '과장'
+        case 10: return '대리'
+        case 11: return '주임'
+        case 12: return '직원'
+        case 13: return '관리자'
     }
 }
 export function CardFront({ user }: { user: any }) {
-    return <div className="border border-black w-[400px] h-[200px] flex flex-col cursor-pointer" onClick={(e) => {
+    return <div className='border border-black w-[400px] h-[200px] flex flex-col cursor-pointer' onClick={(e) => {
         html2canvas(e.currentTarget as HTMLInputElement).then(canvas => {
-            var el = document.createElement("a");
-            el.href = canvas.toDataURL("image/png");
+            var el = document.createElement('a');
+            el.href = canvas.toDataURL('image/png');
             el.download = '명함 앞면.png';
             el.click();
             // document.body.append(canvas)
         });
     }}>
-        <div className="flex h-[150px] mt-auto">
-            <div className="mx-auto flex flex-col">
-                <div className="flex flex-col mt-4">
-                    <label className="font-bold text-[#8fbee9] cursor-pointer">HoneyBadger</label>
-                    <label className="text-xxs text-center text-gray-500 cursor-pointer">Don't hold back. Be brave</label>
+        <div className='flex h-[150px] mt-auto'>
+            <div className='mx-auto flex flex-col'>
+                <div className='flex flex-col mt-4'>
+                    <label className='font-bold text-[#8fbee9] cursor-pointer'>HoneyBadger</label>
+                    <label className='text-xxs text-center text-gray-500 cursor-pointer'>Don't hold back. Be brave</label>
                 </div>
-                <div className="mt-auto flex flex-col h-[60px]">
-                    <div className="flex  items-center my-auto">
-                        <img src='/_phone.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs cursor-pointer">{PhoneString(user?.phoneNumber)}</label>
+                <div className='mt-auto flex flex-col h-[60px]'>
+                    <div className='flex  items-center my-auto'>
+                        <img src='/_phone.png' className='w-[20px] h-[20px] mr-2' />
+                        <label className='text-xxs cursor-pointer'>{PhoneString(user?.phoneNumber)}</label>
                     </div>
-                    <div className="flex items-center my-auto">
-                        <img src='/_call.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs cursor-pointer">1312</label>
+                    <div className='flex items-center my-auto'>
+                        <img src='/_call.png' className='w-[20px] h-[20px] mr-2' />
+                        <label className='text-xxs cursor-pointer'>1312</label>
                     </div>
-                    <div className="flex items-center my-auto">
-                        <img src='/_mail.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs cursor-pointer">{user?.username}@honeybadger.com</label>
+                    <div className='flex items-center my-auto'>
+                        <img src='/_mail.png' className='w-[20px] h-[20px] mr-2' />
+                        <label className='text-xxs cursor-pointer'>{user?.username}@honeybadger.com</label>
                     </div>
                 </div>
             </div>
-            <div className="mx-auto flex flex-col">
-                <div className="flex flex-col mt-4">
-                    <label className="font-bold text-[#8fbee9] cursor-pointer">{user?.name}</label>
-                    <label className="text-xs text-gray-500 cursor-pointer">{getRole(user?.role)}</label>
+            <div className='mx-auto flex flex-col'>
+                <div className='flex flex-col mt-4'>
+                    <label className='font-bold text-[#8fbee9] cursor-pointer'>{user?.name}</label>
+                    <label className='text-xs text-gray-500 cursor-pointer'>{getRole(user?.role)}</label>
                 </div>
 
-                <div className="mt-auto flex flex-col h-[60px]">
-                    <div className="flex items-center my-auto">
-                        <img src='/_web.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs cursor-pointer">www.벌꿀오소리.메인.한국</label>
+                <div className='mt-auto flex flex-col h-[60px]'>
+                    <div className='flex items-center my-auto'>
+                        <img src='/_web.png' className='w-[20px] h-[20px] mr-2' />
+                        <label className='text-xxs cursor-pointer'>www.벌꿀오소리.메인.한국</label>
                     </div>
-                    <div className="flex items-center my-auto">
-                        <img src='/_location.png' className="w-[20px] h-[20px] mr-2" />
-                        <label className="text-xxs cursor-pointer">대전광역시 서구 둔산로 52 3층</label>
+                    <div className='flex items-center my-auto'>
+                        <img src='/_location.png' className='w-[20px] h-[20px] mr-2' />
+                        <label className='text-xxs cursor-pointer'>대전광역시 서구 둔산로 52 3층</label>
                     </div>
                 </div>
             </div>
         </div>
-        <div className="w-full h-[20px] bg-[#8fbee9] mt-auto"></div>
+        <div className='w-full h-[20px] bg-[#8fbee9] mt-auto'></div>
     </div>
 }
 export function CardBack() {
-    return <div className="border bg-[#8fbee9] border-black w-[400px] h-[200px] flex flex-col items-center justify-center relative cursor-pointer" onClick={(e) => {
+    return <div className='border bg-[#8fbee9] border-black w-[400px] h-[200px] flex flex-col items-center justify-center relative cursor-pointer' onClick={(e) => {
         html2canvas(e.currentTarget as HTMLInputElement).then(canvas => {
-            var el = document.createElement("a");
-            el.href = canvas.toDataURL("image/png");
+            var el = document.createElement('a');
+            el.href = canvas.toDataURL('image/png');
             el.download = '명함 뒷면.png';
             el.click();
             // document.body.append(canvas)
         });
     }}>
-        <div className="flex">
-            <img src='/_logo.png' className="w-[75px] h-[50px] mr-2 bg-yellow-500 rounded-full p-2" />
-            <div className="flex flex-col">
-                <label className="font-bold text-white text-lg cursor-pointer">HoneyBadger</label>
-                <label className="text-xxs text-center text-gray-300 cursor-pointer">Don't hold back. Be brave</label>
+        <div className='flex'>
+            <img src='/_logo.png' className='w-[75px] h-[50px] mr-2 bg-yellow-500 rounded-full p-2' />
+            <div className='flex flex-col'>
+                <label className='font-bold text-white text-lg cursor-pointer'>HoneyBadger</label>
+                <label className='text-xxs text-center text-gray-300 cursor-pointer'>Don't hold back. Be brave</label>
             </div>
         </div>
-        <div className="bottom-[16px] absolute text-white text-xs">SEO | Web Devlopement | App Development </div>
+        <div className='bottom-[16px] absolute text-white text-xs'>SEO | Web Devlopement | App Development </div>
     </div>
 }
 export function translateDex(num: number) {
