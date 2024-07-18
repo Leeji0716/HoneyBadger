@@ -1,7 +1,8 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.DTO.*;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.NotAllowedException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -9,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,17 +64,19 @@ public class ChatroomController {
     }
 
     @GetMapping //채팅방 메세지 찾아오기
-    public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId, @RequestHeader("Page") int page) {
+    public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken,
+                                         @RequestHeader("chatroomId") Long chatroomId,
+                                         @RequestHeader(value = "Page", required = false) Integer page) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
+
+        if (page == null || page < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("페이지 값이 없습니다.");
+        }
         if (tokenDTO.isOK()) try {
             Page<MessageResponseDTO> messageResponseDTOList = multiService.getMessageList(chatroomId, page);
             return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
         } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
@@ -132,17 +134,9 @@ public class ChatroomController {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomType(chatroomRequestDTO, tokenDTO.username());
-            if (chatroomResponseDTO != null) {
                 return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-            }
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+        } catch (DataNotFoundException | NotAllowedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
@@ -153,12 +147,8 @@ public class ChatroomController {
         if (tokenDTO.isOK()) try {
             ChatroomResponseDTO chatroomResponseDTO = multiService.updateChatroom(chatroomId, chatroomRequestDTO, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+        }catch (DataNotFoundException ex){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
