@@ -1,6 +1,6 @@
 'use client';
 
-import { emailFiles, getUser, mailImage, mailUpdate, reservationEmail, reservationFiles, sendEmail } from "@/app/API/UserAPI";
+import { emailFiles, getUser, mailImage, mailUpdate, reservationEmail, reservationFiles, sendEmail, tempDelete } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
 import { eongetDateTimeFormat, eontransferLocalTime, getDateTimeFormatInput, transferLocalTime } from "@/app/Global/Method";
@@ -57,8 +57,8 @@ export default function EmailForm() {
                 if (email.index == 0) {
                     setEmail(email?.email);
                     setId(email?.email.id);
-                    setTitle("FW: "+email?.email?.title);
-                    setContent("-----Original Message-----"+email?.email?.content);
+                    setTitle("FW: " + email?.email?.title);
+                    setContent("-----Original Message-----" + email?.email?.content);
                     setFiles(email?.email?.files);
                     setFlag(0)
                 } else if (email.index == 1) {
@@ -67,8 +67,8 @@ export default function EmailForm() {
                     re.push(email?.email?.senderId);
                     setReceiverIds(re);
                     setId(email?.email?.id);
-                    setTitle("FW: "+email?.email?.title);
-                    setContent("-----Original Message-----"+email?.email?.content);
+                    setTitle("FW: " + email?.email?.title);
+                    setContent("-----Original Message-----" + email?.email?.content);
                     setFiles(email?.email?.files);
                     setFlag(0)
                 } else {
@@ -81,8 +81,7 @@ export default function EmailForm() {
                     setFiles(email?.email.files);
                     setFlag(2);
                 }
-                console.log(email);
-                console.log("플래그값 : " + flag);
+                tempDelete().catch(e => console.log(e));
             }
         }
         else
@@ -144,12 +143,12 @@ export default function EmailForm() {
     function test() {
         if (flag == 2) {
             if (fileList.length == 0) {
-                const updateFiles:string[] = [];
-                files.map((f:MailFile,index:number) => updateFiles.push(f.value));
+                const updateFiles: string[] = [];
+                files.map((f: MailFile, index: number) => updateFiles.push(f.value));
                 mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: updateFiles }).then(r => window.location.href = "/email").catch(e => console.log(e));
             } else {
-                const updateFiles:string[] = [];
-                files.map((f:MailFile,index:number) => updateFiles.push(f.value));
+                const updateFiles: string[] = [];
+                files.map((f: MailFile, index: number) => updateFiles.push(f.value));
                 const form = new FormData();
                 for (const file of fileList)
                     form.append('attachments', file);
@@ -284,6 +283,7 @@ export default function EmailForm() {
             {/* <div dangerouslySetInnerHTML={{ __html: A }}></div> */}
         </div>
     </Main >
+
 
 }
 

@@ -112,13 +112,26 @@ export const sendEmail = async (data: CreateEmail) => {
     return response.data;
 }
 
-export const getChat = async () => {
-    const response = await UserApi.get('/api/chatroom/list');
+export const getChat = async (keyword: string, Page: number) => {
+    const response = await UserApi.get('/api/chatroom/list',{
+        headers: {
+            keyword: encodeURIComponent(keyword),
+            Page: Page
+        }
+    });
     return response.data;
 }
 
-export const getChatDetail = async (chatroomId: number) => {
-    const response = await UserApi.get('/api/chatroom', { headers: { chatroomId: chatroomId } });
+
+export const getChatDetail = async (chatroomId: number, page: number) => {
+    console.log("----> chatroomId :", chatroomId);
+    console.log("----> Page :" + page);
+    const response = await UserApi.get('/api/chatroom', 
+        { 
+            headers: { chatroomId: chatroomId, Page: page} 
+        }
+    );
+
     return response.data;
 }
 
@@ -200,8 +213,6 @@ export const editChatroom = async ({ chatroomId, chatroomResponseDTO }: { chatro
     });
     return response.data;
 }
-
-
 
 export const notification = async (data: noticeRequestDTO) => {
     const response = await UserApi.put('/api/chatroom/notification', data);
@@ -336,6 +347,11 @@ export const chatUploadFile = async ({ chatroomId, file }: { chatroomId: number,
 
     return response.data;
 };
+
+export const tempDelete = async () => {
+    const response = await UserApi.delete('/api/user/temp');
+    return response.data;
+}
 
 
 // Question

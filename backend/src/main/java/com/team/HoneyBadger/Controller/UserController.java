@@ -142,6 +142,15 @@ public class UserController {
             } catch (DataNotFoundException ex) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
             }
+          } else return tokenDTO.getResponseEntity();
+    }
+
+    @DeleteMapping("/temp")
+    public ResponseEntity<?> deleteTempFiles(@RequestHeader("Authorization") String accessToken) {
+        TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            multiService.deleteUserTemp(tokenDTO.username());
+            return ResponseEntity.status(HttpStatus.OK).body("deleted");
         } else return tokenDTO.getResponseEntity();
     }
 }

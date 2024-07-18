@@ -140,6 +140,20 @@ export function getChatShowDateTimeFormat(data: any) {
             + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
     }
 }
+
+export function getDateEmailTime(data: any) {
+    const date = new Date(data);
+    const hours = date.getHours();
+    const amPm = hours >= 12 ? '오후' : '오전';
+    const formattedHour = hours % 12 || 12;  // 0시는 12시로 표현
+    const formattedTime = amPm + " " + (formattedHour < 10 ? '0' + formattedHour : formattedHour) + ":"
+    + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+
+    return date.getFullYear() + "년 " +
+            (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "월 "
+            + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate())+"일 "+formattedTime;
+}
+
 export function getDepartmentRole(role: number) {
     switch (role) {
         case 0: return '일반';
@@ -243,3 +257,5 @@ export function translateDex(num: number) {
     else
         return num.toString(16);
 }
+
+
