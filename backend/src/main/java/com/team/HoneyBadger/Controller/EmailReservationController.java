@@ -1,7 +1,9 @@
 package com.team.HoneyBadger.Controller;
 
+import com.team.HoneyBadger.DTO.EmailReservationRequestDTO;
+import com.team.HoneyBadger.DTO.EmailReservationResponseDTO;
+import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
-import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Exception.EmailReceiverNotFoundException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;

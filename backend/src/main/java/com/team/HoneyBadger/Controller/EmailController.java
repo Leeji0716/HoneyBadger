@@ -5,6 +5,7 @@ import com.team.HoneyBadger.DTO.EmailRequestDTO;
 import com.team.HoneyBadger.DTO.EmailResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
+import com.team.HoneyBadger.Exception.NotAllowedException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,8 +27,14 @@ public class EmailController {
     public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken, @RequestHeader("status") int status, @RequestHeader("Page") int page) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
-            Page<Object> emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status, page);
-            return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTOList);
+            try {
+                Page<Object> emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status, page);
+                return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTOList);
+            }catch (DataNotFoundException e){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            }catch (NotAllowedException e){
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            }
         } else {
             return tokenDTO.getResponseEntity();
         }
@@ -51,7 +58,7 @@ public class EmailController {
         }
     }
 
-    @PostMapping("/files")
+    @PostMapping("/files") // 이메일 파일 저장
     public ResponseEntity<?> saveFiles(@RequestHeader("Authorization") String accessToken, @RequestHeader("email_id") Long email_id, List<MultipartFile> attachments) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
@@ -67,22 +74,22 @@ public class EmailController {
         }
     }
 
-    @GetMapping
+    @GetMapping //이메일 디테일
     public ResponseEntity<?> getEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long emailId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
             try {
                 EmailResponseDTO emailResponseDTO = multiService.getEmailDTO(emailId, tokenDTO.username());
                 return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
-            } catch (DataNotFoundException ex) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            } catch (RuntimeException ex) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
             }
         } else {
             return tokenDTO.getResponseEntity();
         }
     }
 
-    @PostMapping
+    @PostMapping // 이메일 보내기
     public ResponseEntity<?> sendEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailRequestDTO emailRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
@@ -100,25 +107,24 @@ public class EmailController {
         }
     }
 
-    @PutMapping("/read") // 메세지 읽음 처리
-    public ResponseEntity<?> markEmailAsRead(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReadRequestDTO emailReadRequestDTO) {
-        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+    @PutMapping("/read") // 이메일 읽음 처리
+    public ResponseEntity<?> markEmailAsRead(@RequestBody EmailReadRequestDTO emailReadRequestDTO) {
         try {
-            EmailResponseDTO emailResponseDTO = multiService.read(emailReadRequestDTO, tokenDTO.username());
+            EmailResponseDTO emailResponseDTO = multiService.read(emailReadRequestDTO);
             return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
-        } catch (DataNotFoundException ex) {
+        } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
     }
 
-    @DeleteMapping // 메세지 삭제
+    @DeleteMapping // 이메일 삭제
     public ResponseEntity<?> deleteEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long emailId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
             try {
                 multiService.deleteEmail(emailId, tokenDTO.username());
                 return ResponseEntity.status(HttpStatus.OK).body("이메일 삭제 성공");
-            } catch (DataNotFoundException ex) {
+            } catch (RuntimeException ex) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
             }
         } else {

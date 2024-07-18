@@ -215,7 +215,7 @@ public class MultiService {
      */
 
     @Transactional
-    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) throws NotAllowedException{
+    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) throws NotAllowedException {
         ChatroomResponseDTO chatroomResponseDTO;
         int userCount = chatroomRequestDTO.users().size();
         // 1:1 채팅 처리
@@ -402,7 +402,7 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) throws DataNotFoundException{
+    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         chatroom = chatroomService.updateChatroom(chatroom, chatroomRequestDTO.name());
         return getChatRoom(chatroom, username);
@@ -506,7 +506,7 @@ public class MultiService {
         return email.getId();
     }
 
-    public Page<Object> getEmailsForUser(String username, int statusIndex, int page) {
+    public Page<Object> getEmailsForUser(String username, int statusIndex, int page) throws DataNotFoundException, IllegalArgumentException {
         Pageable pageable = PageRequest.of(page, 15);
         switch (statusIndex) {
             case 0:
@@ -531,25 +531,25 @@ public class MultiService {
                 return new PageImpl<>(reservationEmails.stream().map(this::getEmailReservationDTO).collect(Collectors.toList()), pageable, reservationEmails.getTotalElements());
 
             default:
-                throw new IllegalArgumentException("Invalid status index: " + statusIndex);
+                throw new NotAllowedException("Invalid status index: " + statusIndex);
         }
     }
 
     @Transactional
-    public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
+    public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO) throws RuntimeException {
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
         emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
-        EmailResponseDTO emailResponseDTO = getEmailDTO(email, emailReadRequestDTO.receiverId()); // receiverId 사용
+        EmailResponseDTO emailResponseDTO = getEmailDTO(email, emailReadRequestDTO.receiverId());
         return emailResponseDTO;
     }
 
     @Transactional
-    public void deleteEmail(Long emailId, String username) {
+    public void deleteEmail(Long emailId, String username) throws RuntimeException {
         Email email = emailService.getEmail(emailId);
         emailService.findByUsernameDelete(email, username);
     }
 
-    private EmailResponseDTO getEmailDTO(Email email, String receiverId) {
+    private EmailResponseDTO getEmailDTO(Email email, String receiverId) throws DataNotFoundException {
         List<FileResponseDTO> filePathList = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
         if (_multiKey.isPresent()) {
@@ -563,9 +563,6 @@ public class MultiService {
         }
 
         SiteUser user = userService.get(receiverId);
-        if (user == null) {
-            throw new DataNotFoundException("User not found with receiverId: " + receiverId);
-        }
 
         // receiverId를 기반으로 읽음 상태를 조회
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
@@ -589,7 +586,7 @@ public class MultiService {
                 .receiverStatus(receiverStatus).build();
     }
 
-    public EmailResponseDTO getEmailDTO(Long emailId, String username) {
+    public EmailResponseDTO getEmailDTO(Long emailId, String username) throws RuntimeException {
         Email email = emailService.getEmail(emailId);
         return getEmailDTO(email, username);
     }
@@ -696,7 +693,7 @@ public class MultiService {
     }
 
     @Transactional
-    public Long reservationEmail(EmailReservationRequestDTO requestDTO, String username) throws IOException,EmailReceiverNotFoundException {
+    public Long reservationEmail(EmailReservationRequestDTO requestDTO, String username) throws IOException, EmailReceiverNotFoundException {
         SiteUser sender = userService.get(username);
         if (requestDTO.receiverIds().isEmpty()) {
             throw new EmailReceiverNotFoundException("email not found");
@@ -789,7 +786,7 @@ public class MultiService {
             // 업데이트된 이메일 예약 정보를 바탕으로 DTO 반환
             return getEmailReservationDTO(emailReservation);
         } else {
-            throw new UnauthorizedException("You are not authorized to update this reservation.");
+            throw new UnauthorizedException("권한이 없습니다.");
         }
     }
 
@@ -902,7 +899,7 @@ public class MultiService {
 
     public List<MessageResponseDTO> getImageMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        if (chatroom == null){
+        if (chatroom == null) {
             throw new DataNotFoundException("없는 채팅방입니다.");
         }
         return messageService.getImageMessageList(chatroom);
@@ -910,7 +907,7 @@ public class MultiService {
 
     public List<MessageResponseDTO> getLinkMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        if (chatroom == null){
+        if (chatroom == null) {
             throw new DataNotFoundException("없는 채팅방입니다.");
         }
         return messageService.getLinkMessageList(chatroom);
@@ -918,7 +915,7 @@ public class MultiService {
 
     public List<MessageResponseDTO> getFileMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        if (chatroom == null){
+        if (chatroom == null) {
             throw new DataNotFoundException("없는 채팅방입니다.");
         }
         return messageService.getFileMessageList(chatroom);
