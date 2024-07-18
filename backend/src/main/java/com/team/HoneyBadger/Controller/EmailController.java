@@ -119,9 +119,7 @@ public class EmailController {
                 multiService.deleteEmail(emailId, tokenDTO.username());
                 return ResponseEntity.status(HttpStatus.OK).body("이메일 삭제 성공");
             } catch (DataNotFoundException ex) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("접근 금지: " + ex.getMessage());
-            } catch (IllegalArgumentException ex) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("잘못된 요청: " + ex.getMessage());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
             }
         } else {
             return tokenDTO.getResponseEntity();

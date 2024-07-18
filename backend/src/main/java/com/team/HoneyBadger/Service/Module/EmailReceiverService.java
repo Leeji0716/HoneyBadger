@@ -10,8 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class EmailReceiverService {
@@ -40,9 +38,5 @@ public class EmailReceiverService {
 
     public EmailReceiver getReadStatus(Email email, SiteUser user) {
         return emailReceiverRepository.findByEmailAndUser(email, user);
-    }
-
-    public Optional<EmailReceiver> getEmailReceiver(Long aLong) {
-        return emailReceiverRepository.findById(aLong);
     }
 }
