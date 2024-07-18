@@ -21,15 +21,17 @@ public class PersonalCycle {
     private String content;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+    private LocalDateTime createDate;
     @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser user;
 
     @Builder
-    public PersonalCycle(String title, String content, SiteUser user) {
+    public PersonalCycle(String title, String content, SiteUser user, LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;
         this.content = content;
         this.user = user;
-        this.startDate = LocalDateTime.now();
-        this.endDate = startDate;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.createDate = LocalDateTime.now();
     }
 }

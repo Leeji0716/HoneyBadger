@@ -54,6 +54,7 @@ public class MultiService {
     private final MultiKeyService multiKeyService;
     private final LastReadMessageService lastReadMessageService;
     private final DepartmentService departmentService;
+    private final PersonalCycleService personalCycleService;
 
     /**
      * Auth
@@ -1093,4 +1094,21 @@ public class MultiService {
     }
 
 
+    /*
+     * PersonalCycle
+     */
+
+    public void createPersonalCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) throws IllegalArgumentException{
+       SiteUser user = userService.get(username);
+       if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()){
+           throw new IllegalArgumentException("제목을 입력해주세요.");
+       }else if(personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()){
+           throw new IllegalArgumentException("내용을 입력해주세요.");
+       }else if(personalCycleRequestDTO.startDate() == null){
+           throw new IllegalArgumentException("시작 시간을 입력해주세요.");
+       }else if(personalCycleRequestDTO.endDate() == null){
+           throw new IllegalArgumentException("종료 시간을 입력해주세요.");
+       }
+       personalCycleService.save(user,personalCycleRequestDTO);
+    }
 }
