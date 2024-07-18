@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
-import { deleteDepartment, getDepartmentTopList, getDepartmentUsers, getUser, postDepartment, postDepartmentImage, postUser, updateUser } from "../API/UserAPI";
+import { deleteDepartment, getDepartmentTopList, getDepartmentUsers, getUser, postDepartment, postDepartmentImage, postUser, updateActiveUser, updateUser } from "../API/UserAPI";
 
 import { getDateFormatInput, getDateKorean, getDepartmentRole, getRole, translateDex } from "../Global/Method";
 import Modal from "../Global/Modal";
+import { setMaxListeners } from "events";
 
 
 
@@ -34,11 +35,18 @@ export default function Page() {
     const [departmentName, setDepartmentName] = useState('');
     const [departmentRole, setDepartmentRole] = useState(0);
     const [addPeople, setAddPeople] = useState(false);
+    const [isClientLoading, setClientLoading] = useState(true);
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
                 setUser(r);
-                getDepartmentTopList().then(r => setDepartmentList(r)).catch(e => console.log(e));
+                getDepartmentTopList().then(r => {
+                    setDepartmentList(r);
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
+                }).catch(e => {
+                    setClientLoading(false);
+                    console.log(e);
+                });
                 if (r?.role != 13 && r?.department?.role != 1)
                     location.href = "/";
             }).catch(e => console.log(e));
@@ -122,6 +130,7 @@ export default function Page() {
                                     <th className="w-[100px]">직책</th>
                                     <th className="w-[100px]">아이디</th>
                                     <th className="w-[200px]">입사일</th>
+                                    <th className="w-[200px]">활성 여부</th>
                                     <th className="w-[200px]">정보 조회</th>
                                 </tr>
                             </thead>
@@ -132,6 +141,11 @@ export default function Page() {
                                         <td >{getRole(u?.role)}</td>
                                         <td>{u?.username}</td>
                                         <td>{getDateKorean(u?.joinDate)}</td>
+                                        <td><button className="btn btn-xs" onClick={() => updateActiveUser(u?.username).then(r => {
+                                            getDepartmentUsers(departmentUsers?.name).then(r => setDepartmentUsers(r)).catch(e => console.log(e));
+                                            if (r.username == user.username)
+                                                setUser(r);
+                                        }).catch(e => console.log(e))}>{u?.active ? "비활성화" : '활성화'}</button></td>
                                         <td><button className="btn btn-xs" onClick={() => {
                                             setName(u?.name);
                                             setRole(u?.role)
@@ -182,9 +196,8 @@ export default function Page() {
             input.value = input.value.slice(0, 13);
         if (input.value.lastIndexOf('-') == input.value.length - 1)
             input.value = input.value.slice(0, input.value.length - 1);
-
     }
-    return <Main user={user}>
+    return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-4/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-[847px] w-11/12 bg-white shadow p-2 ">
                 <div className="w-full h-30 flex justify-between gap-20 ">
@@ -332,7 +345,8 @@ export default function Page() {
                         </div>
                         <div className="self-center mt-6">
                             <button className="btn btn-info btn-xs mr-2 text-white" onClick={() => {
-                                postDepartment({ url: url, name: departmentName, parentId: departmentId, role: departmentRole }).then(r => { setDepartmentList(r); setAddOpen(false); }).catch(e => console.log(e));
+                                setAddOpen(false);
+                                postDepartment({ url: url, name: departmentName, parentId: departmentId, role: departmentRole }).then(r => { setDepartmentList(r); }).catch(e => console.log(e));
                             }}>등록</button>
                             <button className="btn btn-error btn-xs text-white" onClick={() => setAddOpen(false)}>취소</button>
                         </div>

@@ -31,6 +31,8 @@ export default function EmailForm() {
     const [files, setFiles] = useState<MailFile[]>([]);
     const [id, setId] = useState(0);
 
+    const [isClientLoading, setClientLoading] = useState(true);
+
     interface MailFile {
         key: string,
         original_name: string,
@@ -44,7 +46,10 @@ export default function EmailForm() {
     useEffect(() => { console.log(time) }, [time])
     useEffect(() => {
         if (ACCESS_TOKEN) {
-            getUser().then(r => setUser(r)).catch(e => console.log(e));
+            getUser().then(r => {
+                setUser(r);
+                const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
+            }).catch(e => {setClientLoading(false); console.log(e);});
             if (localStorage.getItem('email')) {
                 // const email = JSON.parse(localStorage.getItem('email') as string);
                 const storedEmail = localStorage.getItem('email') || 'null';
@@ -52,8 +57,8 @@ export default function EmailForm() {
                 if (email.index == 0) {
                     setEmail(email?.email);
                     setId(email?.email.id);
-                    setTitle("FW: "+email?.email?.title);
-                    setContent("-----Original Message-----"+email?.email?.content);
+                    setTitle("FW: " + email?.email?.title);
+                    setContent("-----Original Message-----" + email?.email?.content);
                     setFiles(email?.email?.files);
                     setFlag(0)
                 } else if (email.index == 1) {
@@ -62,8 +67,8 @@ export default function EmailForm() {
                     re.push(email?.email?.senderId);
                     setReceiverIds(re);
                     setId(email?.email?.id);
-                    setTitle("FW: "+email?.email?.title);
-                    setContent("-----Original Message-----"+email?.email?.content);
+                    setTitle("FW: " + email?.email?.title);
+                    setContent("-----Original Message-----" + email?.email?.content);
                     setFiles(email?.email?.files);
                     setFlag(0)
                 } else {
@@ -76,7 +81,7 @@ export default function EmailForm() {
                     setFiles(email?.email.files);
                     setFlag(2);
                 }
-                tempDelete().catch(e =>  console.log(e));
+                tempDelete().catch(e => console.log(e));
             }
         }
         else
@@ -138,12 +143,12 @@ export default function EmailForm() {
     function test() {
         if (flag == 2) {
             if (fileList.length == 0) {
-                const updateFiles:string[] = [];
-                files.map((f:MailFile,index:number) => updateFiles.push(f.value));
+                const updateFiles: string[] = [];
+                files.map((f: MailFile, index: number) => updateFiles.push(f.value));
                 mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: updateFiles }).then(r => window.location.href = "/email").catch(e => console.log(e));
             } else {
-                const updateFiles:string[] = [];
-                files.map((f:MailFile,index:number) => updateFiles.push(f.value));
+                const updateFiles: string[] = [];
+                files.map((f: MailFile, index: number) => updateFiles.push(f.value));
                 const form = new FormData();
                 for (const file of fileList)
                     form.append('attachments', file);
@@ -199,9 +204,9 @@ export default function EmailForm() {
         }
     }, [error]);
 
-    return <Main user={user}>
+    return <Main user={user} isClientLoading={isClientLoading}>
         <div className="flex flex-col items-center gap-5 bg-white w-full p-6">
-            <h2 className="font-bold">메일 쓰깅</h2>
+            <h2 className="font-bold">메일 쓰기</h2>
             <div className="w-full border-b-2"></div>
             <div className="flex flex-row justify-center gap-3">
                 <button className="mail-hover w-[100px]" onClick={() => finderror()}>보내기</button>
@@ -218,7 +223,7 @@ export default function EmailForm() {
                 <button className="mail-hover w-[100px]">임시저장</button>
             </div>
             {error ? <p className="font-bold text-red-600">{error}</p> : <></>}
-            <div className="flex w-[1400px] gap-5 w-full">
+            <div className="flex w-[1400px] gap-5">
                 <label htmlFor="" className="w-[5%]  whitespace-nowrap">받는 사람</label>
                 <div className="w-full flex border-solid border-b-2">
                     {receiverIds?.length == 0 ? <></> : receiverIds?.map((recever, index) => (ShowReciver(index, recever)))}
@@ -232,13 +237,13 @@ export default function EmailForm() {
                     }} />
                 </div>
             </div>
-            <div className="flex w-[1400px] gap-5 w-full">
+            <div className="flex w-[1400px] gap-5">
                 <label htmlFor="" className="w-[5%]">제목</label>
                 <input type="text" className="border-b-2 w-full" defaultValue={title} onChange={(e) => {
                     setTitle(e.target.value);
                 }} />
             </div>
-            <div className="flex w-[1400px] w-full gap-5">
+            <div className="flex w-[1400px] gap-5">
                 <input id="file" hidden type="file" multiple className="border-b-2" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                     if (event.target.files) {
                         const filesArray = Array.from(event.target.files);
@@ -264,20 +269,21 @@ export default function EmailForm() {
                     </div>
                 </ul>) : <></>}
             </div>
-            <div className="w-full flex justify-center h-[500px]">
+            <div className="w-full flex justify-center">
                 <QuillNoSSRWrapper
                     forwardedRef={quillInstance}
                     value={content}
                     onChange={(e: any) => setContent(e)}
                     modules={modules}
                     theme="snow"
-                    className='w-[1400px] h-[70%]'
+                    className='w-[1400px] h-[400px]'
                     placeholder="내용을 입력해주세요."
                 />
             </div>
             {/* <div dangerouslySetInnerHTML={{ __html: A }}></div> */}
         </div>
     </Main >
+
 
 }
 

@@ -23,15 +23,6 @@ public class EmailReservationRepositoryImpl implements EmailReservationRepositor
     QEmailReservation qEmailReservation = QEmailReservation.emailReservation;
 
     @Override
-    @Transactional
-    public List<EmailReservation> findBySendTimeBeforeAndSendTimeIsNotNull(LocalDateTime now) {
-        return jpaQueryFactory.selectFrom(qEmailReservation)
-                .where(qEmailReservation.sendTime.before(now)
-                        .and(qEmailReservation.sendTime.isNotNull()))
-                .fetch();
-    }
-
-    @Override
     public Page<EmailReservation> findReservedEmailsByUserId(String userId, Pageable pageable) {
         BooleanExpression predicate = qEmailReservation.sender.username.eq(userId);
 

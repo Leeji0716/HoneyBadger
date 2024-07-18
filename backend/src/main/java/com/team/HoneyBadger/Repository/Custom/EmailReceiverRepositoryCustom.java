@@ -6,13 +6,9 @@ import com.team.HoneyBadger.Entity.SiteUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
 public interface EmailReceiverRepositoryCustom {
 
     Boolean markEmailAsRead(Long emailId, String receiverId);
-
-    List<Email> findByReceiver(String receiverId);
 
     Page<Email> findSentEmailsByUserId(String userId, Pageable pageable);
 

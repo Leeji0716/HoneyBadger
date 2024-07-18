@@ -54,7 +54,9 @@ public class MultiService {
     private final MultiKeyService multiKeyService;
     private final LastReadMessageService lastReadMessageService;
     private final DepartmentService departmentService;
-
+    private final QuestionService questionService;
+    private final PersonalCycleService personalCycleService;
+  
     /**
      * Auth
      */
@@ -92,13 +94,11 @@ public class MultiService {
     @Transactional
     public AuthResponseDTO login(AuthRequestDTO requestDto) {
         SiteUser user = this.userService.get(requestDto.username());
-        if (user == null) {
-            throw new IllegalArgumentException("username");
-        }
+        if (user == null) throw new IllegalArgumentException("username");
 
-        if (!this.userService.isMatch(requestDto.password(), user.getPassword())) {
+        if (!this.userService.isMatch(requestDto.password(), user.getPassword()))
             throw new IllegalArgumentException("password");
-        }
+        if (!user.isActive()) throw new IllegalArgumentException("disabled");
         String accessToken = this.jwtTokenProvider.generateAccessToken(new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), user.getPassword()));
         String refreshToken = this.jwtTokenProvider.generateRefreshToken(new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), user.getPassword()));
         return AuthResponseDTO.builder().tokenType("Bearer").accessToken(accessToken).refreshToken(refreshToken).build();
@@ -132,6 +132,7 @@ public class MultiService {
                 .name(user.getName()) //
                 .url(_fileSystem.map(FileSystem::getV).orElse(null)) //
                 .department(getDepartmentDTO(user.getDepartment())) //
+                .active(user.isActive()) //
                 .build();
     }
 
@@ -191,6 +192,13 @@ public class MultiService {
         return getUserResponseDTO(user);
     }
 
+
+    public UserResponseDTO changeUserStatus(String username) {
+        SiteUser user = userService.get(username);
+        user = userService.changeStatus(user);
+        return getUserResponseDTO(user);
+    }
+
     public void deleteUserTemp(String username) {
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(username));
         if (_multiKey.isPresent()) {
@@ -215,7 +223,7 @@ public class MultiService {
      */
 
     @Transactional
-    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) {
+    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) throws NotAllowedException {
         ChatroomResponseDTO chatroomResponseDTO;
         int userCount = chatroomRequestDTO.users().size();
         // 1:1 채팅 처리
@@ -227,7 +235,7 @@ public class MultiService {
         } else if (userCount >= 3) { // 단체 채팅방 처리
             chatroomResponseDTO = createChatroom(chatroomRequestDTO, loginUser);
         } else {
-            return null;
+            throw new NotAllowedException("채팅방에 참여할 유저를 선택해주세요.");
         }
         return chatroomResponseDTO;
     }
@@ -274,7 +282,7 @@ public class MultiService {
     }
 
     @Transactional
-    public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) {
+    public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) throws DataNotFoundException {
         SiteUser siteUser = userService.get(username);
         Pageable pageable = PageRequest.of(page, 10);
         Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
@@ -286,7 +294,7 @@ public class MultiService {
 
 
     @Transactional
-    public Page<MessageResponseDTO> getMessageList(Long chatroomId, int page) {
+    public Page<MessageResponseDTO> getMessageList(Long chatroomId, int page) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         Pageable pageable = PageRequest.of(page, 15);
         Page<MessageResponseDTO> messagePage = messageService.getMessageList(chatroom.getMessageList(), pageable);
@@ -294,7 +302,7 @@ public class MultiService {
     }
 
     @Transactional
-    public List<MessageResponseDTO> updateMessageList(String username, Long chatroomId) {
+    public List<MessageResponseDTO> updateMessageList(String username, Long chatroomId) throws DataNotFoundException {
         SiteUser user = userService.get(username);
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
@@ -373,7 +381,7 @@ public class MultiService {
 
 
     @Transactional
-    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) {
+    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
         Message message = messageService.getMessageById(noticeRequestDTO.messageId());
         chatroomService.notification(chatroom, message);
@@ -383,26 +391,26 @@ public class MultiService {
 
 
     @Transactional
-    public ChatroomResponseDTO getChatRoomById(Long chatroomId, String username) {
+    public ChatroomResponseDTO getChatRoomById(Long chatroomId, String username) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         return getChatRoom(chatroom, username);
     }
 
     @Transactional
-    public void deleteChatroom(Long chatroomId) {
+    public void deleteChatroom(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         chatroomService.delete(chatroom);
     }
 
     @Transactional
-    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) {
+    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         chatroom = chatroomService.updateChatroom(chatroom, chatroomRequestDTO.name());
         return getChatRoom(chatroom, username);
     }
 
     @Transactional
-    public ChatroomResponseDTO plusParticipant(Long chatroomId, String username, String loginUser) {
+    public ChatroomResponseDTO plusParticipant(Long chatroomId, String username, String loginUser) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         SiteUser siteUser = userService.get(username);
         participantService.save(siteUser, chatroom);
@@ -499,7 +507,7 @@ public class MultiService {
         return email.getId();
     }
 
-    public Page<Object> getEmailsForUser(String username, int statusIndex, int page) {
+    public Page<Object> getEmailsForUser(String username, int statusIndex, int page) throws DataNotFoundException, IllegalArgumentException {
         Pageable pageable = PageRequest.of(page, 15);
         switch (statusIndex) {
             case 0:
@@ -524,25 +532,25 @@ public class MultiService {
                 return new PageImpl<>(reservationEmails.stream().map(this::getEmailReservationDTO).collect(Collectors.toList()), pageable, reservationEmails.getTotalElements());
 
             default:
-                throw new IllegalArgumentException("Invalid status index: " + statusIndex);
+                throw new NotAllowedException("Invalid status index: " + statusIndex);
         }
     }
 
     @Transactional
-    public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO, String username) {
+    public EmailResponseDTO read(EmailReadRequestDTO emailReadRequestDTO) throws RuntimeException {
         Email email = emailService.getEmail(emailReadRequestDTO.emailId());
         emailReceiverService.markEmailAsRead(emailReadRequestDTO.emailId(), emailReadRequestDTO.receiverId());
-        EmailResponseDTO emailResponseDTO = getEmailDTO(email, emailReadRequestDTO.receiverId()); // receiverId 사용
+        EmailResponseDTO emailResponseDTO = getEmailDTO(email, emailReadRequestDTO.receiverId());
         return emailResponseDTO;
     }
 
     @Transactional
-    public void deleteEmail(Long emailId, String username) {
+    public void deleteEmail(Long emailId, String username) throws RuntimeException {
         Email email = emailService.getEmail(emailId);
         emailService.findByUsernameDelete(email, username);
     }
 
-    private EmailResponseDTO getEmailDTO(Email email, String receiverId) {
+    private EmailResponseDTO getEmailDTO(Email email, String receiverId) throws DataNotFoundException {
         List<FileResponseDTO> filePathList = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
         if (_multiKey.isPresent()) {
@@ -556,9 +564,6 @@ public class MultiService {
         }
 
         SiteUser user = userService.get(receiverId);
-        if (user == null) {
-            throw new DataNotFoundException("User not found with receiverId: " + receiverId);
-        }
 
         // receiverId를 기반으로 읽음 상태를 조회
         EmailReceiver emailReceiver = emailReceiverService.getReadStatus(email, user);
@@ -570,11 +575,19 @@ public class MultiService {
             status = emailReceiver.isStatus();
         }
 
-        return EmailResponseDTO.builder().id(email.getId()).title(email.getTitle()).content(email.getContent()).senderId(email.getSender().getUsername()).senderName(email.getSender().getUsername()).receiverIds(email.getReceiverList().stream().map(er -> er.getReceiver().getUsername()).toList()).senderTime(this.dateTimeTransfer(email.getCreateDate())).files(filePathList).status(status) // emailReceiver가 null인 경우 기본값으로 false 설정
+        return EmailResponseDTO.builder() //
+                .id(email.getId()) //
+                .title(email.getTitle()) //
+                .content(email.getContent()) //
+                .senderId(email.getSender().getUsername()) //
+                .senderName(email.getSender().getUsername()) //
+                .receiverIds(email.getReceiverList().stream().map(er -> er.getReceiver().getUsername()).toList()) //
+                .senderTime(this.dateTimeTransfer(email.getCreateDate())) //
+                .files(filePathList).status(status) // emailReceiver가 null인 경우 기본값으로 false 설정
                 .receiverStatus(receiverStatus).build();
     }
 
-    public EmailResponseDTO getEmailDTO(Long emailId, String username) {
+    public EmailResponseDTO getEmailDTO(Long emailId, String username) throws RuntimeException {
         Email email = emailService.getEmail(emailId);
         return getEmailDTO(email, username);
     }
@@ -585,11 +598,11 @@ public class MultiService {
 
     @Scheduled(cron = "0 0/1 * * * *")
     @Transactional
+
     public void sendEmailReservation() throws IOException {
         List<EmailReservation> emailReservationList = emailReservationService.getEmailReservationFromDate(LocalDateTime.now());
         for (EmailReservation emailReservation : emailReservationList) {
             if (emailReservation.getSendTime().toLocalTime().isBefore(LocalTime.now())) {
-
                 Long emailId = sendEmail(emailReservation.getTitle(), emailReservation.getContent().replaceAll("/emailReservation/" + emailReservation.getId().toString(), "/emailReservation"), emailReservation.getSender().getUsername(), emailReservation.getReceiverList());
                 String path = HoneyBadgerApplication.getOsType().getLoc();
                 {
@@ -632,7 +645,7 @@ public class MultiService {
                                 Files.move(prePath, newPath, StandardCopyOption.REPLACE_EXISTING);
                                 deleteFileWithFolder(prePath.getParent().toFile());
                                 fileSystemService.deleteByKey(fileSystem);
-                                String fileKey = k.replaceAll("_RESERVATION_" + emailReservation.getId().toString(), "_"+emailId.toString());
+                                String fileKey = k.replaceAll("_RESERVATION_" + emailReservation.getId().toString(), "_" + emailId.toString());
                                 fileSystemService.save(fileKey, newUrl);
 
                                 Optional<FileSystem> _preOrigin = fileSystemService.get(KeyPreset.EMAIL_RESERVATION_ORIGIN.getValue(k));
@@ -646,8 +659,6 @@ public class MultiService {
                         multiKeyService.delete(key);
                     }
                 }
-
-
                 emailReservationService.delete(emailReservation);
             }
         }
@@ -675,9 +686,8 @@ public class MultiService {
         multiKeyService.updateAll(key, list);
     }
 
-
     @Transactional
-    public void deleteEmailReservation(Long reservationId, String username) {
+    public void deleteEmailReservation(Long reservationId, String username) throws DataNotFoundException {
         EmailReservation emailReservation = emailReservationService.getEmailReservation(reservationId);
         if (emailReservation.getSender().getUsername().equals(username)) {
             emailReservationService.delete(emailReservation);
@@ -685,31 +695,35 @@ public class MultiService {
     }
 
     @Transactional
-    public Long reservationEmail(EmailReservationRequestDTO requestDTO, String username) throws IOException {
+    public Long reservationEmail(EmailReservationRequestDTO requestDTO, String username) throws IOException, EmailReceiverNotFoundException {
         SiteUser sender = userService.get(username);
         if (requestDTO.receiverIds().isEmpty()) {
             throw new EmailReceiverNotFoundException("email not found");
         }
         EmailReservation emailReservation = emailReservationService.save(requestDTO.title(), requestDTO.receiverIds(), sender, requestDTO.sendTime());
-
         String content = requestDTO.content();
+
         if (content != null)
             emailReservationService.update(emailReservation, content.replaceAll("/user/" + sender.getUsername(), "/emailReservation/" + emailReservation.getId().toString()).replaceAll("/temp/", "/"));
         String path = HoneyBadgerApplication.getOsType().getLoc();
         Optional<MultiKey> _key = multiKeyService.get(KeyPreset.USER_TEMP_MULTI.getValue(username));
+
         if (_key.isPresent()) {
             MultiKey key = _key.get();
             String newMultiKey = KeyPreset.EMAIL_RESERVATION_MULTI_TEMP.getValue(emailReservation.getId().toString());
             MultiKey newMulti = multiKeyService.get(newMultiKey).orElseGet(() -> multiKeyService.save(newMultiKey));
             List<String> newKeys = newMulti.getKeyValues();
+
             for (String k : key.getKeyValues()) {
                 Optional<FileSystem> _fileSystem = fileSystemService.get(k);
+
                 if (_fileSystem.isPresent()) {
                     FileSystem fileSystem = _fileSystem.get();
                     String value = fileSystem.getV();
                     Path prePath = Paths.get(path + value);
                     String newUrl = value.replaceAll("/user/" + sender.getUsername(), "/emailReservation/" + emailReservation.getId().toString()).replaceAll("/temp/", "/");
                     Path newPath = Paths.get(path + newUrl);
+
                     if (!newPath.getParent().toFile().exists()) newPath.getParent().toFile().mkdirs();
                     Files.move(prePath, newPath, StandardCopyOption.REPLACE_EXISTING);
                     fileSystemService.deleteByKey(fileSystem);
@@ -728,6 +742,7 @@ public class MultiService {
     private EmailReservationResponseDTO getEmailReservationDTO(EmailReservation reservation) {
         List<FileResponseDTO> fileslist = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_RESERVATION_MULTI.getValue(reservation.getId().toString()));
+
         if (_multiKey.isPresent()) for (String key : _multiKey.get().getKeyValues()) {
             FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
             fileSystemService.get(key).ifPresent(file -> builder.value(file.getV()));
@@ -773,7 +788,7 @@ public class MultiService {
             // 업데이트된 이메일 예약 정보를 바탕으로 DTO 반환
             return getEmailReservationDTO(emailReservation);
         } else {
-            throw new UnauthorizedException("You are not authorized to update this reservation.");
+            throw new UnauthorizedException("권한이 없습니다.");
         }
     }
 
@@ -782,7 +797,7 @@ public class MultiService {
      */
 
     @Transactional
-    private MessageType getMessageType(int MessageTypeInt) {
+    private MessageType getMessageType(int MessageTypeInt) throws NotAllowedException {
         MessageType messageType;
         return switch (MessageTypeInt) {
             case 0 -> {
@@ -801,15 +816,19 @@ public class MultiService {
                 messageType = MessageType.FILE;
                 yield messageType;
             }
-            default -> throw new IllegalArgumentException("Unknown message type: " + MessageTypeInt);
+            default -> throw new NotAllowedException("Unknown message type: " + MessageTypeInt);
         };
     }
 
     @Transactional
-    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO) {
+    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO) throws DataNotFoundException, NotAllowedException {
         Chatroom chatroom = chatroomService.getChatRoomById(id);
         SiteUser siteUser = userService.get(messageRequestDTO.username());
         MessageType messageType = this.getMessageType(messageRequestDTO.messageType());
+
+        if (messageRequestDTO.message().isEmpty()){
+            throw new NotAllowedException("메세지를 입력해주세요.");
+        }
 
         return GetMessageDTO(messageService.save(messageRequestDTO.message(), siteUser, chatroom, messageType));
     }
@@ -830,10 +849,14 @@ public class MultiService {
     }
 
     @Transactional
-    public void deleteMessage(Long messageId) {
+    public void deleteMessage(Long messageId, String username) throws DataNotFoundException, NotAllowedException {
         Message message = messageService.getMessageById(messageId);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime send = message.getCreateDate();
+
+        if (!message.getSender().getUsername().equals(username)){
+            throw new NotAllowedException("삭제 권한이 없습니다.");
+        }
 
         // 메시지의 createDate가 now 기준으로 5분 이내인지 확인
         if (Duration.between(send, now).toMinutes() <= 5) {
@@ -844,7 +867,7 @@ public class MultiService {
             //TODO:'삭제된메시지입니다'로 변경 or 메세지 아예 삭제
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
-            throw new RuntimeException("Cannot delete message older than 5 minutes");
+            throw new NotAllowedException("5분이 지나 메세지를 삭제할 수 없습니다.");
         }
     }
 
@@ -865,17 +888,17 @@ public class MultiService {
     }
 
     @Transactional
-    public void readMessage(Long chatroomId, String username) { //메세지 읽기 처리
+    public void readMessage(Long chatroomId, String username) throws DataNotFoundException { //메세지 읽기 처리
         SiteUser reader = userService.get(username);
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
 
         LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
         Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
 
-        Message testMessage = messageService.getMessageById (startId + 1);
-        System.out.println (testMessage);
+        Message testMessage = messageService.getMessageById(startId + 1);
+        System.out.println(testMessage);
 
-        System.out.println ( messageService.getList(startId).size());
+        System.out.println(messageService.getList(startId).size());
         for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
             HashSet<String> sets = new HashSet<>(message.getReadUsers());
             sets.add(reader.getUsername());
@@ -884,17 +907,17 @@ public class MultiService {
 //        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
     }
 
-    public List<MessageResponseDTO> getImageMessageList(Long chatroomId) {
+    public List<MessageResponseDTO> getImageMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         return messageService.getImageMessageList(chatroom);
     }
 
-    public List<MessageResponseDTO> getLinkMessageList(Long chatroomId) {
+    public List<MessageResponseDTO> getLinkMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         return messageService.getLinkMessageList(chatroom);
     }
 
-    public List<MessageResponseDTO> getFileMessageList(Long chatroomId) {
+    public List<MessageResponseDTO> getFileMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         return messageService.getFileMessageList(chatroom);
     }
@@ -916,10 +939,25 @@ public class MultiService {
     }
 
     @Transactional
-    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) {
+    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException, NotAllowedException{
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
-        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendDate()).messageType(messageReservationRequestDTO.messageType()).build();
+
+        if (messageReservationRequestDTO.message().isEmpty()){
+            throw new NotAllowedException("메세지를 입력해주세요.");
+        }
+
+        if (messageReservationRequestDTO.sendDate().isBefore(LocalDateTime.now())){
+            throw new NotAllowedException("지난 시간으로 예약할 수 없습니다.");
+        }
+
+        MessageReservation messageReservation = MessageReservation.builder()
+                .chatroom(chatroom)
+                .message(messageReservationRequestDTO.message())
+                .sender(sender)
+                .sendDate(messageReservationRequestDTO.sendDate())
+                .messageType(messageReservationRequestDTO.messageType())
+                .build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
@@ -933,26 +971,32 @@ public class MultiService {
 
 
     @Transactional
-    public void deleteReservationMessage(Long reservationMessageId) {
+    public void deleteReservationMessage(Long reservationMessageId) throws DataNotFoundException {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
         messageReservationService.delete(messageReservation);
     }
 
     @Transactional
-    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException {
+
+    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException, NotAllowedException {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
-        if (messageReservation.getSender().getUsername().equals(username) && messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
+
+        if (!messageReservation.getSender().getUsername().equals(username)) {
+            throw new NotAllowedException("권한이 없습니다.");
+        } else if(!messageReservation.getChatroom().getId().equals(messageReservationRequestDTO.chatroomId())) {
+            throw new NotAllowedException("채팅방이 다릅니다.");
+        } else {
             messageReservationService.update(messageReservation, messageReservationRequestDTO);
         }
         return getMessageReservation(messageReservation);
     }
 
-    public MessageReservationResponseDTO getMessageReservationById(Long reservationMessageId) {
+    public MessageReservationResponseDTO getMessageReservationById(Long reservationMessageId) throws DataNotFoundException {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
         return getMessageReservation(messageReservation);
     }
 
-    public Page<MessageReservationResponseDTO> getMessageReservationByUser(String username, int page) {
+    public Page<MessageReservationResponseDTO> getMessageReservationByUser(String username, int page) throws DataNotFoundException {
         SiteUser user = userService.get(username);
         Pageable pageable = PageRequest.of(page, 10);
 
@@ -1067,5 +1111,83 @@ public class MultiService {
         return DepartmentUserResponseDTO.builder().users(users).name(department.getName()).child(list).role(department.getRole().ordinal()).build();
     }
 
+    /*
+     * Question
+     */
+    public Page<QuestionDTO> getQuestions(int page, String keyword) {
+        return questionService.getList(page, keyword).map(this::getQuestionDTO);
+    }
 
+    public void createQuestion(QuestionDTO questionDTO) {
+        questionService.save(questionDTO.title(), questionDTO.content(), questionDTO.author(), questionDTO.password(), questionDTO.lock());
+    }
+
+    public QuestionDTO createAnswer(QuestionDTO requestDto) throws DataNotFoundException {
+        Question question = questionService.get(requestDto.id());
+        question = questionService.update(question, requestDto.answer());
+        return getQuestionDTO(question);
+    }
+
+    private QuestionDTO getQuestionDTO(Question question) {
+        return QuestionDTO.builder()//
+                .id(question.getId())
+                .title(question.getTitle())//
+                .content(question.getContent())//
+                .answer(question.getAnswer())//
+                .author(question.getAuthor())//
+                .createDate(this.dateTimeTransfer(question.getCreateDate())) //
+                .modifyDate(this.dateTimeTransfer(question.getModifyDate())) //
+                .lock(question.isLock())//
+                .build();
+
+    }
+
+    public boolean checkQuestion(QuestionDTO requestDto) {
+        Question question = questionService.get(requestDto.id());
+        return questionService.checkPassword(question, requestDto.password());
+    }
+
+    /*
+     * PersonalCycle
+     */
+
+    public void createPersonalCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) throws NotAllowedException {
+        SiteUser user = userService.get(username);
+        if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
+            throw new NotAllowedException("제목을 입력해주세요.");
+        } else if (personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()) {
+            throw new NotAllowedException("내용을 입력해주세요.");
+        } else if (personalCycleRequestDTO.startDate() == null) {
+            throw new NotAllowedException("시작 시간을 입력해주세요.");
+        } else if (personalCycleRequestDTO.endDate() == null) {
+            throw new NotAllowedException("종료 시간을 입력해주세요.");
+        }
+        personalCycleService.save(user, personalCycleRequestDTO);
+    }
+
+    public void updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
+        SiteUser user = userService.get(username);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if (personalCycle.getUser() != user) {
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }else if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
+            throw new NotAllowedException("제목을 입력해주세요.");
+        } else if (personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()) {
+            throw new NotAllowedException("내용을 입력해주세요.");
+        } else if (personalCycleRequestDTO.startDate() == null) {
+            throw new NotAllowedException("시작 시간을 입력해주세요.");
+        } else if (personalCycleRequestDTO.endDate() == null) {
+            throw new NotAllowedException("종료 시간을 입력해주세요.");
+        }
+        personalCycleService.upDate(personalCycle,personalCycleRequestDTO);
+    }
+
+    public void deletePersonalCycle(String username, Long id) {
+        SiteUser user = userService.get(username);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if(personalCycle.getUser() != user){
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }
+        personalCycleService.delete(personalCycle);
+    }
 }

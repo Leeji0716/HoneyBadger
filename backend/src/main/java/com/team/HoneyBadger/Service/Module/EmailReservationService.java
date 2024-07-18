@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Service.Module;
 import com.team.HoneyBadger.DTO.EmailReservationRequestDTO;
 import com.team.HoneyBadger.Entity.EmailReservation;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.EmailReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,7 +34,7 @@ public class EmailReservationService {
     }
 
     public EmailReservation getEmailReservation(Long reservationId) {
-        return emailReservationRepository.findById(reservationId).orElseThrow();
+        return emailReservationRepository.findById(reservationId).orElseThrow(() -> new DataNotFoundException("없는 예약 메일 입니다."));
     }
 
     public void update(EmailReservation emailReservation, EmailReservationRequestDTO emailReservationRequestDTO) {

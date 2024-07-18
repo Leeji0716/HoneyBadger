@@ -4,6 +4,7 @@ import com.team.HoneyBadger.DTO.MessageReservationRequestDTO;
 import com.team.HoneyBadger.DTO.MessageReservationResponseDTO;
 import com.team.HoneyBadger.Entity.MessageReservation;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.MessageReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,7 +35,7 @@ public class MessageReservationService {
     }
 
     public MessageReservation getMessageReservation(Long id) {
-        return messageReservationRepository.findById(id).orElseThrow();
+        return messageReservationRepository.findById(id).orElseThrow( ()-> new DataNotFoundException("없는 예약메세지입니다."));
     }
 
     public void update(MessageReservation messageReservation, MessageReservationRequestDTO messageReservationRequestDTO) {

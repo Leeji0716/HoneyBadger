@@ -13,12 +13,21 @@ export default function HOME() {
     const [open, setOpen] = useState(false);
     const [error, setError] = useState('');
     const file = useRef(null as any);
+    const [isClientLoading, setClientLoading] = useState(true);
+
     useEffect(() => {
         if (ACCESS_TOKEN)
-            getUser().then(r => setUser(r)).catch(e => console.log(e));
+            getUser().then(r => {
+                setUser(r); const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
+            }).catch(e => {
+                setClientLoading(false);
+                console.log(e);
+            });
+        else
+            location.href = "/"
     }, [ACCESS_TOKEN])
 
-    return <Main user={user}>
+    return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-full flex items-center justify-center p-10">
             <div className="w-full bg-white h-full shadow p-2 flex flex-col text-lg items-center">
                 <div className="flex items-center mt-10">

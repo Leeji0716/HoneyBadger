@@ -29,6 +29,7 @@ public class SiteUser {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Department department;
+    private boolean active;
 
     @Builder
     public SiteUser(String username, String name, UserRole role, String password, String phoneNumber, LocalDateTime joinDate, Department department) {
@@ -41,5 +42,6 @@ public class SiteUser {
         this.modifyDate = createDate;
         this.joinDate = joinDate;
         this.department = department;
+        this.active = true;
     }
 }

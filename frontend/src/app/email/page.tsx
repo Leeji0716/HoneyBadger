@@ -35,7 +35,6 @@ export default function Email() {
         receiverStatus: Receiver[],
         totalPage: number
     }
-
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
     const [user, setUser] = useState(null as any);
@@ -50,10 +49,13 @@ export default function Email() {
     const [maxPage, setMaxPage] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const mailBoxRef = useRef<HTMLDivElement>(null);
+    
 
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const maxLength = 30;
     const router = useRouter();
+
+    const [isClientLoading, setClientLoading] = useState(true);
 
     useEffect(() => {
         if (ACCESS_TOKEN)
@@ -63,14 +65,15 @@ export default function Email() {
                     setEmailList(r.content);
                     setSort(1);
                     setMaxPage(r.totalPages);
-                    setPage(page+1);
-                }).catch(e => console.log(e))
+                    setPage(page + 1);
+                    const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
+                }).catch(e => { setClientLoading(false); console.log(e); })
             }).catch(e => console.log(e));
     }, [ACCESS_TOKEN])
   
     const loadPage = () => {
         const mailBox = mailBoxRef.current;
-        
+
         if (mailBox != null) {
             const scrollLocation = mailBox?.scrollTop;
             const maxScroll = mailBox.scrollHeight - mailBox.clientHeight;
@@ -119,7 +122,7 @@ export default function Email() {
     }
 
     console.log(email);
-    function MailBox({ email }: { email: EmailResponseDTO }) {
+    function MailBox({ email  }: { email: EmailResponseDTO }) {
 
         return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300" onClick={() => {
             if (email.status == false && sort == 1) {
@@ -193,7 +196,7 @@ export default function Email() {
         </div>
     }
 
-    return <Main user={user}>
+    return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-4/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-full w-11/12 bg-white shadow p-2">
                 <div className="w-full h-30 flex flex-row">
