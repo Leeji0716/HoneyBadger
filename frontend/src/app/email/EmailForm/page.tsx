@@ -30,7 +30,7 @@ export default function EmailForm() {
     const [image, setImage] = useState("");
     const [files, setFiles] = useState<MailFile[]>([]);
     const [id, setId] = useState(0);
-
+    
     interface MailFile {
         key: string,
         original_name: string,
@@ -52,8 +52,8 @@ export default function EmailForm() {
                 if (email.index == 0) {
                     setEmail(email?.email);
                     setId(email?.email.id);
-                    setTitle("FW: "+email?.email?.title);
-                    setContent("-----Original Message-----"+email?.email?.content);
+                    setTitle("FW: " + email?.email?.title);
+                    setContent("-----Original Message-----" + email?.email?.content);
                     setFiles(email?.email?.files);
                     setFlag(0)
                 } else if (email.index == 1) {
@@ -62,8 +62,8 @@ export default function EmailForm() {
                     re.push(email?.email?.senderId);
                     setReceiverIds(re);
                     setId(email?.email?.id);
-                    setTitle("FW: "+email?.email?.title);
-                    setContent("-----Original Message-----"+email?.email?.content);
+                    setTitle("FW: " + email?.email?.title);
+                    setContent("-----Original Message-----" + email?.email?.content);
                     setFiles(email?.email?.files);
                     setFlag(0)
                 } else {
@@ -76,7 +76,7 @@ export default function EmailForm() {
                     setFiles(email?.email.files);
                     setFlag(2);
                 }
-                tempDelete().catch(e =>  console.log(e));
+                tempDelete().catch(e => console.log(e));
             }
         }
         else
@@ -138,12 +138,12 @@ export default function EmailForm() {
     function test() {
         if (flag == 2) {
             if (fileList.length == 0) {
-                const updateFiles:string[] = [];
-                files.map((f:MailFile,index:number) => updateFiles.push(f.value));
+                const updateFiles: string[] = [];
+                files.map((f: MailFile, index: number) => updateFiles.push(f.value));
                 mailUpdate({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: updateFiles }).then(r => window.location.href = "/email").catch(e => console.log(e));
             } else {
-                const updateFiles:string[] = [];
-                files.map((f:MailFile,index:number) => updateFiles.push(f.value));
+                const updateFiles: string[] = [];
+                files.map((f: MailFile, index: number) => updateFiles.push(f.value));
                 const form = new FormData();
                 for (const file of fileList)
                     form.append('attachments', file);
@@ -278,6 +278,7 @@ export default function EmailForm() {
             {/* <div dangerouslySetInnerHTML={{ __html: A }}></div> */}
         </div>
     </Main >
+
 
 }
 

@@ -22,11 +22,6 @@ public class EmailReceiverRepositoryCustomImpl implements EmailReceiverRepositor
     QEmailReservation qEmailReservation = QEmailReservation.emailReservation;
 
     @Override
-    public List<Email> findByReceiver(String receiverId) {
-        return jpaQueryFactory.select(qEmailReceiver.email).from(qEmailReceiver).where(qEmailReceiver.receiver.username.eq(receiverId)).fetch();
-    }
-
-    @Override
     @Transactional
     public Boolean markEmailAsRead(Long emailId, String receiverId) {
         long updatedRows = jpaQueryFactory.update(qEmailReceiver)

@@ -26,32 +26,29 @@ public class EmailController {
     public ResponseEntity<?> getEmailsForUser(@RequestHeader("Authorization") String accessToken, @RequestHeader("status") int status, @RequestHeader("Page") int page) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
-            try {
-                Page<Object> emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status, page);
-                return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTOList);
-            } catch (DataNotFoundException ex) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-            }
+            Page<Object> emailResponseDTOList = multiService.getEmailsForUser(tokenDTO.username(), status, page);
+            return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTOList);
         } else {
             return tokenDTO.getResponseEntity();
         }
     }
 
-    @PostMapping("/upload") //이메일 내용 업로드
+    @PostMapping("/upload") // 이메일 내용 업로드
     public ResponseEntity<?> handleFileUpload(@RequestHeader("Authorization") String accessToken, MultipartFile file) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (file.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 선택해주세요.");
-        if (tokenDTO.isOK()) try {
-            String fileName = multiService.emailContentUpload(tokenDTO.username(), file);
-            return ResponseEntity.status(HttpStatus.OK).body(fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 업로드 실패");
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        if (tokenDTO.isOK()) {
+            try {
+                String fileName = multiService.emailContentUpload(tokenDTO.username(), file);
+                return ResponseEntity.status(HttpStatus.OK).body(fileName);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("파일 업로드 실패: " + e.getMessage());
+            } catch (DataNotFoundException e) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            }
+        } else {
+            return tokenDTO.getResponseEntity();
         }
-
-        else return tokenDTO.getResponseEntity();
     }
 
     @PostMapping("/files")
@@ -60,61 +57,74 @@ public class EmailController {
         if (tokenDTO.isOK()) {
             try {
                 multiService.emailFilesUpload(email_id, attachments);
-                return ResponseEntity.status(HttpStatus.OK).body("okay");
+                return ResponseEntity.status(HttpStatus.OK).body("파일 업로드 성공");
             } catch (IOException ex) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("files not uploaded");
+                ex.printStackTrace();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("파일 업로드 실패: " + ex.getMessage());
             }
-        } else
+        } else {
             return tokenDTO.getResponseEntity();
+        }
     }
 
     @GetMapping
     public ResponseEntity<?> getEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long emailId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) try {
-            EmailResponseDTO emailResponseDTO = multiService.getEmailDTO(emailId, tokenDTO.username());
-            return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        if (tokenDTO.isOK()) {
+            try {
+                EmailResponseDTO emailResponseDTO = multiService.getEmailDTO(emailId, tokenDTO.username());
+                return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
+            } catch (DataNotFoundException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            }
+        } else {
+            return tokenDTO.getResponseEntity();
         }
-        else return tokenDTO.getResponseEntity();
-
     }
 
     @PostMapping
     public ResponseEntity<?> sendEmail(@RequestHeader("Authorization") String accessToken, @RequestBody EmailRequestDTO emailRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) try {
-            Long emailId = multiService.sendEmail(emailRequestDTO.title(), emailRequestDTO.content(), tokenDTO.username(), emailRequestDTO.receiverIds());
-            return ResponseEntity.status(HttpStatus.OK).body(emailId);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
-        } catch (IOException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("files error");
+        if (tokenDTO.isOK()) {
+            try {
+                Long emailId = multiService.sendEmail(emailRequestDTO.title(), emailRequestDTO.content(), tokenDTO.username(), emailRequestDTO.receiverIds());
+                return ResponseEntity.status(HttpStatus.OK).body(emailId);
+            } catch (DataNotFoundException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("파일 오류: " + ex.getMessage());
+            }
+        } else {
+            return tokenDTO.getResponseEntity();
         }
-        else return tokenDTO.getResponseEntity();
     }
 
-    @PutMapping("/read") //메세지 읽음 처리
+    @PutMapping("/read") // 메세지 읽음 처리
     public ResponseEntity<?> markEmailAsRead(@RequestHeader("Authorization") String accessToken, @RequestBody EmailReadRequestDTO emailReadRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        EmailResponseDTO emailResponseDTO = multiService.read(emailReadRequestDTO, tokenDTO.username());
-        return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
+        try {
+            EmailResponseDTO emailResponseDTO = multiService.read(emailReadRequestDTO, tokenDTO.username());
+            return ResponseEntity.status(HttpStatus.OK).body(emailResponseDTO);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 
-    @DeleteMapping //메세지 삭제
+    @DeleteMapping // 메세지 삭제
     public ResponseEntity<?> deleteEmail(@RequestHeader("Authorization") String accessToken, @RequestHeader Long emailId) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) try {
-            multiService.deleteEmail(emailId, tokenDTO.username());
-            return ResponseEntity.status(HttpStatus.OK).body("email DELETE SUCCESS");
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("FORBIDDEN : " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("BAD_REQUEST : " + ex.getMessage());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
+        if (tokenDTO.isOK()) {
+            try {
+                multiService.deleteEmail(emailId, tokenDTO.username());
+                return ResponseEntity.status(HttpStatus.OK).body("이메일 삭제 성공");
+            } catch (DataNotFoundException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("접근 금지: " + ex.getMessage());
+            } catch (IllegalArgumentException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("잘못된 요청: " + ex.getMessage());
+            }
+        } else {
+            return tokenDTO.getResponseEntity();
         }
-        else return tokenDTO.getResponseEntity();
     }
 }

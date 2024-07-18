@@ -35,7 +35,6 @@ export default function Email() {
         receiverStatus: Receiver[],
         totalPage: number
     }
-
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
     const [user, setUser] = useState(null as any);
@@ -50,6 +49,7 @@ export default function Email() {
     const [maxPage, setMaxPage] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const mailBoxRef = useRef<HTMLDivElement>(null);
+    
 
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const maxLength = 30;
@@ -119,7 +119,7 @@ export default function Email() {
     }
 
     console.log(email);
-    function MailBox({ email }: { email: EmailResponseDTO }) {
+    function MailBox({ email  }: { email: EmailResponseDTO }) {
 
         return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300" onClick={() => {
             if (email.status == false && sort == 1) {

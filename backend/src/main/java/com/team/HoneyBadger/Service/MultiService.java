@@ -689,7 +689,7 @@ public class MultiService {
     }
 
     @Transactional
-    public Long reservationEmail(EmailReservationRequestDTO requestDTO, String username) throws IOException {
+    public Long reservationEmail(EmailReservationRequestDTO requestDTO, String username) throws IOException,EmailReceiverNotFoundException {
         SiteUser sender = userService.get(username);
         if (requestDTO.receiverIds().isEmpty()) {
             throw new EmailReceiverNotFoundException("email not found");
