@@ -216,7 +216,7 @@ public class MultiService {
      */
 
     @Transactional
-    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) throws NotAllowedException{
+    public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) throws NotAllowedException {
         ChatroomResponseDTO chatroomResponseDTO;
         int userCount = chatroomRequestDTO.users().size();
         // 1:1 채팅 처리
@@ -363,14 +363,7 @@ public class MultiService {
             alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
         }
 
-        return ChatroomResponseDTO.builder()
-                .id(chatroom.getId())
-                .name(chatroom.getName())
-                .users(users)
-                .latestMessage(latestMessageDTO)
-                .notification(notificationDTO)
-                .alarmCount(alarmCnt)
-                .build();
+        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).alarmCount(alarmCnt).build();
     }
 
     @Transactional
@@ -403,7 +396,7 @@ public class MultiService {
     }
 
     @Transactional
-    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) throws DataNotFoundException{
+    public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         chatroom = chatroomService.updateChatroom(chatroom, chatroomRequestDTO.name());
         return getChatRoom(chatroom, username);
@@ -697,7 +690,7 @@ public class MultiService {
     }
 
     @Transactional
-    public Long reservationEmail(EmailReservationRequestDTO requestDTO, String username) throws IOException,EmailReceiverNotFoundException {
+    public Long reservationEmail(EmailReservationRequestDTO requestDTO, String username) throws IOException, EmailReceiverNotFoundException {
         SiteUser sender = userService.get(username);
         if (requestDTO.receiverIds().isEmpty()) {
             throw new EmailReceiverNotFoundException("email not found");
@@ -903,7 +896,7 @@ public class MultiService {
 
     public List<MessageResponseDTO> getImageMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        if (chatroom == null){
+        if (chatroom == null) {
             throw new DataNotFoundException("없는 채팅방입니다.");
         }
         return messageService.getImageMessageList(chatroom);
@@ -911,7 +904,7 @@ public class MultiService {
 
     public List<MessageResponseDTO> getLinkMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        if (chatroom == null){
+        if (chatroom == null) {
             throw new DataNotFoundException("없는 채팅방입니다.");
         }
         return messageService.getLinkMessageList(chatroom);
@@ -919,7 +912,7 @@ public class MultiService {
 
     public List<MessageResponseDTO> getFileMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        if (chatroom == null){
+        if (chatroom == null) {
             throw new DataNotFoundException("없는 채팅방입니다.");
         }
         return messageService.getFileMessageList(chatroom);
@@ -1098,17 +1091,43 @@ public class MultiService {
      * PersonalCycle
      */
 
-    public void createPersonalCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) throws IllegalArgumentException{
-       SiteUser user = userService.get(username);
-       if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()){
-           throw new IllegalArgumentException("제목을 입력해주세요.");
-       }else if(personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()){
-           throw new IllegalArgumentException("내용을 입력해주세요.");
-       }else if(personalCycleRequestDTO.startDate() == null){
-           throw new IllegalArgumentException("시작 시간을 입력해주세요.");
-       }else if(personalCycleRequestDTO.endDate() == null){
-           throw new IllegalArgumentException("종료 시간을 입력해주세요.");
-       }
-       personalCycleService.save(user,personalCycleRequestDTO);
+    public void createPersonalCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) throws NotAllowedException {
+        SiteUser user = userService.get(username);
+        if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
+            throw new NotAllowedException("제목을 입력해주세요.");
+        } else if (personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()) {
+            throw new NotAllowedException("내용을 입력해주세요.");
+        } else if (personalCycleRequestDTO.startDate() == null) {
+            throw new NotAllowedException("시작 시간을 입력해주세요.");
+        } else if (personalCycleRequestDTO.endDate() == null) {
+            throw new NotAllowedException("종료 시간을 입력해주세요.");
+        }
+        personalCycleService.save(user, personalCycleRequestDTO);
+    }
+
+    public void updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
+        SiteUser user = userService.get(username);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if (personalCycle.getUser() != user) {
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }else if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
+            throw new NotAllowedException("제목을 입력해주세요.");
+        } else if (personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()) {
+            throw new NotAllowedException("내용을 입력해주세요.");
+        } else if (personalCycleRequestDTO.startDate() == null) {
+            throw new NotAllowedException("시작 시간을 입력해주세요.");
+        } else if (personalCycleRequestDTO.endDate() == null) {
+            throw new NotAllowedException("종료 시간을 입력해주세요.");
+        }
+        personalCycleService.upDate(personalCycle,personalCycleRequestDTO);
+    }
+
+    public void deletePersonalCycle(String username, Long id) {
+        SiteUser user = userService.get(username);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if(personalCycle.getUser() != user){
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }
+        personalCycleService.delete(personalCycle);
     }
 }

@@ -3,6 +3,7 @@ package com.team.HoneyBadger.Service.Module;
 import com.team.HoneyBadger.DTO.PersonalCycleRequestDTO;
 import com.team.HoneyBadger.Entity.PersonalCycle;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.PersonalCycleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,5 +21,22 @@ public class PersonalCycleService {
                 .startDate(personalCycleRequestDTO.startDate())
                 .endDate(personalCycleRequestDTO.endDate())
                 .build());
+    }
+
+    public void upDate(PersonalCycle personalCycle, PersonalCycleRequestDTO personalCycleRequestDTO) {
+        personalCycle.setTitle(personalCycleRequestDTO.title());
+        personalCycle.setContent(personalCycleRequestDTO.content());
+        personalCycle.setStartDate(personalCycleRequestDTO.startDate());
+        personalCycle.setEndDate(personalCycleRequestDTO.endDate());
+        personalCycleRepository.save(personalCycle);
+
+    }
+
+    public PersonalCycle findById(Long id) throws DataNotFoundException {
+        return personalCycleRepository.findById(id).orElseThrow(() -> new DataNotFoundException("PersonalCycle not found with id: " + id));
+    }
+
+    public void delete(PersonalCycle personalCycle) {
+        personalCycleRepository.delete(personalCycle);
     }
 }
