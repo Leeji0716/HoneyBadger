@@ -124,8 +124,6 @@ export const getChat = async (keyword: string, Page: number) => {
 
 
 export const getChatDetail = async (chatroomId: number, page: number) => {
-    console.log("----> chatroomId :", chatroomId);
-    console.log("----> Page :" + page);
     const response = await UserApi.get('/api/chatroom', 
         { 
             headers: { chatroomId: chatroomId, Page: page} 

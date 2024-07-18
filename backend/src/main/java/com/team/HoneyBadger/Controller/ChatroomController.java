@@ -23,6 +23,7 @@ import java.util.List;
 public class ChatroomController {
     private final MultiService multiService;
 
+
     @GetMapping //채팅방 메세지 가져오기
     public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken,
                                          @RequestHeader("chatroomId") Long chatroomId,
