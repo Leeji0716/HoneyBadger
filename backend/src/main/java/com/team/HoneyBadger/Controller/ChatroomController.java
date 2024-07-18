@@ -34,7 +34,7 @@ public class ChatroomController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("INTERNAL_SERVER_ERROR : " + ex.getMessage());
         }
     }
-
+ 
     //    @GetMapping("/get") //--> updateChatroom PostMan 테스트 완료
 //    public ResponseEntity<?> getChatRoom(@RequestHeader("chatroomId") Long chatroomId, @RequestHeader("Authorization") String accessToken) {
 //        TokenDTO tokenDTO = multiService.checkToken(accessToken);
