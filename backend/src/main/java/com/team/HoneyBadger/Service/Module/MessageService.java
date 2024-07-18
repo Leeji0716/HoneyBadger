@@ -5,6 +5,7 @@ import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.Message;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Enum.MessageType;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,7 +31,7 @@ public class MessageService {
     }
 
     public Message getMessageById(Long messageId) {
-        return messageRepository.findById(messageId).orElseThrow();
+        return messageRepository.findById(messageId).orElseThrow(() -> new DataNotFoundException("없는 메세지입니다."));
     }
 
 

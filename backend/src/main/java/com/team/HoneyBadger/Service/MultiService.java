@@ -288,9 +288,6 @@ public class MultiService {
     @Transactional
     public Page<MessageResponseDTO> getMessageList(Long chatroomId, int page) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        if (chatroom == null) {
-            throw new DataNotFoundException("없는 채팅방입니다.");
-        }
         Pageable pageable = PageRequest.of(page, 15);
         Page<MessageResponseDTO> messagePage = messageService.getMessageList(chatroom.getMessageList(), pageable);
         return messagePage;
@@ -383,7 +380,7 @@ public class MultiService {
 
 
     @Transactional
-    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) {
+    public ChatroomResponseDTO notification(NoticeRequestDTO noticeRequestDTO, String username) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(noticeRequestDTO.chatroomId());
         Message message = messageService.getMessageById(noticeRequestDTO.messageId());
         chatroomService.notification(chatroom, message);
@@ -393,13 +390,13 @@ public class MultiService {
 
 
     @Transactional
-    public ChatroomResponseDTO getChatRoomById(Long chatroomId, String username) {
+    public ChatroomResponseDTO getChatRoomById(Long chatroomId, String username) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         return getChatRoom(chatroom, username);
     }
 
     @Transactional
-    public void deleteChatroom(Long chatroomId) {
+    public void deleteChatroom(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
         chatroomService.delete(chatroom);
     }
@@ -407,9 +404,6 @@ public class MultiService {
     @Transactional
     public ChatroomResponseDTO updateChatroom(Long chatroomId, ChatroomRequestDTO chatroomRequestDTO, String username) throws DataNotFoundException{
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
-        if (chatroom == null) {
-            throw new DataNotFoundException("없는 채팅방입니다.");
-        }
         chatroom = chatroomService.updateChatroom(chatroom, chatroomRequestDTO.name());
         return getChatRoom(chatroom, username);
     }
@@ -819,7 +813,7 @@ public class MultiService {
     }
 
     @Transactional
-    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO) {
+    public MessageResponseDTO sendMessage(Long id, MessageRequestDTO messageRequestDTO) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(id);
         SiteUser siteUser = userService.get(messageRequestDTO.username());
         MessageType messageType = this.getMessageType(messageRequestDTO.messageType());
@@ -897,18 +891,27 @@ public class MultiService {
 //        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
     }
 
-    public List<MessageResponseDTO> getImageMessageList(Long chatroomId) {
+    public List<MessageResponseDTO> getImageMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        if (chatroom == null){
+            throw new DataNotFoundException("없는 채팅방입니다.");
+        }
         return messageService.getImageMessageList(chatroom);
     }
 
-    public List<MessageResponseDTO> getLinkMessageList(Long chatroomId) {
+    public List<MessageResponseDTO> getLinkMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        if (chatroom == null){
+            throw new DataNotFoundException("없는 채팅방입니다.");
+        }
         return messageService.getLinkMessageList(chatroom);
     }
 
-    public List<MessageResponseDTO> getFileMessageList(Long chatroomId) {
+    public List<MessageResponseDTO> getFileMessageList(Long chatroomId) throws DataNotFoundException {
         Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        if (chatroom == null){
+            throw new DataNotFoundException("없는 채팅방입니다.");
+        }
         return messageService.getFileMessageList(chatroom);
     }
 
