@@ -15,7 +15,7 @@
               "runtimeArgs": [
                 "--remote-debugging-port=9229",
                 "--incognito",
-                // "--force-dark-mode"
+                "--force-dark-mode"
               ],
               "env": {
                 "NODE_ENV": "development"

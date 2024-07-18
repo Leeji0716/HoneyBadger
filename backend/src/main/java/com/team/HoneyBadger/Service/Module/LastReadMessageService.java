@@ -5,10 +5,7 @@ import com.team.HoneyBadger.Entity.LastReadMessage;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Repository.LastReadMessageRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.text.translate.NumericEntityUnescaper;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,9 +13,8 @@ import java.util.Optional;
 public class LastReadMessageService {
     private final LastReadMessageRepository lastReadMessageRepository;
 
-    public LastReadMessage get(SiteUser user, Chatroom chatroom) throws NullPointerException {
+    public LastReadMessage get(SiteUser user, Chatroom chatroom) {
         return lastReadMessageRepository.getLastMessage(user, chatroom);
-//        return null;
     }
 
     public LastReadMessage create(SiteUser user, Chatroom chatroom, Long lastMessageId) {

@@ -73,6 +73,11 @@ public class UserService {
     public List<SiteUser> getUsersDepartmentIsNull() {
         return userRepository.getUsersDepartmentIsNull();
     }
+
+    public SiteUser changeStatus(SiteUser user) {
+        user.setActive(!user.isActive());
+        return userRepository.save(user);
+    }
 }
 
 

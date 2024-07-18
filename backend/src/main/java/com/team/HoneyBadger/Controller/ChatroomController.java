@@ -23,93 +23,20 @@ import java.util.List;
 public class ChatroomController {
     private final MultiService multiService;
 
-    @MessageMapping("/updateChatroom/{id}")
-    @SendTo("/api/sub/updateChatroom/{id}") //업데이트 채팅룸 --> 갈아 끼울 채팅방 정보
-    public ResponseEntity<?> updateChatRoom(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
-        try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(id, messageRequestDTO.username());
-            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-        } catch (DataNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-
-    }
-
-    //    @GetMapping("/get") //--> updateChatroom PostMan 테스트 완료
-//    public ResponseEntity<?> getChatRoom(@RequestHeader("chatroomId") Long chatroomId, @RequestHeader("Authorization") String accessToken) {
-//        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-//        if (tokenDTO.isOK()) {
-//            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(chatroomId, tokenDTO.username());
-//            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-//        } else
-//            return tokenDTO.getResponseEntity();
-//    }
-
-    @GetMapping("/list") //채팅방리스트 가져오기
-    public ResponseEntity<?> getChatroomList(@RequestHeader("Authorization") String accessToken,
-                                             @RequestHeader(value = "keyword", defaultValue = "") String keyword,
-                                             @RequestHeader(value = "Page", required = false) Integer page) {
-        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-
-        if (page == null || page < 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("페이지 값이 없습니다.");
-        }
-        if (tokenDTO.isOK()) {
-            Page<ChatroomResponseDTO> chatroomResponseDTOList = multiService.getChatRoomListByUser(tokenDTO.username(), URLDecoder.decode(keyword, StandardCharsets.UTF_8), page);
-            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTOList);
-        } else return tokenDTO.getResponseEntity();
-    }
-
-    @GetMapping //채팅방 메세지 찾아오기
+    @GetMapping //채팅방 메세지 가져오기
     public ResponseEntity<?> getChatroom(@RequestHeader("Authorization") String accessToken,
                                          @RequestHeader("chatroomId") Long chatroomId,
                                          @RequestHeader(value = "Page", required = false) Integer page) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
 
         if (page == null || page < 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("페이지 값이 없습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("해당 페이지를 찾을 수 없습니다.");
         }
         if (tokenDTO.isOK()) try {
             Page<MessageResponseDTO> messageResponseDTOList = multiService.getMessageList(chatroomId, page);
             return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-        else return tokenDTO.getResponseEntity();
-    }
-
-    @GetMapping("/image") //채팅방의 이미지 메세지 찾아오기
-    public ResponseEntity<?> getChatroomByImage(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId) {
-        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) try {
-            List<MessageResponseDTO> messageResponseDTOList = multiService.getImageMessageList(chatroomId);
-            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-        else return tokenDTO.getResponseEntity();
-    }
-
-    @GetMapping("/link") //채팅방의 링크 메세지 찾아오기
-    public ResponseEntity<?> getChatroomByLink(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId) {
-        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) try {
-            List<MessageResponseDTO> messageResponseDTOList = multiService.getLinkMessageList(chatroomId);
-            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-        else return tokenDTO.getResponseEntity();
-    }
-
-    @GetMapping("/file") //채팅방의 이미지 메세지 찾아오기
-    public ResponseEntity<?> getChatroomByFile(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId) {
-        TokenDTO tokenDTO = multiService.checkToken(accessToken);
-        if (tokenDTO.isOK()) try {
-            List<MessageResponseDTO> messageResponseDTOList = multiService.getFileMessageList(chatroomId);
-            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
@@ -132,8 +59,8 @@ public class ChatroomController {
         if (tokenDTO.isOK()) try {
             ChatroomResponseDTO chatroomResponseDTO = multiService.updateChatroom(chatroomId, chatroomRequestDTO, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
@@ -144,8 +71,62 @@ public class ChatroomController {
         if (tokenDTO.isOK()) try {
             multiService.deleteChatroom(chatroomId);
             return ResponseEntity.status(HttpStatus.OK).body("DELETE SUCCESS");
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
+    @GetMapping("/file") //채팅방의 이미지 메세지 찾아오기
+    public ResponseEntity<?> getChatroomByFile(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            List<MessageResponseDTO> messageResponseDTOList = multiService.getFileMessageList(chatroomId);
+            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
+    @GetMapping("/image") //채팅방의 이미지 메세지 찾아오기
+    public ResponseEntity<?> getChatroomByImage(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            List<MessageResponseDTO> messageResponseDTOList = multiService.getImageMessageList(chatroomId);
+            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
+    @GetMapping("/link") //채팅방의 링크 메세지 찾아오기
+    public ResponseEntity<?> getChatroomByLink(@RequestHeader("Authorization") String accessToken, @RequestHeader("chatroomId") Long chatroomId) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            List<MessageResponseDTO> messageResponseDTOList = multiService.getLinkMessageList(chatroomId);
+            return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTOList);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
+    @GetMapping("/list") //채팅방리스트 가져오기
+    public ResponseEntity<?> getChatroomList(@RequestHeader("Authorization") String accessToken,
+                                             @RequestHeader(value = "keyword", defaultValue = "") String keyword,
+                                             @RequestHeader(value = "Page", required = false) Integer page) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+
+        if (page == null || page < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("해당 페이지를 찾을 수 없습니다.");
+        }
+        if (tokenDTO.isOK()) try {
+            Page<ChatroomResponseDTO> chatroomResponseDTOList = multiService.getChatRoomListByUser(tokenDTO.username(), URLDecoder.decode(keyword, StandardCharsets.UTF_8), page);
+            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTOList);
+        } catch (DataNotFoundException ex){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
@@ -156,9 +137,21 @@ public class ChatroomController {
         if (tokenDTO.isOK()) try {
             ChatroomResponseDTO chatroomResponseDTO = multiService.notification(noticeRequestDTO, tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO); //chatroom 리턴
-        } catch (DataNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }
+
+    @MessageMapping("/updateChatroom/{id}")
+    @SendTo("/api/sub/updateChatroom/{id}") //업데이트 채팅룸 --> 갈아 끼울 채팅방 정보
+    public ResponseEntity<?> updateChatRoom(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
+        try {
+            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(id, messageRequestDTO.username());
+            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
+        } catch (DataNotFoundException ex){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
 }
