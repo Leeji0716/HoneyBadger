@@ -336,7 +336,7 @@ public class MultiService {
 
     @Transactional
     private List<UserResponseDTO> userChange(Chatroom chatroom, List<String> usernames){
-        List<UserResponseDTO> users = null;
+        List<UserResponseDTO> users = new ArrayList<>();
         for (String user : usernames){
             SiteUser siteUser = userService.get(user);
             UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
