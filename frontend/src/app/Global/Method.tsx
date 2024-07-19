@@ -23,23 +23,6 @@ export function checkInput(check: any, pattern: string, True: () => void, False:
     else
         False();
 }
-export function PhoneNumberCheck(e: any) {
-    const input = e.target as HTMLInputElement;
-    input.value = input.value.replace(/[^0-9]/g, '');
-    if (input.value.length > 3 && input.value.charAt(3) != '-') {
-        const value = input.value;
-        input.value = value.slice(0, 3) + '-' + value.slice(3);
-    }
-    if (input.value.length > 8 && input.value.charAt(8) != '-') {
-        const value = input.value;
-        input.value = value.slice(0, 8) + '-' + value.slice(8);
-    }
-    if (input.value.length > 13)
-        input.value = input.value.slice(0, 13);
-    if (input.value.lastIndexOf('-') == input.value.length - 1)
-        input.value = input.value.slice(0, input.value.length - 1);
-
-}
 export function Check(pattern: string, test: string) {
     return new RegExp(pattern).test(test);
 }
@@ -147,11 +130,11 @@ export function getDateEmailTime(data: any) {
     const amPm = hours >= 12 ? '오후' : '오전';
     const formattedHour = hours % 12 || 12;  // 0시는 12시로 표현
     const formattedTime = amPm + " " + (formattedHour < 10 ? '0' + formattedHour : formattedHour) + ":"
-    + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+        + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
 
     return date.getFullYear() + "년 " +
-            (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "월 "
-            + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate())+"일 "+formattedTime;
+        (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "월 "
+        + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + "일 " + formattedTime;
 }
 
 export function getDepartmentRole(role: number) {
@@ -258,4 +241,18 @@ export function translateDex(num: number) {
         return num.toString(16);
 }
 
+export function PhoneNumberCheck(value: string) {
+    // const input = e.target as HTMLInputElement;
+    value = value.replace(/[^0-9]/g, '');
+    if (value.length > 3 && value.charAt(3) != '-')
+        value = value.slice(0, 3) + '-' + value.slice(3);
 
+    if (value.length > 8 && value.charAt(8) != '-')
+        value = value.slice(0, 8) + '-' + value.slice(8);
+
+    if (value.length > 13)
+        value = value.slice(0, 13);
+    if (value.lastIndexOf('-') == value.length - 1)
+        value = value.slice(0, value.length - 1);
+    return value;
+}

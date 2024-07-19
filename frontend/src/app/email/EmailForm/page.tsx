@@ -3,10 +3,8 @@
 import { emailFiles, getUser, mailImage, mailUpdate, reservationEmail, reservationFiles, sendEmail, tempDelete } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
-import { eongetDateTimeFormat, eontransferLocalTime, getDateTimeFormatInput, transferLocalTime } from "@/app/Global/Method";
+import {  eontransferLocalTime, getDateTimeFormatInput } from "@/app/Global/Method";
 import QuillNoSSRWrapper from "@/app/Global/QuillNoSSRWrapper";
-import { Fuzzy_Bubbles, Sree_Krushnadevaraya, Ultra } from "next/font/google";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
