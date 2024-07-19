@@ -67,7 +67,7 @@ export default function Approval() {
                 </button>
             </div>
 
-            <div className="w-11/12 h-full bg-white shadow">
+            <div className="w-11/12 bg-white shadow">
                 <div className="flex justify-start text-xl ml-5 mr-5 mt-5 mb-5 text-black">
                     <button className="font-bold" id="button1" onClick={() => { setOpen(!open), setFilter(!filter) }}>채팅{open ? '▴' : '▾'}</button>
                     <DropDown open={open} onClose={() => setOpen(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="button1">

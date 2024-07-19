@@ -382,3 +382,13 @@ export const updateQuestionAnswer = async (data: {answer:string, id:number}) => 
     const response = await UserApi.put('/api/question', data);
     return response.data;
 };
+
+export const readUsersName = async (messageId:number, username:string)=>{
+    const response = await UserApi.get('/api/message/readUsernames',{
+        headers : {
+            messageId : messageId,
+            username : username
+        }
+    });
+    return response.data;
+}
