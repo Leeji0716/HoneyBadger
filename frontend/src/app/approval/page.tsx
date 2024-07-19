@@ -7,38 +7,151 @@ import { useEffect, useState } from "react";
 
 
 export default function Approval() {
-
-    interface messageResponseDTO {
+    interface approvalResponseDTO {
         id?: number,
-        username: string,
-        message: string,
-        messageType: number,
-        sendTime: number,
-        name: string,
-        readUsers?: number
+        title: string,
+        status: number,
+        sender: string,
+        approver: string,
+        viewers: string[],
     }
 
+    const testData: approvalResponseDTO[] = [
+        {
+            id: 1,
+            title: "2024년 예산 승인 요청",
+            status: 2, // 예를 들어, 2는 "결제 대기중"을 의미한다고 가정
+            sender: "홍길동",
+            approver: "김철수",
+            viewers: ["이영희", "박민수"],
+        },
+        {
+            id: 2,
+            title: "프로젝트 X 완료 보고서",
+            status: 1, // 예를 들어, 1은 "안 읽음"을 의미한다고 가정
+            sender: "이순신",
+            approver: "최진희",
+            viewers: ["강호동"],
+        },
+        {
+            title: "연차 휴가 신청",
+            status: 3, // 예를 들어, 3은 "허가"를 의미한다고 가정
+            sender: "정우성",
+            approver: "황정민",
+            viewers: ["김연아", "손흥민", "이지영"],
+        },
+        {
+            id: 4,
+            title: "새로운 마케팅 계획",
+            status: 4, // 예를 들어, 0은 "반환"를 의미한다고 가정
+            sender: "오세훈",
+            approver: "임지연",
+            viewers: ["문재인", "유재석", "김태훈", "한성언", "남도원"],
+        },
+        {
+            id: 1,
+            title: "2024년 예산 승인 요청",
+            status: 2, // 예를 들어, 2는 "결제 대기중"을 의미한다고 가정
+            sender: "홍길동",
+            approver: "김철수",
+            viewers: ["이영희", "박민수"],
+        },
+        {
+            id: 2,
+            title: "프로젝트 X 완료 보고서",
+            status: 1, // 예를 들어, 1은 "안 읽음"을 의미한다고 가정
+            sender: "이순신",
+            approver: "최진희",
+            viewers: ["강호동"],
+        },
+        {
+            title: "연차 휴가 신청",
+            status: 3, // 예를 들어, 3은 "허가"를 의미한다고 가정
+            sender: "정우성",
+            approver: "황정민",
+            viewers: ["김연아", "손흥민", "이지영"],
+        },
+        {
+            id: 4,
+            title: "새로운 마케팅 계획",
+            status: 4, // 예를 들어, 0은 "반환"를 의미한다고 가정
+            sender: "오세훈",
+            approver: "임지연",
+            viewers: ["문재인", "유재석", "김태훈", "한성언", "남도원"],
+        },
+        {
+            id: 1,
+            title: "2024년 예산 승인 요청",
+            status: 2, // 예를 들어, 2는 "결제 대기중"을 의미한다고 가정
+            sender: "홍길동",
+            approver: "김철수",
+            viewers: ["이영희", "박민수"],
+        },
+        {
+            id: 2,
+            title: "프로젝트 X 완료 보고서",
+            status: 1, // 예를 들어, 1은 "안 읽음"을 의미한다고 가정
+            sender: "이순신",
+            approver: "최진희",
+            viewers: ["강호동"],
+        },
+        {
+            title: "연차 휴가 신청",
+            status: 3, // 예를 들어, 3은 "허가"를 의미한다고 가정
+            sender: "정우성",
+            approver: "황정민",
+            viewers: ["김연아", "손흥민", "이지영"],
+        },
+        {
+            id: 4,
+            title: "새로운 마케팅 계획",
+            status: 4, // 예를 들어, 0은 "반환"를 의미한다고 가정
+            sender: "오세훈",
+            approver: "임지연",
+            viewers: ["문재인", "유재석", "김태훈", "한성언", "남도원"],
+        },
+        {
+            id: 1,
+            title: "2024년 예산 승인 요청",
+            status: 2, // 예를 들어, 2는 "결제 대기중"을 의미한다고 가정
+            sender: "홍길동",
+            approver: "김철수",
+            viewers: ["이영희", "박민수"],
+        },
+        {
+            id: 2,
+            title: "프로젝트 X 완료 보고서",
+            status: 1, // 예를 들어, 1은 "안 읽음"을 의미한다고 가정
+            sender: "이순신",
+            approver: "최진희",
+            viewers: ["강호동"],
+        },
+        {
+            title: "연차 휴가 신청",
+            status: 3, // 예를 들어, 3은 "허가"를 의미한다고 가정
+            sender: "정우성",
+            approver: "황정민",
+            viewers: ["김연아", "손흥민", "이지영"],
+        },
+        {
+            id: 4,
+            title: "새로운 마케팅 계획",
+            status: 4, // 예를 들어, 0은 "반환"를 의미한다고 가정
+            sender: "오세훈",
+            approver: "임지연",
+            viewers: ["문재인", "유재석", "김태훈", "한성언", "남도원"],
+        }
+    ];
 
-    const [open, setOpen] = useState(false);
-    const [filter, setFilter] = useState(false);
+    const [filter, setFilter] = useState(0); //결제 필터 (전체 + status = 총 5개 : 0~4)
     const [user, setUser] = useState(null as any);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
-    const [isModalOpen2, setIsModalOpen2] = useState(false);
-    const [chatroomName, setChatroomName] = useState('');
     const [userList, setUserList] = useState([] as any[])
     const [selectedUsers, setSelectedUsers] = useState(new Set<string>());
     const [isClientLoading, setClientLoading] = useState(true);
     const [keyword, setKeyword] = useState('');
 
-    function handleOpen2Modal() {
-        setIsModalOpen2(true);
-    }
-
-    function handleClose2Modal() {
-        setIsModalOpen2(false);
-    }
-
-
+    // 유저 토큰 확인하기
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
@@ -49,112 +162,120 @@ export default function Approval() {
             location.href = '/';
     }, [ACCESS_TOKEN])
 
+    // 상태 매핑 함수
+    const getStatusText = (status: number): string => {
+        switch (status) {
+            case 0:
+                return "전체";
+            case 1:
+                return "안 읽음";
+            case 2:
+                return "결제 대기중..";
+            case 3:
+                return "허가";
+            case 4:
+                return "반환";
+            default:
+                return "알 수 없음";
+        }
+    };
+
+    // 상태 색상 매핑 함수
+    const getStatusColor = (status: number): string => {
+        switch (status) {
+            case 0:
+                return "text-black"; // 전체
+            case 1:
+                return "text-yellow-500"; // 안 읽음
+            case 2:
+                return "text-blue-500"; // 결제 대기중
+            case 3:
+                return "text-green-500"; // 허가
+            case 4:
+                return "text-red-500"; // 반환
+            default:
+                return "text-black"; // 알 수 없음
+        }
+    };
+
     return <Main user={user} isClientLoading={isClientLoading}>
         {/* 왼쪽 부분 */}
-        <div className="w-4/12 flex flex-col items-center justify-center pt-10 pb-4">
-            {/* 검색 인풋 */}
-            <div className="flex items-center border-2 border-gray rounded-full w-11/12 h-[50px] mb-5 shadow">
-                <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
-                <input
-                    type="text"
-                    placeholder="결재 제목 검색"
-                    className="bolder-0 outline-none bg-white text-black w-[90%]"
-                    value={keyword}
-                    onChange={e => setKeyword(e.target.value)}
-                />
-                <button className="text-gray-300 whitespace-nowrap w-[50px] h-[50px] m-2">
-                    검색
-                </button>
-            </div>
-
-            <div className="w-11/12 bg-white shadow">
-                <div className="flex justify-start text-xl ml-5 mr-5 mt-5 mb-5 text-black">
-                    <button className="font-bold" id="button1" onClick={() => { setOpen(!open), setFilter(!filter) }}>채팅{open ? '▴' : '▾'}</button>
-                    <DropDown open={open} onClose={() => setOpen(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="button1">
-                        <button>개인</button>
-                        <button>단체</button>
-                    </DropDown>
+        <div className="w-4/12 flex items-center justify-center h-full pt-10 pb-4">
+            <div className="w-11/12 h-full">
+                {/* 검색 인풋 */}
+                <div className="flex items-center border-2 border-gray rounded-full h-[50px] mb-5 shadow">
+                    <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
+                    <input
+                        type="text"
+                        placeholder="결재 제목 검색"
+                        className="bolder-0 outline-none bg-white text-black w-[90%]"
+                        value={keyword}
+                        onChange={e => setKeyword(e.target.value)}
+                    />
+                    <button className="text-gray-300 whitespace-nowrap w-[50px] h-[50px] m-2">
+                        검색
+                    </button>
                 </div>
-                <button onClick={handleOpen2Modal} className="fixed bottom-5 left-10 w-[50px] h-[50px] rounded-full bg-blue-300 text-xl font-bold text-white">
-                    +
-                </button>
-                <Modal open={isModalOpen2} onClose={handleClose2Modal} escClose={true} outlineClose={true}>
-                    <div className="overflow-auto w-full">
-                        <p className="font-bold text-3xl m-3 mb-8 flex justify-center">채팅방 만들기</p>
-                        <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] m-2">
-                            <input
-                                type="text"
-                                placeholder="채팅방 이름을 입력해주세요"
-                                className="bolder-0 outline-none bg-white text-black"
-                                value={chatroomName}
-                                onChange={e => setChatroomName(e.target.value)}
-                            />
-                        </div>
-                        <ul className="m-3">
-                            {userList.map((user, index) => (
-                                <li key={index} className="flex justify-between items-center mb-5">
-                                    <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
-                                    <span className="font-bold text-md m-3">{user.name}</span>
-                                    <span className=" text-md m-3">부서</span>
-                                    <span className="text-md m-3">역할</span>
-                                    {/* 체크박스 */}
-                                    {/* <input
-                                        type="checkbox"
-                                        checked={selectedUsers.has(user.username)}
-                                        onChange={() => handleCheckboxChange(user.username)}
-                                    /> */}
-                                </li>
+                <div className="bg-white shadow w-full">
+                    <div className="bg-gray-200 w-full justify-between h-[50px] flex flex-row mb-5">
+                        {filter == 0 ?
+                            <div className="flex w-[20%] justify-center items-center official-color rounded-md">
+                                <button className="font-bold btn-lx text-center text-white" >전체</button>
+                            </div> :
+                            <div className="flex w-[20%] justify-center items-center">
+                                <button className="font-bold btn-lx text-center" onClick={() => setFilter(0)}>전체</button>
+                            </div>
+                        }
+                        {filter == 1 ?
+                            <div className="flex w-[20%] justify-center items-center official-color rounded-md">
+                                <button className="font-bold btn-lx text-center text-white" >안 읽음</button>
+                            </div> :
+                            <div className="flex w-[20%] justify-center items-center">
+                                <button className="font-bold btn-lx text-center" onClick={() => setFilter(1)}>안 읽음</button>
+                            </div>
+                        }
+                        {filter == 2 ?
+                            <div className="flex w-[20%] justify-center items-center official-color rounded-md">
+                                <button className="font-bold btn-lx text-center text-white" >결제 대기중</button>
+                            </div> :
+                            <div className="flex w-[20%] justify-center items-center">
+                                <button className="font-bold btn-lx text-center" onClick={() => setFilter(2)}>결제 대기중</button>
+                            </div>
+                        }
+                        {filter == 3 ?
+                            <div className="flex w-[20%] justify-center items-center official-color rounded-md">
+                                <button className="font-bold btn-lx text-center text-white" >허가</button>
+                            </div> :
+                            <div className="flex w-[20%] justify-center items-center">
+                                <button className="font-bold btn-lx text-center" onClick={() => setFilter(3)}>허가</button>
+                            </div>
+                        }
+                        {filter == 4 ?
+                            <div className="flex w-[20%] justify-center items-center official-color rounded-md">
+                                <button className="font-bold btn-lx text-center text-white" >반환</button>
+                            </div> :
+                            <div className="flex w-[20%] justify-center items-center">
+                                <button className="font-bold btn-lx text-center" onClick={() => setFilter(4)}>반환</button>
+                            </div>
+                        }
+                    </div>
+                    <div className="relative flex flex-col justify-center w-full h-full">
+                        <div className="w-full h-[705px] overflow-x-hidden overflow-y-scroll">
+                            {/* Here we display the filtered approval data */}
+                            {testData.filter(item => filter === 0 || item.status === filter).map((item, index) => (
+                                <div key={index}
+                                    className="w-[550px] h-[50px] border-2 border-gray-300 mb-1 ml-1 rounded-lg shadow-md flex justify-between">
+                                    <h4 className="flex items-center justify-center font-bold w-[80%]">
+                                        <a href="#" className="">{item.title}</a></h4>
+                                    <p className={`flex items-center justify-center text-sm w-[20%] ${getStatusColor(item.status)}`}>{getStatusText(item.status)}</p>
+                                </div>
                             ))}
-                        </ul>
-                        <div className="w-full flex justify-center">
-                            {/* <button onClick={handleCreateChatroom} className="login-button flex items-center m-2">
-                                채팅방 생성
-                            </button> */}
+
+                            {/* 결재 서류 작성 */}
+                            <a href="/approval/ApprovalForm" className="absolute bottom-4 right-4 w-[50px] h-[50px] btn rounded-full official-color text-xl font-bold text-white flex items-center justify-center">
+                                +
+                            </a>
                         </div>
-                    </div>
-                </Modal>
-
-
-                <div className="flex flex-col items-center">
-                    <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[50px] mb-5">
-                        <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
-                        <input
-                            type="text"
-                            placeholder="대화방, 참여자 검색"
-                            className="bolder-0 outline-none bg-white text-black w-[80%]"
-                            value={keyword}
-                            onChange={e => setKeyword(e.target.value)}
-                        />
-                        {/* <button className="text-gray-300 whitespace-nowrap"
-                            onClick={handleSearch} >
-                            검색
-                        </button> */}
-                    </div>
-                    <div className="justify-start w-full">
-                        <p className="font-bold ml-3 text-gray-300">
-                            내 프로필
-                        </p>
-                        <div className="flex hover:bg-gray-400 text-white rounded-md">
-                            <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />
-                            <div className="w-full m-2 flex flex-col">
-                                <div className="flex justify-between">
-                                    <p className="text-black font-bold">{user?.name}</p>
-
-                                </div>
-                                <div className="flex flex-col mt-2">
-                                    <p className="text-black">{user?.username}</p>
-                                    <p className="text-black text-sm">:)</p>
-                                </div>
-                            </div>
-                            <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
-                            </div>
-                        </div>
-                        <p className="font-bold ml-3 text-gray-300 mt-3">
-                            대화 목록
-                        </p>
-                    </div>
-                    <div className="w-full justify-end h-[550px] overflow-x-hidden overflow-y-scroll">
-                        {/* {chatrooms?.map((chatroom: chatroomResponseDTO, index: number) => <ChatList key={index} Chatroom={chatroom} ChatDetail={chatDetail} innerRef={chatBoxRef} />)} */}
                     </div>
                 </div>
             </div>
@@ -162,10 +283,8 @@ export default function Approval() {
 
         {/* 오른쪽 부분 */}
         <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
-            <div className="h-11/12 w-11/12 bg-white h-full flex flex-col shadow">
-                {/* {chatroom != null ? <ChatDetail Chatroom={chatroom} messageList={messageList} innerRef={chatBoxRef} currentScrollLocation={currentScrollLocation} /> : <></>} */}
+            <div className="w-11/12 bg-white h-full flex flex-col shadow">
             </div>
         </div>
-    </Main>
-
+    </Main >
 }

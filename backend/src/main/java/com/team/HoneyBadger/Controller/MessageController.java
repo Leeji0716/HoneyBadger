@@ -86,6 +86,7 @@ public class MessageController {
                     for (SimpSubscription subscription : session.getSubscriptions()) {
                         if (subscription.getDestination().equals("/api/sub/message/"+id)) {
                             subscriberIds.add(user.getName());
+                            System.out.println(user.getName()); 
                             multiService.readMessage(id, messageRequestDTO.username());
                         }
                     }
