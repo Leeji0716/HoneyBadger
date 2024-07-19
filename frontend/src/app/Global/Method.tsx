@@ -258,10 +258,41 @@ export function PhoneNumberCheck(value: string) {
     return value;
 }
 
-export function getSoloarToLunarDate(time: number) {
-    const date = new Date(time);
+export function getSoloarToLunarDate(date: Date) {
     const calendar = new KoreanLunarCalendar();
     calendar.setSolarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
     const lunar = calendar.getLunarCalendar();
-    return new Date(lunar.year, lunar.month - 1, lunar.day);
+    return { date: new Date(lunar.year, lunar.month - 1, lunar.day), intercalation: lunar.intercalation };
+}
+
+export function hasIntercalation(year: number, month: number) {
+    const calendar = new KoreanLunarCalendar();
+    calendar.setLunarDate(year, month, 1, false);
+    const lunar = calendar.getSolarCalendar();
+    const date = new Date(lunar.year, lunar.month, lunar.day - 1);
+    calendar.setSolarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    return calendar.getLunarCalendar().intercalation;
+}
+
+export function isHoliday(date: Date) {
+    const solar = (date.getMonth() < 9 ? '0' : '') + (date.getMonth() + 1) + date.getDate();
+    const lunarDate = getSoloarToLunarDate(date);
+    const lunar = (lunarDate.date.getMonth() < 9 ? '0' : '') + (lunarDate.date.getMonth() + 1) + lunarDate.date.getDate() + (lunarDate.intercalation ? 'U' : '');
+    const solarHoliday = [
+        '0101', // 새해
+        '0301', // 삼일절
+        '0505', // 어린이날
+        '0606', // 현충일
+        '0815', // 광복절
+        '1003', // 개천절
+        '1009', // 한글날
+        '1225', // 크리스마스
+    ];
+
+    const lunarHoliday = [
+        '1231' + (hasIntercalation(lunarDate.date.getFullYear(), 12) ? 'U' : ''), '0101', '0102', // 설날
+        '0408', // 부처님 오신 날
+        '0814', '0815', '0816' // 추석
+    ];
+    return solarHoliday.includes(solar) || lunarHoliday.includes(lunar);
 }
