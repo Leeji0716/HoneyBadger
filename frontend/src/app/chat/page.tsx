@@ -66,6 +66,11 @@ export default function Chat() {
     const chatBoxRef = useRef<HTMLDivElement>(null);
     const [currentScrollLocation, setCurrentScrollLocation] = useState(0);
     const [updateMessageList, setUpdateMessageList] = useState<messageResponseDTO[]>([]);
+    const [preChatroomId, setPreChatroomId] = useState(0); 
+    const [messageSub, setMessageSub] = useState<any>(null);
+    const [readSub, setReadSub] = useState<any>(null);
+    const [updateSub, setUpdateSub] = useState<any>(null);
+   
 
     function handleOpenModal() {
         setIsModalOpen(true);
@@ -112,9 +117,6 @@ export default function Chat() {
     }, [])
 
     useEffect(() => {
-        console.log('chatBox load');
-        console.log('===>', chatBoxRef);
-        console.log('===>', chatBoxRef.current);
         
     }, [chatBoxRef])
 
@@ -127,41 +129,52 @@ export default function Chat() {
     }, [tempChatroom])
 
     useEffect(()=>{
-        console.log("궁금해요");
-        console.log(messageList);
-        console.log(updateMessageList.reverse());
-        if(updateMessageList){
-            let i = 1;
-            console.log(messageList.length);
-            updateMessageList.map((item) => {
-                console.log(item.id);
-                console.log(messageList.length - i);
-                messageList[messageList.length - i] = item;
-                i++;
-            })
-            console.log('---------------------------------------> 하하하');
-            console.log(messageList);
-            setMessageList(messageList);
-            // const index = messageList.findIndex((e:any)=> e.id == updateMessageList[0]?.id);
+    
+        if(updateMessageList) {
+            const updatedMessageList = [...messageList];
+            console.log('meeeeeee');
+            // console.log(messageList);
+            // console.log(updateMessageList);
 
-        }
+            
+            updateMessageList.forEach((updateItem) => {
+                const index = updatedMessageList.findIndex(msgItem => msgItem.id === updateItem.id);
+                if (index !== -1) {
+                    updatedMessageList[index] = updateItem; 
+                }
+            });
+    
+
+            setMessageList(updatedMessageList);
+
+            // console.log("ㅁㅁㅁㅁㅁㅁㅁ");
+            // console.log(messageList);
+            // console.log(updatedMessageList);
+
+          }
     }, [updateMessageList]);
     
     useEffect(() => {
         if (temp) {
-            console.log(',,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,')
-            console.log(temp);
-
             const test: messageResponseDTO[] = [...messageList];
 
-            console.log(',,,,,,,,,ssss,,,,')
-            console.log(test)
+            console.log("message, temsteer2121221212");
+            console.log(messageList);
 
-            test.push(temp);            
+            test.push(temp);   
+
+            console.log("tempt, temsteer2121221212");
+            console.log(temp);
+            console.log(test);
+            
             setMessageList(test);
-            // setChatDetail(temp);
+          
             setTemp(null);
         }
+
+        console.log("tempt, temsteer");
+        console.log(messageList);
+        // setChatDetail(temp);
     }, [temp])
 
     useEffect(() => {
@@ -178,18 +191,15 @@ export default function Chat() {
 
     const loadPage = () => {
         const chatBox = chatBoxRef.current;
-        console.log('sdfsdf');
 
         if (chatBox != null) {
             const scrollLocation = chatBox?.scrollTop;  
             const maxScroll = chatBox.scrollHeight - chatBox.clientHeight;
-            console.log('page' , page);
-            console.log('maxPage ', maxPage);
+    
          
             if (!isLoading && scrollLocation <= 0 && page < maxPage - 1) {
                 getChatDetail(chatroom.id, page + 1).then(r => {
-                    
-                    console.log(r.content.reverse());
+                
                     const result = [...r.content, ...messageList];
                     setMessageList(result);
                     setPage(page + 1);
@@ -276,7 +286,7 @@ export default function Chat() {
 
     function ChatList({ Chatroom, ChatDetail, innerRef }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO, innerRef:RefObject<HTMLDivElement> }) {
         const joinMembers: number = Chatroom.users.length;
-       
+
         function getValue(confirm: number) {
 
             switch (joinMembers) {
@@ -311,33 +321,48 @@ export default function Chat() {
                     </div>
             }
         }
+
         return <div className="flex hover:bg-gray-400 text-white rounded-md cursor-pointer" onClick={() => {
             if (isReady) {
                 let nowPage = page;
+
                 if (Chatroom) {
                     setPage(0);
                     nowPage = 0;
-                    socket.unsubscribe("/api/sub/message/" + Chatroom?.id);
-                    socket.unsubscribe("/api/sub/read/" + Chatroom?.id);
-                    socket.unsubscribe("/api/sub/updateChatroom/" + Chatroom?.id);
+                    console.log('unsub');
+                    if(messageSub) {
+                        console.log(messageSub.id);
+                        socket.unsubscribe(messageSub.id);
+                    }              
+                    if(readSub) {
+                        socket.unsubscribe(readSub.id);
+                    }      
+
+                    if(updateSub) {
+                        socket.unsubscribe(updateSub.id);
+                    }
+                    
+                    // socket.unsubscribe("/api/sub/message/" + preChatroomId);
+                    // socket.unsubscribe("/api/sub/read/" + preChatroomId);
+                    // socket.unsubscribe("/api/sub/updateChatroom/" + preChatroomId);
                 }
                 setChatroom(Chatroom);
-                console.log("caaaaaaa"+Chatroom.id);
+                setPreChatroomId(Chatroom.id);
+                
+                console.log(Chatroom.id);
 
+                console.log("-----------------------> onclick")
                 getChatDetail(Chatroom?.id, nowPage).then(r => {
-                    console.log('---------------------ddddd')
-                    console.log([...r.content].reverse());
-                    console.log(r.content);
                     setMessageList([...r.content].reverse());
                     setMaxPage(r.totalPages);
-
+                    console.log("-----------------------> getChatDetail")
                     // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
-                    socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
+                    const messageSub = socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
                         const message = JSON.parse(e.body).body;
                         const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name:message?.name, username: message?.username, messageType: message?.messageType, readUsers:message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
+                        
 
-                        console.log("username:", user?.username);
                         socket.publish({
                             destination: "/api/pub/read/" + Chatroom?.id,
                             body: JSON.stringify({ username: user?.username })
@@ -347,50 +372,37 @@ export default function Chat() {
 
                             destination: "/api/pub/updateChatroom/" + Chatroom?.id,
                             body: JSON.stringify({ username: user?.username })
+
                         });
 
 
                     });
+                    console.log('dddff');
+                    console.log(messageSub);
+                    setMessageSub(messageSub);
 
-                    socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
+                    const readSub = socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
                         const data = JSON.parse(e.body);
 
                         getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                            // console.log("==========><><<><><><><");
-                            // console.log(...r.content);
+                            console.log("----------------------------------------------------------------ssssssss");
+                            console.log(updateMessageList);
                             setUpdateMessageList(updateMessageList);
-                            // console.log("????????????????????")
-                            // console.log(updateMessageList);
-                           
-                            // const index = r.content.findIndex((e: messageResponseDTO) => e.id === updateMessageList[0].id);
-
-                            // const qweqwe = [...r.content];
-
-                            // console.log("qweqwe");
-                            // console.log(...r.content);
-                            // console.log(qweqwe);
-                            // console.log(qweqwe[3]);
-                            // console.log(qweqwe[2]);
-                            // console.log(qweqwe);
-
-                            // qweqwe.splice(index, qweqwe.length - index, ...updateMessageList);
-
-                            // console.log("qweqwe2");
-                            // console.log(qweqwe);
-
-                            // setMessageList(qweqwe);
-                            // console.log(messageList);
+     
                         }));
 
                     }, JSON.stringify({ username: user?.username }));
 
+                    setReadSub(readSub);
+
                 }).catch(e => console.log(e));
 
 
-                socket.subscribe("/api/sub/updateChatroom/" + Chatroom?.id, (e: any) => {
+                const updateSub1 = socket.subscribe("/api/sub/updateChatroom/" + Chatroom?.id, (e: any) => {
                     const data = JSON.parse(e.body);
                     setTempChatroom(data.body);
                 }, JSON.stringify({ username: user?.username }));
+                setUpdateSub(updateSub1);
 
             }
         }}>
@@ -437,13 +449,10 @@ export default function Chat() {
         const [messageType, setMessageType] = useState(0);
         const [messageListTmp, setMessageListTmp] = useState<messageResponseDTO[]>([]);
 
-        console.log('000000000000000000000000000');
-        console.log(messageList);
-
         useEffect(() => {        
             setMessageListTmp(messageList);
-            console.log('00011111111111100000');
-            console.log(messageListTmp);
+            // console.log("이게뭔데");
+            // console.log(messageList);
         }, []);
     
         useEffect(() => {
@@ -456,6 +465,7 @@ export default function Chat() {
                 }                
             } 
         }, [messageListTmp])
+    
     
         return <div>
             <div className="flex w-full justify-between border-b-2">
@@ -493,7 +503,7 @@ export default function Chat() {
                     <div className="overflow-auto">
                         <p className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</p>
                         <ul className="m-3">
-                            {userList.map((user, index) => (
+                            {userList.filter(user=>!chatroom.users.includes(user.username)).map((user, index) => (
                                 <li key={index} className="flex justify-between items-center mb-5">
                                     <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
                                     <span className="font-bold text-md m-3">{user.name}</span>
@@ -501,7 +511,7 @@ export default function Chat() {
                                     <span className="text-md m-3">역할</span>
                                     <button onClick={() => {
                                         addUser({ chatroomId: chatroom.id, username: user.username }).then(r => {
-                                            console.log("완료")
+                                            console.log("유저 추가 완료")
 
                                         }).catch(e => {
                                             console.log(e)
@@ -598,7 +608,6 @@ export default function Chat() {
                                                     setChatrooms([...chatrooms]);
                                                     setChatroom(r);
 
-                                                    console.log(Chatroom);
                                                 })
                                                 .catch((e) => {
                                                     console.error(e);
@@ -613,7 +622,6 @@ export default function Chat() {
 
                                             deleteMessage(Number(t?.id))
                                                 .then(() => {
-                                                    console.log("----")
                                                     setMessageList(prevMessageList => prevMessageList.filter(message => message.id !== t.id));
                                                 })
                                                 .catch((e) => {
@@ -654,8 +662,7 @@ export default function Chat() {
 
                                                 notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
                                                     .then((r) => {
-                                                        console.log('-=------====');
-                                                        // setNotificationMessage(r);
+
 
                                                         chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
                                                         setChatrooms([...chatrooms]);
@@ -670,7 +677,7 @@ export default function Chat() {
                                         >
                                             공지 설정
                                         </button>
-                                        <p className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap"> {joinMembers - (t?.readUsers ?? 0)}</p>
+                                        <p className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap"> {t.readUsers}{joinMembers - (t?.readUsers ?? 0)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -685,12 +692,10 @@ export default function Chat() {
 
                         onKeyDown={e => {
                             if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
-                                console.log("============> message Type");
                                 e.preventDefault(); // 폼 제출 방지
 
                                 if (isReady) {
-                                    console.log("ddddd: "+Chatroom?.id);
-                                    
+
                                     socket.publish({
                                         destination: "/api/pub/message/" + Chatroom?.id,
                                         body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
@@ -727,7 +732,7 @@ export default function Chat() {
                                     const selectedFile = e.target.files[0];
                                     if (selectedFile instanceof File) { // File 인스턴스 확인
                                         chatUploadFile({ chatroomId: chatroom?.id, file: selectedFile })
-                                            .then(r => { console.log('============>'); console.log(r); setMessage(r); setMessageType(1); })
+                                            .then(r => {setMessage(r); setMessageType(1); })
                                             .catch(e => console.log(e));
                                     }
                                 }
