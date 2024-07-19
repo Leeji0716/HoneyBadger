@@ -100,4 +100,14 @@ public class MessageController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
     }
+
+    @GetMapping("/readUsernames") //테스트용
+    public ResponseEntity<?> readUserMessagesTest(@RequestHeader Long messageId, @RequestHeader String username) {
+        try {
+            List<String> readUsers = multiService.readUserMessage(messageId, username);
+            return ResponseEntity.status(HttpStatus.OK).body(readUsers);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
 }
