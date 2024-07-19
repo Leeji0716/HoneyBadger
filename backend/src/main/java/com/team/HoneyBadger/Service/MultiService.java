@@ -895,10 +895,6 @@ public class MultiService {
         LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
         Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
 
-        Message testMessage = messageService.getMessageById(startId + 1);
-        System.out.println(testMessage);
-
-        System.out.println(messageService.getList(startId).size());
         for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
             HashSet<String> sets = new HashSet<>(message.getReadUsers());
             sets.add(reader.getUsername());

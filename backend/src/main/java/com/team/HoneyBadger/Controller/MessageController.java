@@ -90,4 +90,14 @@ public class MessageController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
     }
+
+    @PutMapping("/read")
+    public ResponseEntity<?> readMessagesTest(@RequestHeader Long id, @RequestHeader String username) {
+        try {
+            multiService.readMessage(id, username);
+            return ResponseEntity.status(HttpStatus.OK).body("Read OK");
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
 }
