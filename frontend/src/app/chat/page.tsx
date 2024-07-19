@@ -150,7 +150,13 @@ export default function Chat() {
     useEffect(() => {
         if (temp) {
             console.log(',,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,')
+            console.log(temp);
+
             const test: messageResponseDTO[] = [...messageList];
+
+            console.log(',,,,,,,,,ssss,,,,')
+            console.log(test)
+
             test.push(temp);            
             setMessageList(test);
             // setChatDetail(temp);
@@ -328,7 +334,7 @@ export default function Chat() {
                     // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
                     socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
                         const message = JSON.parse(e.body).body;
-                        const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, username: message?.username, messageType: message.messageType } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
+                        const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name:message?.name, username: message?.username, messageType: message?.messageType, readUsers:message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
 
                         console.log("username:", user?.username);
@@ -436,7 +442,8 @@ export default function Chat() {
 
         useEffect(() => {        
             setMessageListTmp(messageList);
-            
+            console.log('00011111111111100000');
+            console.log(messageListTmp);
         }, []);
     
         useEffect(() => {
@@ -563,12 +570,14 @@ export default function Chat() {
             </div> */}
 
             <div ref={innerRef} onScroll={loadPage} className="h-[600px] w-[100%] overflow-x-hidden overflow-y-scroll">
+
                 {/* 날짜 */}
                 <div className="flex justify-center">
                     <div className="inline-flex bg-gray-400 rounded-full text-white font-bold px-4 py-2 text-sm justify-center mt-2 bg-opacity-55">
                         2024년 07월 05일 금요일
                     </div>
                 </div>
+
                 {/* 채팅 */}
                 {messageListTmp?.map((t, index) => <div key={index} className="w-full flex flex-col items-start m-1">
                     {
@@ -576,7 +585,7 @@ export default function Chat() {
                             <div className="flex w-full justify-end" id={index.toString()}>
                                 <div className="w-6/12 flex justify-end mr-2">
 
-                                    <p className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap">{t?.readUsers}, {joinMembers - (t?.readUsers ?? 0)}</p>
+                                    <p className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap" >{t?.readUsers}, {joinMembers - (t?.readUsers ?? 0)}</p>
 
                                     <button
                                         className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
@@ -627,7 +636,7 @@ export default function Chat() {
                                 <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
                                 <div className="flex flex-col ml-2">
                                     <p className="text-black font-bold ml-2">
-                                        {t?.name}
+                                       {t?.name}
                                     </p>
                                     <div className="w-full flex">
                                         <p className="text-black ml-2">
@@ -669,9 +678,9 @@ export default function Chat() {
                 </div>)
                 }
             </div>
-            <div className="flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[6/12] items-start">
-                <div className="h-[100px] m-2 w-[98%]">
-                    <textarea placeholder="내용을 입력하세요" className="bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
+            <div className="flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[159px] items-start">
+                <div className="h-full m-2 w-[98%]">
+                    <textarea placeholder="내용을 입력하세요" className="resize-none bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
                         value={message}
 
                         onKeyDown={e => {
@@ -747,7 +756,7 @@ export default function Chat() {
     return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-4/12 flex items-center justify-center h-full pt-10 pb-4">
             {/* 왼쪽 부분 */}
-            <div className=" h-11/12 w-11/12 bg-white h-full shadow">
+            <div className=" w-11/12 bg-white h-full shadow">
                 <div className="flex justify-start text-xl ml-5 mr-5 mt-5 mb-5 text-black">
                     <button className="font-bold" id="button1" onClick={() => { setOpen(!open), setFilter(!filter) }}>채팅{open ? '▴' : '▾'}</button>
                     <DropDown open={open} onClose={() => setOpen(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="button1">
