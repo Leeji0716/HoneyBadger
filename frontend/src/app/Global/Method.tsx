@@ -1,4 +1,5 @@
 import html2canvas from 'html2canvas-pro';
+import KoreanLunarCalendar from "korean-lunar-calendar";
 
 export function Move(id: string) {
     document.getElementById(id)?.focus();
@@ -255,4 +256,12 @@ export function PhoneNumberCheck(value: string) {
     if (value.lastIndexOf('-') == value.length - 1)
         value = value.slice(0, value.length - 1);
     return value;
+}
+
+export function getSoloarToLunarDate(time: number) {
+    const date = new Date(time);
+    const calendar = new KoreanLunarCalendar();
+    calendar.setSolarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    const lunar = calendar.getLunarCalendar();
+    return new Date(lunar.year, lunar.month - 1, lunar.day);
 }
