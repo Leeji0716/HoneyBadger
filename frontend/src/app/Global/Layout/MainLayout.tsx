@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import Side from "../Side";
 import DropDown, { Direcion } from "../DropDown";
 

@@ -4,7 +4,7 @@ import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
 import { deleteDepartment, getDepartmentTopList, getDepartmentUsers, getUser, postDepartment, postDepartmentImage, postUser, updateActiveUser, updateUser } from "../API/UserAPI";
 
-import { getDateFormatInput, getDateKorean, getDepartmentRole, getRole, translateDex } from "../Global/Method";
+import { getDateFormatInput, getDateKorean, getDepartmentRole, getRole, PhoneNumberCheck, translateDex } from "../Global/Method";
 import Modal from "../Global/Modal";
 import { setMaxListeners } from "events";
 
@@ -181,22 +181,7 @@ export default function Page() {
             {detailFolds.includes(departmentUsers) ? (departmentUsers?.child as any[])?.map((child, index) => <Detail key={index} departmentUsers={child} stack={stack} />) : <></>}
         </>
     }
-    function PhoneNumberCheck(e: any) {
-        const input = e.target as HTMLInputElement;
-        input.value = input.value.replace(/[^0-9]/g, '');
-        if (input.value.length > 3 && input.value.charAt(3) != '-') {
-            const value = input.value;
-            input.value = value.slice(0, 3) + '-' + value.slice(3);
-        }
-        if (input.value.length > 8 && input.value.charAt(8) != '-') {
-            const value = input.value;
-            input.value = value.slice(0, 8) + '-' + value.slice(8);
-        }
-        if (input.value.length > 13)
-            input.value = input.value.slice(0, 13);
-        if (input.value.lastIndexOf('-') == input.value.length - 1)
-            input.value = input.value.slice(0, input.value.length - 1);
-    }
+
     return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-4/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-[847px] w-11/12 bg-white shadow p-2 ">
@@ -258,7 +243,7 @@ export default function Page() {
                     </div>
                     <div className="mt-2 flex items-center">
                         <label className="text-lg mr-2 w-[100px]">전화번호</label>
-                        <input type="text" className="input input-info w-[300px]" defaultValue={phoneNumber ? phoneNumber : "010-"} placeholder="전화번호" onChange={e => { PhoneNumberCheck(e); setPhoneNumber(e.target.value.replaceAll('-', '')) }} />
+                        <input type="text" className="input input-info w-[300px]" defaultValue={phoneNumber ? PhoneNumberCheck(phoneNumber) : "010-"} placeholder="전화번호" onChange={e => { const value = PhoneNumberCheck(e.target.value); e.target.value = value; setPhoneNumber(value.replaceAll('-', '')) }} />
                     </div>
                     <div className="mt-2 flex items-center">
                         <label className="text-lg mr-2 w-[100px]">입사일</label>
