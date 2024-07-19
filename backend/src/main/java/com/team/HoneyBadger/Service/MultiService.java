@@ -254,12 +254,14 @@ public class MultiService {
             if (chatroomParticipants.size() == 2) {
                 List<String> chatroomUsernames = chatroomParticipants.stream().map(p -> p.getUser().getUsername()).collect(Collectors.toList());
 
+
                 // 요청된 사용자 목록과 동일여부
                 if (new HashSet<>(chatroomRequestDTO.users()).containsAll(chatroomUsernames)) {
                     Chatroom chatroom = chatroomParticipants.get(0).getChatroom();
+                    List<UserResponseDTO> users = this.userChange(chatroom, chatroomUsernames);
 
                     // 채팅방이 존재할 경우 ChatroomResponseDTO 생성하여 반환
-                    return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(chatroomUsernames).build();
+                    return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).build();
                 }
             }
         }
@@ -331,9 +333,24 @@ public class MultiService {
         }
     }
 
+
+    @Transactional
+    private List<UserResponseDTO> userChange(Chatroom chatroom, List<String> usernames){
+        List<UserResponseDTO> users = null;
+        for (String user : usernames){
+            SiteUser siteUser = userService.get(user);
+            UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
+            users.add(userResponseDTO);
+        }
+        return users;
+    }
+
     @Transactional
     private ChatroomResponseDTO getChatRoom(Chatroom chatroom, String username) {
-        List<String> users = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
+        List<String> usernames = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
+
+        List<UserResponseDTO> users = this.userChange(chatroom, usernames);
+        
         Message latestMessage = messageService.getLatesMessage(chatroom.getMessageList());
 
         //마지막 메세지
