@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getDateKorean, getDateTimeKorean } from "../Global/Method";
+import {  getDateTimeKorean } from "../Global/Method";
 import { checkQuestion, createQuestion, getQuestions, getUser, updateQuestionAnswer } from "../API/UserAPI";
 import Modal from "../Global/Modal";
 import 'react-quill/dist/quill.bubble.css';
