@@ -26,6 +26,7 @@ export default function Main(props: Readonly<pageInterface>) {
           <a href="/email">메일</a>
           <a href="/email/EmailForm" onClick={() => localStorage.removeItem('email')}>메일쓰기</a>
           <a href="/approval">결재</a>
+          <a href="/cycle">일정</a>
           {user?.role == 13 || user?.department?.role == 1 ? <a href="/hr">인사관리</a> : <></>}
           {user?.role == 13 || user?.department?.role == 1 ? <a href="/inquire">문의관리</a> : <></>}
         </div>

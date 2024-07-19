@@ -30,10 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,6 +53,7 @@ public class MultiService {
     private final DepartmentService departmentService;
     private final QuestionService questionService;
     private final PersonalCycleService personalCycleService;
+    private final HolidayService holidayService;
 
     /**
      * Auth
@@ -1207,10 +1205,35 @@ public class MultiService {
 
     public void deletePersonalCycle(String username, Long id) {
         SiteUser user = userService.get(username);
-        PersonalCycle personalCycle = personalCycleService.findById(id);
-        if (personalCycle.getUser() != user) {
-            throw new NotAllowedException("접근 권한이 없습니다.");
-        }
-        personalCycleService.delete(personalCycle);
+//        PersonalCycle personalCycle = personalCycleService.findById(id);
+//        if(personalCycle.getUser() != user){
+//            throw new NotAllowedException("접근 권한이 없습니다.");
+//        }
+//        personalCycleService.delete(personalCycle);
+    }
+
+    public List<PersonalCycleResponseDTO> getMyCycle(String username, LocalDateTime startDate, LocalDateTime endDate) {
+        List<PersonalCycleResponseDTO> personalCycleResponseDTOList = new ArrayList<>();
+        SiteUser user = userService.get(username);
+        List<PersonalCycle> personalCycleList = personalCycleService.myMonthCycle(user,startDate,endDate);
+
+        do{
+            List<PersonalCycle> personalCycles = new ArrayList<>();
+            boolean holiday = false;
+            for(PersonalCycle personalCycle : personalCycleList){
+//                long start =  this.dateTimeTransfer(personalCycle.getStartDate());
+//                long end =  this.dateTimeTransfer(personalCycle.getEndDate().plusDays(1));
+//                long now = this.dateTimeTransfer(startDate);
+                if(startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()){
+                    personalCycles.add(personalCycle);
+                }
+            }
+            if(holidayService.getHoliday(startDate.toLocalDate()) != null){
+                holiday = true;
+            }
+            PersonalCycleResponseDTO personalCycleResponseDTO = PersonalCycleResponseDTO.builder().personalCycles(personalCycles).holiday(holiday).build();
+            personalCycleResponseDTOList.add(personalCycleResponseDTO);
+        }while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
+        return personalCycleResponseDTOList;
     }
 }

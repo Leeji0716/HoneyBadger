@@ -24,10 +24,25 @@ export default function Chat() {
     interface chatroomResponseDTO {
         id: number,
         name: string,
-        users: string[]
-        latestMessage: messageResponseDTO
-        notification: messageResponseDTO
+        users: any[],
+        latestMessage: messageResponseDTO,
+        notification: messageResponseDTO,
         alarmCount: number
+    }
+
+    interface userResponseDTO {
+        username: string,
+        name: string,
+        phoneNumber: string,
+        role: number,
+        createDate: number,
+        joinDate: number,
+        url: string,
+        DepartmentResponseDTO: DepartmentResponseDTO
+    }
+
+    interface DepartmentResponseDTO {
+        name: string
     }
 
     interface chatroomRequestDTO {
@@ -66,11 +81,11 @@ export default function Chat() {
     const chatBoxRef = useRef<HTMLDivElement>(null);
     const [currentScrollLocation, setCurrentScrollLocation] = useState(0);
     const [updateMessageList, setUpdateMessageList] = useState<messageResponseDTO[]>([]);
-    const [preChatroomId, setPreChatroomId] = useState(0); 
+    const [preChatroomId, setPreChatroomId] = useState(0);
     const [messageSub, setMessageSub] = useState<any>(null);
     const [readSub, setReadSub] = useState<any>(null);
     const [updateSub, setUpdateSub] = useState<any>(null);
-   
+
 
     function handleOpenModal() {
         setIsModalOpen(true);
@@ -102,11 +117,13 @@ export default function Chat() {
                 setUser(r);
                 getUsers().then(r => {
                     setUserList(r);
+                    console.log("rerqwerewzzzzzzzzzzzz")
+                    console.log(r);
                 }).catch(e => console.log(e))
                 getChat(keyword, page).then(r => {
                     setChatrooms(r.content);
                     const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
-                }).catch(e => {console.log(e); setClientLoading(false);})
+                }).catch(e => { console.log(e); setClientLoading(false); })
             }).catch(e => console.log(e));
         else
             window.location.href = "/";
@@ -117,7 +134,7 @@ export default function Chat() {
     }, [])
 
     useEffect(() => {
-        
+
     }, [chatBoxRef])
 
     useEffect(() => {
@@ -128,22 +145,22 @@ export default function Chat() {
         }
     }, [tempChatroom])
 
-    useEffect(()=>{
-    
-        if(updateMessageList) {
+    useEffect(() => {
+
+        if (updateMessageList) {
             const updatedMessageList = [...messageList];
             console.log('meeeeeee');
             // console.log(messageList);
             // console.log(updateMessageList);
 
-            
+
             updateMessageList.forEach((updateItem) => {
                 const index = updatedMessageList.findIndex(msgItem => msgItem.id === updateItem.id);
                 if (index !== -1) {
-                    updatedMessageList[index] = updateItem; 
+                    updatedMessageList[index] = updateItem;
                 }
             });
-    
+
 
             setMessageList(updatedMessageList);
 
@@ -151,9 +168,9 @@ export default function Chat() {
             // console.log(messageList);
             // console.log(updatedMessageList);
 
-          }
+        }
     }, [updateMessageList]);
-    
+
     useEffect(() => {
         if (temp) {
             const test: messageResponseDTO[] = [...messageList];
@@ -161,14 +178,14 @@ export default function Chat() {
             console.log("message, temsteer2121221212");
             console.log(messageList);
 
-            test.push(temp);   
+            test.push(temp);
 
             console.log("tempt, temsteer2121221212");
             console.log(temp);
             console.log(test);
-            
+
             setMessageList(test);
-          
+
             setTemp(null);
         }
 
@@ -187,19 +204,19 @@ export default function Chat() {
             }
         };
         fetchData();
-    }, []);    
+    }, []);
 
     const loadPage = () => {
         const chatBox = chatBoxRef.current;
 
         if (chatBox != null) {
-            const scrollLocation = chatBox?.scrollTop;  
+            const scrollLocation = chatBox?.scrollTop;
             const maxScroll = chatBox.scrollHeight - chatBox.clientHeight;
-    
-         
+
+
             if (!isLoading && scrollLocation <= 0 && page < maxPage - 1) {
                 getChatDetail(chatroom.id, page + 1).then(r => {
-                
+
                     const result = [...r.content, ...messageList];
                     setMessageList(result);
                     setPage(page + 1);
@@ -224,7 +241,7 @@ export default function Chat() {
             //                 console.log("------------maxScroll - beforeMax");
             //                 console.log(maxScroll);
             //                 setCurrentScrollLocation(maxScroll);
-                            
+
             //                     // scrollHeight : 300
             //                     // maxScroll : 300
             //                     // scrollLocation: 0
@@ -284,39 +301,49 @@ export default function Chat() {
         });
     };
 
-    function ChatList({ Chatroom, ChatDetail, innerRef }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO, innerRef:RefObject<HTMLDivElement> }) {
-        const joinMembers: number = Chatroom.users.length;
+    function ChatList({ Chatroom, ChatDetail, innerRef }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO, innerRef: RefObject<HTMLDivElement> }) {
 
-        function getValue(confirm: number) {
+        console.log("adsedwedqwqwedzzzzzzzzzzzzzzzzzz")
+        console.log(Chatroom);
 
-            switch (joinMembers) {
-                case 2: return <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />;
+        const joinMembers = Chatroom.users;
+
+        function getValue() {
+            const targets = [] as any[] //joinMembers.filter(f=> f?.name != user?.username)
+
+            // UseResonseDTO로 바꿔주면 주석 풀면 이미지는 바뀔것이오..
+
+
+            switch (joinMembers.length) {
+                case 2: return <img src={targets[0]?.url ? targets[0]?.url : "/pin.png"} className="m-2 w-[80px] h-[80px] rounded-full" />;
+
                 case 3: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
                     <div className="w-[80px] h-[40px] flex">
-                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full ml-2 mt-2" />
+                        <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full ml-2 mt-2" />
                     </div>
                     <div className="w-[80px] h-[40px] flex justify-end">
-                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full mr-2 mb-2" />
+                        <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full mr-2 mb-2" />
                     </div>
                 </div>
+
                 case 4: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
                     <div className="w-[80px] h-[40px] flex justify-center">
-                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
+                        <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
                     </div>
                     <div className="w-[80px] h-[40px] flex">
-                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
-                        <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
+                        <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
+                        <img src={targets[2]?.url ? targets[2].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
                     </div>
                 </div>
                 default:
                     return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
                         <div className="w-[80px] h-[40px] flex">
-                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
-                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
+                            <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
+                            <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
                         </div>
                         <div className="w-[80px] h-[40px] flex">
-                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
-                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
+                            <img src={targets[2]?.url ? targets[2].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
+                            <img src={targets[3]?.url ? targets[3].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
                         </div>
                     </div>
             }
@@ -330,25 +357,25 @@ export default function Chat() {
                     setPage(0);
                     nowPage = 0;
                     console.log('unsub');
-                    if(messageSub) {
+                    if (messageSub) {
                         console.log(messageSub.id);
                         socket.unsubscribe(messageSub.id);
-                    }              
-                    if(readSub) {
+                    }
+                    if (readSub) {
                         socket.unsubscribe(readSub.id);
-                    }      
+                    }
 
-                    if(updateSub) {
+                    if (updateSub) {
                         socket.unsubscribe(updateSub.id);
                     }
-                    
+
                     // socket.unsubscribe("/api/sub/message/" + preChatroomId);
                     // socket.unsubscribe("/api/sub/read/" + preChatroomId);
                     // socket.unsubscribe("/api/sub/updateChatroom/" + preChatroomId);
                 }
                 setChatroom(Chatroom);
                 setPreChatroomId(Chatroom.id);
-                
+
                 console.log(Chatroom.id);
 
                 console.log("-----------------------> onclick")
@@ -356,19 +383,30 @@ export default function Chat() {
                     setMessageList([...r.content].reverse());
                     setMaxPage(r.totalPages);
                     console.log("-----------------------> getChatDetail")
+
+                    socket.publish({
+                        destination: "/api/pub/read/" + Chatroom?.id,
+                        body: JSON.stringify({ username: user?.username })
+                    });
+
                     // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
                     const messageSub = socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
                         const message = JSON.parse(e.body).body;
-                        const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name:message?.name, username: message?.username, messageType: message?.messageType, readUsers:message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
+                        const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name: message?.name, username: message?.username, messageType: message?.messageType, readUsers: message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
-                        
+
+                        getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
+                                    console.log("----------------------------------------------------------------ssssssss");
+                                    console.log(updateMessageList);
+                                    // console.log(readUsersName(chatroom.id,updateMessageList[]))
+                                    setUpdateMessageList(updateMessageList);
+        
+                                }));
+
+
 
                         socket.publish({
-                            destination: "/api/pub/read/" + Chatroom?.id,
-                            body: JSON.stringify({ username: user?.username })
-                        });
-
-                        socket.publish({
+                            
 
                             destination: "/api/pub/updateChatroom/" + Chatroom?.id,
                             body: JSON.stringify({ username: user?.username })
@@ -381,17 +419,18 @@ export default function Chat() {
                     console.log(messageSub);
                     setMessageSub(messageSub);
 
-                    const readSub = socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
-                        const data = JSON.parse(e.body);
+                    // const readSub = socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
+                    //     const data = JSON.parse(e.body);
 
-                        getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                            console.log("----------------------------------------------------------------ssssssss");
-                            console.log(updateMessageList);
-                            setUpdateMessageList(updateMessageList);
-     
-                        }));
+                    //     getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
+                    //         console.log("----------------------------------------------------------------ssssssss");
+                    //         console.log(updateMessageList);
+                    //         // console.log(readUsersName(chatroom.id,updateMessageList[]))
+                    //         setUpdateMessageList(updateMessageList);
 
-                    }, JSON.stringify({ username: user?.username }));
+                    //     }));
+
+                    // }, JSON.stringify({ username: user?.username }));
 
                     setReadSub(readSub);
 
@@ -406,7 +445,7 @@ export default function Chat() {
 
             }
         }}>
-            {getValue(joinMembers)}
+            {getValue()}
 
             <div className="w-full m-2 flex flex-col">
                 <div className="text-black font-bold">
@@ -414,10 +453,10 @@ export default function Chat() {
                         <span>{Chatroom.name}</span>
                     ) : (
                         Chatroom?.users
-                            .filter((username: any) => username !== user?.username) // 현재 사용자 제외
-                            .map((username: any, index: number, array: any[]) => (
-                                <span key={username}>
-                                    {username}
+                            .filter((u: any) => u?.username !== user?.username) // 현재 사용자 제외
+                            .map((u: any, index: number, array: any[]) => (
+                                <span key={u?.username}>
+                                    {u?.username}
                                     {index < array.length - 1 && ", "}
                                 </span>
                             ))
@@ -442,31 +481,31 @@ export default function Chat() {
         </div>
     }
 
-    function ChatDetail({ Chatroom, messageList, innerRef, currentScrollLocation }: { Chatroom: chatroomResponseDTO, messageList: messageResponseDTO[], innerRef:RefObject<HTMLDivElement>, currentScrollLocation:number}){
+    function ChatDetail({ Chatroom, messageList, innerRef, currentScrollLocation }: { Chatroom: chatroomResponseDTO, messageList: messageResponseDTO[], innerRef: RefObject<HTMLDivElement>, currentScrollLocation: number }) {
         const joinMembers = Array.isArray(Chatroom.users) ? Chatroom.users.length : 0;
         const [message, setMessage] = useState('');
         const [roomName, setRoomName] = useState(chatroom?.name);
         const [messageType, setMessageType] = useState(0);
         const [messageListTmp, setMessageListTmp] = useState<messageResponseDTO[]>([]);
 
-        useEffect(() => {        
+        useEffect(() => {
             setMessageListTmp(messageList);
             // console.log("이게뭔데");
             // console.log(messageList);
         }, []);
-    
+
         useEffect(() => {
-            if(innerRef.current) {
-                if(currentScrollLocation == 0) {
-                    innerRef.current.scrollTop = innerRef.current.scrollHeight;    
+            if (innerRef.current) {
+                if (currentScrollLocation == 0) {
+                    innerRef.current.scrollTop = innerRef.current.scrollHeight;
                 }
                 else {
                     innerRef.current.scrollTop = currentScrollLocation;
-                }                
-            } 
+                }
+            }
         }, [messageListTmp])
-    
-    
+
+
         return <div>
             <div className="flex w-full justify-between border-b-2">
                 <div className="text-black flex w-[50%]">
@@ -477,11 +516,11 @@ export default function Chat() {
                                 {chatroom?.name ? (
                                     <span>{chatroom.name}</span>
                                 ) : (
-                                    chatroom?.users
-                                        ?.filter((username: any) => username !== user?.username) // 현재 사용자 제외
-                                        ?.map((username: any, index: number, array: []) => (
-                                            <span key={username}>
-                                                {username}
+                                    Chatroom?.users
+                                        .filter((u: any) => u?.username !== user?.username) // 현재 사용자 제외
+                                        .map((u: any, index: number, array: any[]) => (
+                                            <span key={u?.username}>
+                                                {u?.username}
                                                 {index < array.length - 1 && ", "}
                                             </span>
                                         ))
@@ -503,7 +542,7 @@ export default function Chat() {
                     <div className="overflow-auto">
                         <p className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</p>
                         <ul className="m-3">
-                            {userList.filter(user=>!chatroom.users.includes(user.username)).map((user, index) => (
+                            {userList.filter(user => !chatroom.users.includes(user.username)).map((user, index) => (
                                 <li key={index} className="flex justify-between items-center mb-5">
                                     <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
                                     <span className="font-bold text-md m-3">{user.name}</span>
@@ -644,7 +683,7 @@ export default function Chat() {
                                 <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
                                 <div className="flex flex-col ml-2">
                                     <p className="text-black font-bold ml-2">
-                                       {t?.name}
+                                        {t?.name}
                                     </p>
                                     <div className="w-full flex">
                                         <p className="text-black ml-2">
@@ -732,7 +771,7 @@ export default function Chat() {
                                     const selectedFile = e.target.files[0];
                                     if (selectedFile instanceof File) { // File 인스턴스 확인
                                         chatUploadFile({ chatroomId: chatroom?.id, file: selectedFile })
-                                            .then(r => {setMessage(r); setMessageType(1); })
+                                            .then(r => { setMessage(r); setMessageType(1); })
                                             .catch(e => console.log(e));
                                     }
                                 }
@@ -857,7 +896,7 @@ export default function Chat() {
         {/* 오른쪽 부분 */}
         <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-11/12 w-11/12 bg-white h-full flex flex-col shadow">
-                {chatroom != null ? <ChatDetail Chatroom={chatroom} messageList={messageList} innerRef={chatBoxRef} currentScrollLocation={currentScrollLocation}/> : <></>}
+                {chatroom != null ? <ChatDetail Chatroom={chatroom} messageList={messageList} innerRef={chatBoxRef} currentScrollLocation={currentScrollLocation} /> : <></>}
             </div>
         </div>
     </Main>
