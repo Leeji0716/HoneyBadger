@@ -19,11 +19,11 @@ public class Approval {
     private String title;
     private ApprovalStatus status;
     @ManyToOne(fetch = FetchType.LAZY)
-    private SiteUser sender;
+    private SiteUser sender; //보낸사람
     @ManyToOne(fetch = FetchType.LAZY)
-    private SiteUser approver;
+    private SiteUser approver; //승인자
     @OneToMany(mappedBy = "approval", orphanRemoval = true, cascade = CascadeType.ALL)
-    private List<Viewer> viewers;
+    private List<Viewer> viewers; //참고인
 
     @Builder
     public Approval(String title, ApprovalStatus status, SiteUser sender, SiteUser approver, List<Viewer> viewers) {
