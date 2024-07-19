@@ -1,6 +1,7 @@
 package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.DTO.PersonalCycleRequestDTO;
+import com.team.HoneyBadger.DTO.PersonalCycleResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.NotAllowedException;
@@ -9,6 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -59,4 +64,16 @@ public class PersonalCycleController {
         }
         else return tokenDTO.getResponseEntity();
     }
+
+    @GetMapping
+    public ResponseEntity<?> myMonthCycle(@RequestHeader("Authorization") String accessToken, @RequestHeader("startDate") String startDate, @RequestHeader("endDate") String endDate){
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if(tokenDTO.isOK()) {
+            List<PersonalCycleResponseDTO> personalCycleResponseDTOS = multiService.getMyCycle(tokenDTO.username(), LocalDateTime.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")), LocalDateTime.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
+            return ResponseEntity.status(HttpStatus.OK).body(personalCycleResponseDTOS);
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
+
 }
