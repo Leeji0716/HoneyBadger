@@ -22,11 +22,8 @@ export default function Home() {
             location.href = "/"
     }, [ACCESS_TOKEN])
 
-    const lunar = getSoloarToLunarDate(new Date().getTime());
     return <Main user={user} isClientLoading={isClientLoading} >
         <div className="flex flex-col">
-            <div>{getDateKorean(new Date().getTime())}</div>
-            <div>{getDateKorean(lunar.getTime())}</div>
         </div>
     </Main>
 }
