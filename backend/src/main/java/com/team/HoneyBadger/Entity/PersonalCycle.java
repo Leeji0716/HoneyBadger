@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -24,6 +25,8 @@ public class PersonalCycle {
     private LocalDateTime createDate;
     @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser user;
+
+    private List<String> tag;
 
     @Builder
     public PersonalCycle(String title, String content, SiteUser user, LocalDateTime startDate, LocalDateTime endDate) {

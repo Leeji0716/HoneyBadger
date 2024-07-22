@@ -233,7 +233,6 @@ export default function Home() {
                         :
                         <></>
                     }
-
                 </div>
                 <div className="flex justify-center absolute bottom-0 left-0 w-full">
                     <button><img src="/lleft.png" className="w-[12px] h-[12px]" /></button>

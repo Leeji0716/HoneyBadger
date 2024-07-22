@@ -8,6 +8,9 @@ import com.team.HoneyBadger.Repository.PersonalCycleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PersonalCycleService {
@@ -38,5 +41,17 @@ public class PersonalCycleService {
 
     public void delete(PersonalCycle personalCycle) {
         personalCycleRepository.delete(personalCycle);
+    }
+
+    public List<PersonalCycle> myMonthCycle(SiteUser user, LocalDateTime startDate, LocalDateTime endDate){
+
+        return personalCycleRepository.myMonthCycle(user,startDate,endDate);
+    }
+
+
+    public void setTag(PersonalCycle personalCycle, List<String> tag) {
+        personalCycle.setTag(tag);
+        personalCycleRepository.save(personalCycle);
+
     }
 }

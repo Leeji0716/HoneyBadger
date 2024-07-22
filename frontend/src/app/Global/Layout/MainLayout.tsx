@@ -30,7 +30,7 @@ export default function Main(props: Readonly<pageInterface>) {
           <a href="/chat" className="flex mb-4"><img src='/chat.png' className="w-[24px] h-[24px] mr-2" />채팅</a>
           <a href="/email" className="flex mb-4"><img src='/mailb.png' className="w-[24px] h-[24px] mr-2" />메일</a>
           <a href="/approval" className="flex mb-4"><img src='/approval.png' className="w-[24px] h-[24px] mr-2" />결재</a>
-          <a href="/calander" className="flex mb-4"><img src='/calander.png' className="w-[24px] h-[24px] mr-2" />일정</a>
+          <a href="/cycle" className="flex mb-4"><img src='/calander.png' className="w-[24px] h-[24px] mr-2" />일정</a>
           <a href="/storage" className="flex mb-4"><img src='/storage.png' className="w-[24px] h-[24px] mr-2" />저장소</a>
           {user?.role == 13 || user?.department?.role == 1 ? <a href="/hr" className="flex mb-4"><img src='/hr.png' className="w-[24px] h-[24px] mr-2" />인사관리</a> : <></>}
           {user?.role == 13 || user?.department?.role == 1 ? <a href="/inquire" className="flex mb-4"><img src='/inquire.png' className="w-[24px] h-[24px] mr-2" />문의관리</a> : <></>}

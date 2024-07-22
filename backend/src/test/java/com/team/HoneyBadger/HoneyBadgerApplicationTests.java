@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
+
 @SpringBootTest
 class HoneyBadgerApplicationTests {
     @Autowired
@@ -30,6 +32,31 @@ class HoneyBadgerApplicationTests {
 //                }
 //            }
 //        }
+
+
+    }
+
+    @Test
+    void getMyCycle() {
+        System.out.println("for");
+        {
+            LocalDateTime startDate = LocalDateTime.now();
+            LocalDateTime endDate = LocalDateTime.now().plusDays(5);
+
+            for (; !startDate.isAfter(endDate); startDate = startDate.plusDays(1)) {
+                System.out.println(startDate.toString());
+            }
+        }
+        System.out.println("while");
+        {
+            LocalDateTime startDate = LocalDateTime.now();
+            LocalDateTime endDate = LocalDateTime.now().plusDays(5);
+
+            while (!(startDate = startDate.plusDays(1)).isAfter(endDate)) {
+                System.out.println(startDate.toString());
+            }
+        }
+
 
 
     }
