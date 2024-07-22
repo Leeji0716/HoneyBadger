@@ -1188,7 +1188,7 @@ public class MultiService {
         } else if (personalCycleRequestDTO.endDate().isBefore(personalCycleRequestDTO.startDate()) || personalCycleRequestDTO.startDate().equals(personalCycleRequestDTO.endDate())) {
             throw new NotAllowedException("시간 설정을 다시 해주세요.");
         }
-        personalCycleService.save(user, personalCycleRequestDTO);
+        personalCycleService.create(user, personalCycleRequestDTO);
     }
 
     @Transactional
@@ -1230,7 +1230,7 @@ public class MultiService {
             boolean holiday = false;
             String holidayTitle = "";
             for (PersonalCycle personalCycle : personalCycleList) {
-                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()) {
+                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()){
                     PersonalCycleDTO personalCycleDTO = PersonalCycleDTO.builder().id(personalCycle.getId()).title(personalCycle.getTitle()).content(personalCycle.getContent()).startDate(dateTimeTransfer(personalCycle.getStartDate())).endDate(dateTimeTransfer(personalCycle.getEndDate())).tag(personalCycle.getTag()).build();
                     personalCycleDTOList.add(personalCycleDTO);
                 }
@@ -1273,6 +1273,20 @@ public class MultiService {
                     .endDate(dateTimeTransfer(personalCycle.getEndDate()))
                     .tag(personalCycle.getTag())
                     .build();
+
+    }
+
+    public void deleteTag(String username, Long id, String tag) {
+        SiteUser user = userService.get(username);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if(user != personalCycle.getUser()){
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }
+        boolean intag = personalCycle.getTag().remove(tag);
+        if(!intag){
+            throw new IllegalArgumentException("잘못된 태그 입니다.");
+        }
+        personalCycleService.save(personalCycle);
 
     }
 }
