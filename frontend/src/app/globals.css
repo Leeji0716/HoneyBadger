@@ -47,7 +47,7 @@ body {
   background-color: #1d4ed8; 
 }
 .official-color {
-  background-color: rgb(143, 190, 233); /* RGB 값으로 배경 색상 설정 */
+  background-color: #8fbee9; /* RGB 값으로 배경 색상 설정 */
 }
 
 
@@ -128,4 +128,10 @@ body {
   background-color: black;  /* 줄의 색상 */
   transition: all 0.3s ease; /* 애니메이션 효과 */
   border-radius: 1.5px;
+}
+
+@layer components {
+  .checkbox-div:has(input:checked) {
+    @apply border-2 border-[#8fbee9] group-hover:bg-[#dce2e8];
+  }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import {  useState } from "react";
+import { useState } from "react";
 import Side from "../Side";
 import DropDown, { Direcion } from "../DropDown";
 
@@ -8,7 +8,7 @@ interface pageInterface {
   children: React.ReactNode,
   classname?: string,
   user: any;
-  isClientLoading: boolean; 
+  isClientLoading: boolean;
 }
 
 export default function Main(props: Readonly<pageInterface>) {
@@ -21,14 +21,19 @@ export default function Main(props: Readonly<pageInterface>) {
         <img src="/logo.png" />
       </div>
       <Side open={open} onClose={() => setOpen(false)} escClose={true} outlineClose={true} className="w-[250px] h-full">
-        <div className="flex flex-col">
-          <a href="/chat">채팅</a>
-          <a href="/email">메일</a>
-          <a href="/email/EmailForm" onClick={() => localStorage.removeItem('email')}>메일쓰기</a>
-          <a href="/approval">결재</a>
-          <a href="/cycle">일정</a>
-          {user?.role == 13 || user?.department?.role == 1 ? <a href="/hr">인사관리</a> : <></>}
-          {user?.role == 13 || user?.department?.role == 1 ? <a href="/inquire">문의관리</a> : <></>}
+        <div className="flex flex-col p-4">
+          <div className="flex justify-between items-center">
+            <img src='/logo_text.png' className="w-[100px] mb-4" />
+            <img src="/x.png" className="w-[24px] h-[24px] cursor-pointer" onClick={() => setOpen(false)}></img>
+          </div>
+          <a href="/main" className="flex mb-4"><img src='/main.png' className="w-[24px] h-[24px] mr-2" />메인</a>
+          <a href="/chat" className="flex mb-4"><img src='/chat.png' className="w-[24px] h-[24px] mr-2" />채팅</a>
+          <a href="/email" className="flex mb-4"><img src='/mailb.png' className="w-[24px] h-[24px] mr-2" />메일</a>
+          <a href="/approval" className="flex mb-4"><img src='/approval.png' className="w-[24px] h-[24px] mr-2" />결재</a>
+          <a href="/cycle" className="flex mb-4"><img src='/calander.png' className="w-[24px] h-[24px] mr-2" />일정</a>
+          <a href="/storage" className="flex mb-4"><img src='/storage.png' className="w-[24px] h-[24px] mr-2" />저장소</a>
+          {user?.role == 13 || user?.department?.role == 1 ? <a href="/hr" className="flex mb-4"><img src='/hr.png' className="w-[24px] h-[24px] mr-2" />인사관리</a> : <></>}
+          {user?.role == 13 || user?.department?.role == 1 ? <a href="/inquire" className="flex mb-4"><img src='/inquire.png' className="w-[24px] h-[24px] mr-2" />문의관리</a> : <></>}
         </div>
       </Side>
       <div className="official-color flex items-center h-[50px] min-h-[50px] w-full ">
@@ -62,4 +67,4 @@ export default function Main(props: Readonly<pageInterface>) {
 
 // 화이팅!!
 // 다들 힘내야 돼 우리는 할 수 있어 !!
-
+// 정말..?
