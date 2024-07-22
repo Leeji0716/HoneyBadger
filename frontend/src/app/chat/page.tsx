@@ -412,19 +412,19 @@ export default function Chat() {
                         // });
 
 
-                        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!server!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        // console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!server!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         // 서버로 메시지 전송
-                        socket.publish({
-                            destination: '/api/pub/read/' + Chatroom.id,
-                            body: JSON.stringify({ username: user?.username })
-                        });
+                        // socket.publish({
+                        //     destination: '/api/pub/read/' + Chatroom.id,
+                        //     body: JSON.stringify({ username: user?.username })
+                        // });
 
 
                         // 메시지 수신
-                        socket.subscribe('/topic/messages', (data:string) => {
-                            const usernames = JSON.parse(data);
-                            console.log('Received usernames:', usernames);
-                        });
+                        // socket.subscribe('/topic/messages', (data:string) => {
+                        //     const usernames = JSON.parse(data);
+                        //     console.log('Received usernames:', usernames);
+                        // });
 
                         socket.publish({
 
