@@ -47,4 +47,11 @@ public class PersonalCycleService {
 
         return personalCycleRepository.myMonthCycle(user,startDate,endDate);
     }
+
+
+    public void setTag(PersonalCycle personalCycle, List<String> tag) {
+        personalCycle.setTag(tag);
+        personalCycleRepository.save(personalCycle);
+
+    }
 }

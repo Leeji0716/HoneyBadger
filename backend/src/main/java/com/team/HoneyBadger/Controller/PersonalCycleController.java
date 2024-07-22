@@ -1,6 +1,7 @@
 package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.DTO.PersonalCycleRequestDTO;
+import com.team.HoneyBadger.DTO.PersonalCycleRequestTagDTO;
 import com.team.HoneyBadger.DTO.PersonalCycleResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
@@ -65,6 +66,8 @@ public class PersonalCycleController {
         else return tokenDTO.getResponseEntity();
     }
 
+
+    //개인일정 리스트
     @GetMapping
     public ResponseEntity<?> myMonthCycle(@RequestHeader("Authorization") String accessToken, @RequestHeader("startDate") String startDate, @RequestHeader("endDate") String endDate){
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
@@ -75,5 +78,19 @@ public class PersonalCycleController {
         else return tokenDTO.getResponseEntity();
     }
 
+
+    @PostMapping("/tag")
+    public ResponseEntity<?> tagMake(@RequestHeader("Authorization") String accessToken, @RequestBody PersonalCycleRequestTagDTO personalCycleRequestTagDTO){
+        TokenDTO tokenDTO =  multiService.checkToken(accessToken);
+        if(tokenDTO.isOK())try{
+            multiService.personalCycleTag(tokenDTO.username(), personalCycleRequestTagDTO.id(), personalCycleRequestTagDTO.tag());
+            return ResponseEntity.status(HttpStatus.OK).body("ok!");
+        }catch (NotAllowedException ex){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }catch (DataNotFoundException ex){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
 
 }

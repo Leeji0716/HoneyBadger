@@ -9,4 +9,6 @@ import java.util.List;
 public interface PersonalCycleRepositoryCustom {
 
     List<PersonalCycle> myMonthCycle(SiteUser user, LocalDateTime startDate, LocalDateTime endDate);
+
+    List<PersonalCycle> searchCycle(String param);
 }

@@ -30,7 +30,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -333,9 +336,9 @@ public class MultiService {
 
 
     @Transactional
-    private List<UserResponseDTO> userChange(Chatroom chatroom, List<String> usernames){
+    private List<UserResponseDTO> userChange(Chatroom chatroom, List<String> usernames) {
         List<UserResponseDTO> users = new ArrayList<>();
-        for (String user : usernames){
+        for (String user : usernames) {
             SiteUser siteUser = userService.get(user);
             UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
             users.add(userResponseDTO);
@@ -348,7 +351,7 @@ public class MultiService {
         List<String> usernames = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
 
         List<UserResponseDTO> users = this.userChange(chatroom, usernames);
-        
+
         Message latestMessage = messageService.getLatesMessage(chatroom.getMessageList());
 
         //마지막 메세지
@@ -1171,7 +1174,7 @@ public class MultiService {
     /*
      * PersonalCycle
      */
-
+    @Transactional
     public void createPersonalCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) throws NotAllowedException {
         SiteUser user = userService.get(username);
         if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
@@ -1182,10 +1185,13 @@ public class MultiService {
             throw new NotAllowedException("시작 시간을 입력해주세요.");
         } else if (personalCycleRequestDTO.endDate() == null) {
             throw new NotAllowedException("종료 시간을 입력해주세요.");
+        } else if (personalCycleRequestDTO.endDate().isBefore(personalCycleRequestDTO.startDate()) || personalCycleRequestDTO.startDate().equals(personalCycleRequestDTO.endDate())) {
+            throw new NotAllowedException("시간 설정을 다시 해주세요.");
         }
         personalCycleService.save(user, personalCycleRequestDTO);
     }
 
+    @Transactional
     public void updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
         SiteUser user = userService.get(username);
         PersonalCycle personalCycle = personalCycleService.findById(id);
@@ -1203,37 +1209,51 @@ public class MultiService {
         personalCycleService.upDate(personalCycle, personalCycleRequestDTO);
     }
 
+    @Transactional
     public void deletePersonalCycle(String username, Long id) {
         SiteUser user = userService.get(username);
-//        PersonalCycle personalCycle = personalCycleService.findById(id);
-//        if(personalCycle.getUser() != user){
-//            throw new NotAllowedException("접근 권한이 없습니다.");
-//        }
-//        personalCycleService.delete(personalCycle);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if (personalCycle.getUser() != user) {
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }
+        personalCycleService.delete(personalCycle);
     }
 
+    @Transactional
     public List<PersonalCycleResponseDTO> getMyCycle(String username, LocalDateTime startDate, LocalDateTime endDate) {
         List<PersonalCycleResponseDTO> personalCycleResponseDTOList = new ArrayList<>();
         SiteUser user = userService.get(username);
-        List<PersonalCycle> personalCycleList = personalCycleService.myMonthCycle(user,startDate,endDate);
+        List<PersonalCycle> personalCycleList = personalCycleService.myMonthCycle(user, startDate, endDate);
+        List<PersonalCycleDTO> personalCycleDTOList = new ArrayList<>();
 
-        do{
-            List<PersonalCycle> personalCycles = new ArrayList<>();
+        do {
             boolean holiday = false;
-            for(PersonalCycle personalCycle : personalCycleList){
-//                long start =  this.dateTimeTransfer(personalCycle.getStartDate());
-//                long end =  this.dateTimeTransfer(personalCycle.getEndDate().plusDays(1));
-//                long now = this.dateTimeTransfer(startDate);
-                if(startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()){
-                    personalCycles.add(personalCycle);
+            String holidayTitle = "";
+            for (PersonalCycle personalCycle : personalCycleList) {
+                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()) {
+                    PersonalCycleDTO personalCycleDTO = PersonalCycleDTO.builder().id(personalCycle.getId()).title(personalCycle.getTitle()).content(personalCycle.getContent()).startDate(dateTimeTransfer(personalCycle.getStartDate())).endDate(dateTimeTransfer(personalCycle.getEndDate())).tag(personalCycle.getTag()).build();
+                    personalCycleDTOList.add(personalCycleDTO);
                 }
             }
-            if(holidayService.getHoliday(startDate.toLocalDate()) != null){
+            if (holidayService.getHoliday(startDate.toLocalDate()) != null) {
+                Holiday holiday1 = holidayService.getHoliday(startDate.toLocalDate());
                 holiday = true;
+                holidayTitle = holiday1.getTitle();
             }
-            PersonalCycleResponseDTO personalCycleResponseDTO = PersonalCycleResponseDTO.builder().personalCycles(personalCycles).holiday(holiday).build();
+            PersonalCycleResponseDTO personalCycleResponseDTO = PersonalCycleResponseDTO.builder().personalCycleDTOList(new ArrayList<>(personalCycleDTOList)).holiday(holiday).build();
             personalCycleResponseDTOList.add(personalCycleResponseDTO);
-        }while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
+            personalCycleDTOList.clear();
+        } while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
         return personalCycleResponseDTOList;
+    }
+
+    @Transactional
+    public void personalCycleTag(String username, Long id, List<String> tag) {
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        SiteUser user = userService.get(username);
+        if (personalCycle.getUser() != user) {
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }
+        personalCycleService.setTag(personalCycle, tag);
     }
 }
