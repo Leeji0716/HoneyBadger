@@ -54,6 +54,9 @@ public class MultiService {
     private final QuestionService questionService;
     private final PersonalCycleService personalCycleService;
     private final HolidayService holidayService;
+    private final ApprovalService approvalService;
+    private final ApproverService approverService;
+    private final ViewerService viewerService;
 
     /**
      * Auth
@@ -471,7 +474,7 @@ public class MultiService {
     public String emailContentUpload(String username, MultipartFile file) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
-        String fileName = "/api/user/" + username + "/temp/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        String fileName = "/api/user/" + username + "/temp/" + uuid.toString() + "." + (Objects.requireNonNull (file.getOriginalFilename ()).contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
         // 멀티키
         String keyString = KeyPreset.USER_TEMP_MULTI.getValue(username);
@@ -1236,4 +1239,69 @@ public class MultiService {
         }while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
         return personalCycleResponseDTOList;
     }
+
+    /*
+     * Approval
+     */
+
+    @Transactional
+    private ApprovalResponseDTO getApproval(Approval approval, String username) {
+
+        List<String> approversUsernames = approval.getApprovers ().stream().map(approver -> approver.getUser().getUsername()).toList();
+        List<String> viewersUsernames = approval.getViewers().stream().map(viewer -> viewer.getUser().getUsername()).toList();
+
+        // 승인자(UserResponseDTO 리스트) 생성
+        List<UserResponseDTO> approvers = this.userFind(approval, approversUsernames);
+
+        // 참고인(UserResponseDTO 리스트) 생성
+        List<UserResponseDTO> viewers = this.userFind(approval, viewersUsernames);
+
+        // 승인 요청자(sender) 정보 생성
+        UserResponseDTO senderDTO = getUserResponseDTO(approval.getSender());
+
+        // 승인 여부 처리 (이 예제에서는 승인 여부를 어떻게 결정하는지 명확하지 않음, 예제 값으로 false 사용)
+        boolean isApproved = false;  // 실제 로직에 따라 결정되어야 함
+
+
+        return ApprovalResponseDTO.builder()
+                .id(approval.getId())
+                .title(approval.getTitle())
+                .content(approval.getContent())
+                .sender(senderDTO)
+                .approvals(approvers)
+                .viewers(viewers)
+                .approval(isApproved)
+                .build();
+    }
+
+    @Transactional
+    public ApprovalResponseDTO createApproval(ApprovalRequestDTO approvalRequestDTO, String loginUser) {
+        SiteUser sender = userService.get (loginUser);
+        Approval approval = approvalService.create(approvalRequestDTO,sender);
+
+        for (String username : approvalRequestDTO.approversname ()) {
+            SiteUser user = userService.get(username);
+           approverService.save(user, approval);
+        }
+
+        for (String username : approvalRequestDTO.viewersname ()) {
+            SiteUser user = userService.get(username);
+            viewerService.save(user, approval);
+        }
+
+
+        return getApproval (approval, loginUser);
+    }
+
+    @Transactional
+    private List<UserResponseDTO> userFind(Approval approval, List<String> usernames) {
+        List<UserResponseDTO> users = new ArrayList<>();
+        for (String username : usernames) {
+            SiteUser siteUser = userService.get(username);
+            UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
+            users.add(userResponseDTO);
+        }
+        return users;
+    }
+
 }
