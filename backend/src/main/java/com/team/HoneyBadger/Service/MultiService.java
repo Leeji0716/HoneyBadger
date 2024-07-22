@@ -1254,6 +1254,25 @@ public class MultiService {
         if (personalCycle.getUser() != user) {
             throw new NotAllowedException("접근 권한이 없습니다.");
         }
-        personalCycleService.setTag(personalCycle, tag);
+            personalCycleService.setTag(personalCycle, tag);
+    }
+    @Transactional
+    public List<PersonalCycleDTO> personalCycleTagList(String username, String tag) {
+        SiteUser user = userService.get(username);
+        List<PersonalCycle> personalCycleList = personalCycleService.tagList(user,tag);
+        return personalCycleList.stream().map(this::getPersonalCycleDTO).toList();
+    }
+@Transactional
+    public PersonalCycleDTO getPersonalCycleDTO(PersonalCycle personalCycle){
+
+          return   PersonalCycleDTO.builder()
+                    .id(personalCycle.getId())
+                    .title(personalCycle.getTitle())
+                    .content(personalCycle.getContent())
+                    .startDate(dateTimeTransfer(personalCycle.getStartDate()))
+                    .endDate(dateTimeTransfer(personalCycle.getEndDate()))
+                    .tag(personalCycle.getTag())
+                    .build();
+
     }
 }

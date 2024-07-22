@@ -50,8 +50,14 @@ public class PersonalCycleService {
 
 
     public void setTag(PersonalCycle personalCycle, List<String> tag) {
-        personalCycle.setTag(tag);
+        for(String tags : tag){
+            personalCycle.getTag().add(tags);
+        }
         personalCycleRepository.save(personalCycle);
 
+    }
+
+    public List<PersonalCycle> tagList(SiteUser user, String tag) {
+        return personalCycleRepository.tagList(user,tag);
     }
 }
