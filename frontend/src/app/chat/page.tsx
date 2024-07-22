@@ -394,19 +394,39 @@ export default function Chat() {
                         const message = JSON.parse(e.body).body;
                         const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name: message?.name, username: message?.username, messageType: message?.messageType, readUsers: message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
+                        console.log('fffffffffffffffff');
 
                         getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                                    console.log("----------------------------------------------------------------ssssssss");
-                                    console.log(updateMessageList);
-                                    // console.log(readUsersName(chatroom.id,updateMessageList[]))
-                                    setUpdateMessageList(updateMessageList);
-        
-                                }));
+                            console.log("----------------------------------------------------------------ssssssss");
+                            console.log(updateMessageList);
+                            // console.log(readUsersName(chatroom.id,updateMessageList[]))
+                            setUpdateMessageList(updateMessageList);
+
+                        }));
+
+                        // socket.publish({
+
+                        //     destination: "/api/pub/read/" + Chatroom?.id,
+                        //     body: JSON.stringify({ username: user?.username })
+
+                        // });
 
 
+                        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!server!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        // 서버로 메시지 전송
+                        socket.publish({
+                            destination: '/api/pub/read/' + Chatroom.id,
+                            body: JSON.stringify({ username: user?.username })
+                        });
+
+
+                        // 메시지 수신
+                        socket.subscribe('/topic/messages', (data:string) => {
+                            const usernames = JSON.parse(data);
+                            console.log('Received usernames:', usernames);
+                        });
 
                         socket.publish({
-                            
 
                             destination: "/api/pub/updateChatroom/" + Chatroom?.id,
                             body: JSON.stringify({ username: user?.username })
@@ -419,18 +439,18 @@ export default function Chat() {
                     console.log(messageSub);
                     setMessageSub(messageSub);
 
-                    // const readSub = socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
-                    //     const data = JSON.parse(e.body);
+                    const readSub = socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
+                        const data = JSON.parse(e.body);
 
-                    //     getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                    //         console.log("----------------------------------------------------------------ssssssss");
-                    //         console.log(updateMessageList);
-                    //         // console.log(readUsersName(chatroom.id,updateMessageList[]))
-                    //         setUpdateMessageList(updateMessageList);
+                        getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
+                            console.log("----------------------------------------------------------------ssssssss");
+                            console.log(updateMessageList);
+                            // console.log(readUsersName(chatroom.id,updateMessageList[]))
+                            setUpdateMessageList(updateMessageList);
 
-                    //     }));
+                        }));
 
-                    // }, JSON.stringify({ username: user?.username }));
+                    }, JSON.stringify({ username: user?.username }));
 
                     setReadSub(readSub);
 

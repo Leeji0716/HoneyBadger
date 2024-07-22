@@ -18,6 +18,10 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
     private Long id;
+
+    @Version
+    private int version;
+
     @Column(columnDefinition = "LONGTEXT")
     private String message;
     private LocalDateTime createDate;
