@@ -118,7 +118,6 @@ export default function Email() {
         return items;
     }
 
-    console.log(email);
     function MailBox({ email }: { email: EmailResponseDTO }) {
 
         return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300" onClick={() => {
