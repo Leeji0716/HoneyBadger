@@ -12,7 +12,7 @@ public record EmailResponseDTO(Long id,
                                String senderName,
                                Long senderTime,
                                List<String> receiverIds,
-                               List<FileResponseDTO> files,
+                               List<OriginFileResponseDTO> files,
                                boolean status,
                                List<EmailReceiverDTO> receiverStatus) {
 }

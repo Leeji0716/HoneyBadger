@@ -3,10 +3,7 @@ package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
-import com.team.HoneyBadger.Enum.DepartmentRole;
-import com.team.HoneyBadger.Enum.KeyPreset;
-import com.team.HoneyBadger.Enum.MessageType;
-import com.team.HoneyBadger.Enum.UserRole;
+import com.team.HoneyBadger.Enum.*;
 import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
@@ -30,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -569,11 +567,11 @@ public class MultiService {
     }
 
     private EmailResponseDTO getEmailDTO(Email email, String receiverId) throws DataNotFoundException {
-        List<FileResponseDTO> filePathList = new ArrayList<>();
+        List<OriginFileResponseDTO> filePathList = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
         if (_multiKey.isPresent()) {
             for (String key : _multiKey.get().getKeyValues()) {
-                FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
+                OriginFileResponseDTO.OriginFileResponseDTOBuilder builder = OriginFileResponseDTO.builder();
                 fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
                 fileSystemService.get(KeyPreset.EMAIL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
                 builder.key(key); // key
@@ -758,11 +756,11 @@ public class MultiService {
 
     @Transactional
     private EmailReservationResponseDTO getEmailReservationDTO(EmailReservation reservation) {
-        List<FileResponseDTO> fileslist = new ArrayList<>();
+        List<OriginFileResponseDTO> fileslist = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_RESERVATION_MULTI.getValue(reservation.getId().toString()));
 
         if (_multiKey.isPresent()) for (String key : _multiKey.get().getKeyValues()) {
-            FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
+            OriginFileResponseDTO.OriginFileResponseDTOBuilder builder = OriginFileResponseDTO.builder();
             fileSystemService.get(key).ifPresent(file -> builder.value(file.getV()));
             fileSystemService.get(KeyPreset.EMAIL_RESERVATION_ORIGIN.getValue(key)).ifPresent(file -> builder.original_name(file.getV()));
             builder.key(key);
@@ -975,13 +973,7 @@ public class MultiService {
             throw new NotAllowedException("지난 시간으로 예약할 수 없습니다.");
         }
 
-        MessageReservation messageReservation = MessageReservation.builder()
-                .chatroom(chatroom)
-                .message(messageReservationRequestDTO.message())
-                .sender(sender)
-                .sendDate(messageReservationRequestDTO.sendDate())
-                .messageType(messageReservationRequestDTO.messageType())
-                .build();
+        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendDate()).messageType(messageReservationRequestDTO.messageType()).build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
@@ -1154,8 +1146,7 @@ public class MultiService {
 
     private QuestionDTO getQuestionDTO(Question question) {
         return QuestionDTO.builder()//
-                .id(question.getId())
-                .title(question.getTitle())//
+                .id(question.getId()).title(question.getTitle())//
                 .content(question.getContent())//
                 .answer(question.getAnswer())//
                 .author(question.getAuthor())//
@@ -1289,4 +1280,78 @@ public class MultiService {
         personalCycleService.save(personalCycle);
 
     }
+
+    /*
+     * Storage
+     */
+    public Page<FileResponseDTO> getStorageFiles(String location, int page) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        Pageable pageable = PageRequest.of(page, 15);
+
+        File file = new File(path + location);
+        if (!file.exists())
+            file.mkdirs();
+        if (!file.isDirectory())
+            throw new NotAllowedException("not folder");
+        int total = 0;
+
+        File[] files = file.listFiles();
+        total = files.length;
+        List<FileResponseDTO> list = Arrays.stream(file.listFiles()).skip(page * 15L).limit(15).map(f -> {
+            try {
+                return transferFileToDTO(f);
+            } catch (IOException ignored) {
+                return null;
+            }
+        }).toList();
+        return new PageImpl<>(list, pageable, total);
+    }
+
+    public FileResponseDTO getStorageFile(String location) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        File file = new File(path + location);
+        if (!file.exists())
+            throw new DataNotFoundException("file not found");
+        return transferFileToDTO(file);
+    }
+
+    public List<FolderResponseDTO> getFileFolders(String location) {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        File file = new File(path + location);
+        if (!file.exists())
+            throw new DataNotFoundException("file not found");
+        List<FolderResponseDTO> list = new ArrayList<>();
+        if(file.isDirectory())
+            for (File child : file.listFiles())
+                if (child.isDirectory())
+                    list.add(transferFolderToDTO(file));
+        return list;
+    }
+
+    private FolderResponseDTO transferFolderToDTO(File file) {
+        if (file.isDirectory()) {
+            List<FolderResponseDTO> list = new ArrayList<>();
+            for (File child : file.listFiles())
+                if (child.isDirectory())
+                    list.add(transferFolderToDTO(file));
+            return FolderResponseDTO.builder().name(file.getName()).child(list).build();
+        } else return null;
+    }
+
+    private FileResponseDTO transferFileToDTO(File file) throws IOException {
+        return FileResponseDTO.builder().name(file.getName()).type(FileType.get(file).ordinal()).createDate(((FileTime) Files.getAttribute(file.toPath(), "creationTime")).toMillis()).modifyDate(file.lastModified()).size(getSize(file)).url(file.getPath().replaceAll("\\\\", "/").replaceAll(HoneyBadgerApplication.getOsType().getLoc(), "")).build();
+    }
+
+    private long getSize(File file) {
+        long size = 0;
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                for (File list : file.listFiles())
+                    size += getSize(list);
+            }
+            size += file.length();
+        }
+        return size;
+    }
+
 }
