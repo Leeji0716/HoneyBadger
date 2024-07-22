@@ -118,7 +118,6 @@ export default function Email() {
         return items;
     }
 
-    console.log(email);
     function MailBox({ email }: { email: EmailResponseDTO }) {
 
         return <div className="w-11/12 h-[70px] ml-2 mt-4 flex hover:bg-gray-300" onClick={() => {
@@ -215,7 +214,8 @@ export default function Email() {
                             <button>태그</button>
                         </DropDown>
                     </div>
-                    {sort == 2 ? <button className="official-color text-white" >예약 메일</button> : <button className="" onClick={() => { setEmail(null); setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button>}
+                    {sort == 2 ? <button className="official-color text-white" >예약 메일</button> : <button className="" onClick={() => {setEmail(null); setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button>}
+                    <a href="/email/EmailForm" className="ml-auto mr-2" onClick={() => localStorage.removeItem('email')}>메일쓰기</a>
                 </div>
                 <div ref={mailBoxRef} onScroll={loadPage} id="mailBox" className="h-[800px] overflow-y-scroll">
                     {emailList?.map((email: EmailResponseDTO, index: number) => <MailBox key={index} email={email} />)}

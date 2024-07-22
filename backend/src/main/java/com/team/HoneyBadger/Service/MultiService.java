@@ -3,10 +3,7 @@ package com.team.HoneyBadger.Service;
 
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.*;
-import com.team.HoneyBadger.Enum.DepartmentRole;
-import com.team.HoneyBadger.Enum.KeyPreset;
-import com.team.HoneyBadger.Enum.MessageType;
-import com.team.HoneyBadger.Enum.UserRole;
+import com.team.HoneyBadger.Enum.*;
 import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
@@ -30,7 +27,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.*;
+import java.nio.file.attribute.FileTime;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -336,9 +337,9 @@ public class MultiService {
 
 
     @Transactional
-    private List<UserResponseDTO> userChange(Chatroom chatroom, List<String> usernames){
+    private List<UserResponseDTO> userChange(Chatroom chatroom, List<String> usernames) {
         List<UserResponseDTO> users = new ArrayList<>();
-        for (String user : usernames){
+        for (String user : usernames) {
             SiteUser siteUser = userService.get(user);
             UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
             users.add(userResponseDTO);
@@ -351,7 +352,7 @@ public class MultiService {
         List<String> usernames = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
 
         List<UserResponseDTO> users = this.userChange(chatroom, usernames);
-        
+
         Message latestMessage = messageService.getLatesMessage(chatroom.getMessageList());
 
         //마지막 메세지
@@ -569,11 +570,11 @@ public class MultiService {
     }
 
     private EmailResponseDTO getEmailDTO(Email email, String receiverId) throws DataNotFoundException {
-        List<FileResponseDTO> filePathList = new ArrayList<>();
+        List<OriginFileResponseDTO> filePathList = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_MULTI.getValue(email.getId().toString()));
         if (_multiKey.isPresent()) {
             for (String key : _multiKey.get().getKeyValues()) {
-                FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
+                OriginFileResponseDTO.OriginFileResponseDTOBuilder builder = OriginFileResponseDTO.builder();
                 fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
                 fileSystemService.get(KeyPreset.EMAIL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
                 builder.key(key); // key
@@ -758,11 +759,11 @@ public class MultiService {
 
     @Transactional
     private EmailReservationResponseDTO getEmailReservationDTO(EmailReservation reservation) {
-        List<FileResponseDTO> fileslist = new ArrayList<>();
+        List<OriginFileResponseDTO> fileslist = new ArrayList<>();
         Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.EMAIL_RESERVATION_MULTI.getValue(reservation.getId().toString()));
 
         if (_multiKey.isPresent()) for (String key : _multiKey.get().getKeyValues()) {
-            FileResponseDTO.FileResponseDTOBuilder builder = FileResponseDTO.builder();
+            OriginFileResponseDTO.OriginFileResponseDTOBuilder builder = OriginFileResponseDTO.builder();
             fileSystemService.get(key).ifPresent(file -> builder.value(file.getV()));
             fileSystemService.get(KeyPreset.EMAIL_RESERVATION_ORIGIN.getValue(key)).ifPresent(file -> builder.original_name(file.getV()));
             builder.key(key);
@@ -975,13 +976,7 @@ public class MultiService {
             throw new NotAllowedException("지난 시간으로 예약할 수 없습니다.");
         }
 
-        MessageReservation messageReservation = MessageReservation.builder()
-                .chatroom(chatroom)
-                .message(messageReservationRequestDTO.message())
-                .sender(sender)
-                .sendDate(messageReservationRequestDTO.sendDate())
-                .messageType(messageReservationRequestDTO.messageType())
-                .build();
+        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendDate()).messageType(messageReservationRequestDTO.messageType()).build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
@@ -1154,8 +1149,7 @@ public class MultiService {
 
     private QuestionDTO getQuestionDTO(Question question) {
         return QuestionDTO.builder()//
-                .id(question.getId())
-                .title(question.getTitle())//
+                .id(question.getId()).title(question.getTitle())//
                 .content(question.getContent())//
                 .answer(question.getAnswer())//
                 .author(question.getAuthor())//
@@ -1174,7 +1168,7 @@ public class MultiService {
     /*
      * PersonalCycle
      */
-
+    @Transactional
     public void createPersonalCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) throws NotAllowedException {
         SiteUser user = userService.get(username);
         if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
@@ -1185,10 +1179,13 @@ public class MultiService {
             throw new NotAllowedException("시작 시간을 입력해주세요.");
         } else if (personalCycleRequestDTO.endDate() == null) {
             throw new NotAllowedException("종료 시간을 입력해주세요.");
+        } else if (personalCycleRequestDTO.endDate().isBefore(personalCycleRequestDTO.startDate()) || personalCycleRequestDTO.startDate().equals(personalCycleRequestDTO.endDate())) {
+            throw new NotAllowedException("시간 설정을 다시 해주세요.");
         }
-        personalCycleService.save(user, personalCycleRequestDTO);
+        personalCycleService.create(user, personalCycleRequestDTO);
     }
 
+    @Transactional
     public void updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
         SiteUser user = userService.get(username);
         PersonalCycle personalCycle = personalCycleService.findById(id);
@@ -1206,39 +1203,89 @@ public class MultiService {
         personalCycleService.upDate(personalCycle, personalCycleRequestDTO);
     }
 
+    @Transactional
     public void deletePersonalCycle(String username, Long id) {
         SiteUser user = userService.get(username);
-//        PersonalCycle personalCycle = personalCycleService.findById(id);
-//        if(personalCycle.getUser() != user){
-//            throw new NotAllowedException("접근 권한이 없습니다.");
-//        }
-//        personalCycleService.delete(personalCycle);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if (personalCycle.getUser() != user) {
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }
+        personalCycleService.delete(personalCycle);
     }
 
+    @Transactional
     public List<PersonalCycleResponseDTO> getMyCycle(String username, LocalDateTime startDate, LocalDateTime endDate) {
         List<PersonalCycleResponseDTO> personalCycleResponseDTOList = new ArrayList<>();
         SiteUser user = userService.get(username);
-        List<PersonalCycle> personalCycleList = personalCycleService.myMonthCycle(user,startDate,endDate);
+        List<PersonalCycle> personalCycleList = personalCycleService.myMonthCycle(user, startDate, endDate);
+        List<PersonalCycleDTO> personalCycleDTOList = new ArrayList<>();
 
-        do{
-            List<PersonalCycle> personalCycles = new ArrayList<>();
+        do {
             boolean holiday = false;
-            for(PersonalCycle personalCycle : personalCycleList){
-//                long start =  this.dateTimeTransfer(personalCycle.getStartDate());
-//                long end =  this.dateTimeTransfer(personalCycle.getEndDate().plusDays(1));
-//                long now = this.dateTimeTransfer(startDate);
-                if(startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()){
-                    personalCycles.add(personalCycle);
+            String holidayTitle = "";
+            for (PersonalCycle personalCycle : personalCycleList) {
+                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()){
+                    PersonalCycleDTO personalCycleDTO = PersonalCycleDTO.builder().id(personalCycle.getId()).title(personalCycle.getTitle()).content(personalCycle.getContent()).startDate(dateTimeTransfer(personalCycle.getStartDate())).endDate(dateTimeTransfer(personalCycle.getEndDate())).tag(personalCycle.getTag()).build();
+                    personalCycleDTOList.add(personalCycleDTO);
                 }
             }
-            if(holidayService.getHoliday(startDate.toLocalDate()) != null){
+            if (holidayService.getHoliday(startDate.toLocalDate()) != null) {
+                Holiday holiday1 = holidayService.getHoliday(startDate.toLocalDate());
                 holiday = true;
+                holidayTitle = holiday1.getTitle();
             }
-            PersonalCycleResponseDTO personalCycleResponseDTO = PersonalCycleResponseDTO.builder().personalCycles(personalCycles).holiday(holiday).build();
+            PersonalCycleResponseDTO personalCycleResponseDTO = PersonalCycleResponseDTO.builder().personalCycleDTOList(new ArrayList<>(personalCycleDTOList)).holiday(holiday).build();
             personalCycleResponseDTOList.add(personalCycleResponseDTO);
-        }while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
+            personalCycleDTOList.clear();
+        } while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
         return personalCycleResponseDTOList;
     }
+    
+  
+  
+    @Transactional
+    public void personalCycleTag(String username, Long id, List<String> tag) {
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        SiteUser user = userService.get(username);
+        if (personalCycle.getUser() != user) {
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }
+            personalCycleService.setTag(personalCycle, tag);
+    }
+    @Transactional
+    public List<PersonalCycleDTO> personalCycleTagList(String username, String tag) {
+        SiteUser user = userService.get(username);
+        List<PersonalCycle> personalCycleList = personalCycleService.tagList(user,tag);
+        return personalCycleList.stream().map(this::getPersonalCycleDTO).toList();
+    }
+@Transactional
+    public PersonalCycleDTO getPersonalCycleDTO(PersonalCycle personalCycle){
+
+          return   PersonalCycleDTO.builder()
+                    .id(personalCycle.getId())
+                    .title(personalCycle.getTitle())
+                    .content(personalCycle.getContent())
+                    .startDate(dateTimeTransfer(personalCycle.getStartDate()))
+                    .endDate(dateTimeTransfer(personalCycle.getEndDate()))
+                    .tag(personalCycle.getTag())
+                    .build();
+
+    }
+
+    public void deleteTag(String username, Long id, String tag) {
+        SiteUser user = userService.get(username);
+        PersonalCycle personalCycle = personalCycleService.findById(id);
+        if(user != personalCycle.getUser()){
+            throw new NotAllowedException("접근 권한이 없습니다.");
+        }
+        boolean intag = personalCycle.getTag().remove(tag);
+        if(!intag){
+            throw new IllegalArgumentException("잘못된 태그 입니다.");
+        }
+        personalCycleService.save(personalCycle);
+
+    }
+  
 
     /*
      * Approval
@@ -1302,6 +1349,79 @@ public class MultiService {
             users.add(userResponseDTO);
         }
         return users;
+
+    /*
+     * Storage
+     */
+    public Page<FileResponseDTO> getStorageFiles(String location, int page) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        Pageable pageable = PageRequest.of(page, 15);
+
+        File file = new File(path + location);
+        if (!file.exists())
+            file.mkdirs();
+        if (!file.isDirectory())
+            throw new NotAllowedException("not folder");
+        int total = 0;
+
+        File[] files = file.listFiles();
+        total = files.length;
+        List<FileResponseDTO> list = Arrays.stream(file.listFiles()).skip(page * 15L).limit(15).map(f -> {
+            try {
+                return transferFileToDTO(f);
+            } catch (IOException ignored) {
+                return null;
+            }
+        }).toList();
+        return new PageImpl<>(list, pageable, total);
+    }
+
+    public FileResponseDTO getStorageFile(String location) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        File file = new File(path + location);
+        if (!file.exists())
+            throw new DataNotFoundException("file not found");
+        return transferFileToDTO(file);
+    }
+
+    public List<FolderResponseDTO> getFileFolders(String location) {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        File file = new File(path + location);
+        if (!file.exists())
+            throw new DataNotFoundException("file not found");
+        List<FolderResponseDTO> list = new ArrayList<>();
+        if(file.isDirectory())
+            for (File child : file.listFiles())
+                if (child.isDirectory())
+                    list.add(transferFolderToDTO(file));
+        return list;
+    }
+
+    private FolderResponseDTO transferFolderToDTO(File file) {
+        if (file.isDirectory()) {
+            List<FolderResponseDTO> list = new ArrayList<>();
+            for (File child : file.listFiles())
+                if (child.isDirectory())
+                    list.add(transferFolderToDTO(file));
+            return FolderResponseDTO.builder().name(file.getName()).child(list).build();
+        } else return null;
+    }
+
+    private FileResponseDTO transferFileToDTO(File file) throws IOException {
+        return FileResponseDTO.builder().name(file.getName()).type(FileType.get(file).ordinal()).createDate(((FileTime) Files.getAttribute(file.toPath(), "creationTime")).toMillis()).modifyDate(file.lastModified()).size(getSize(file)).url(file.getPath().replaceAll("\\\\", "/").replaceAll(HoneyBadgerApplication.getOsType().getLoc(), "")).build();
+    }
+
+    private long getSize(File file) {
+        long size = 0;
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                for (File list : file.listFiles())
+                    size += getSize(list);
+            }
+            size += file.length();
+        }
+        return size;
+
     }
 
 }

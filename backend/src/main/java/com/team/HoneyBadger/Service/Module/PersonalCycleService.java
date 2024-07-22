@@ -16,7 +16,7 @@ import java.util.List;
 public class PersonalCycleService {
     private final PersonalCycleRepository personalCycleRepository;
 
-    public void save(SiteUser user, PersonalCycleRequestDTO personalCycleRequestDTO) {
+    public void create(SiteUser user, PersonalCycleRequestDTO personalCycleRequestDTO) {
         personalCycleRepository.save(PersonalCycle.builder()
                 .title(personalCycleRequestDTO.title())
                 .content(personalCycleRequestDTO.content())
@@ -46,5 +46,22 @@ public class PersonalCycleService {
     public List<PersonalCycle> myMonthCycle(SiteUser user, LocalDateTime startDate, LocalDateTime endDate){
 
         return personalCycleRepository.myMonthCycle(user,startDate,endDate);
+    }
+
+
+    public void setTag(PersonalCycle personalCycle, List<String> tag) {
+        for(String tags : tag){
+            personalCycle.getTag().add(tags);
+        }
+        personalCycleRepository.save(personalCycle);
+
+    }
+
+    public List<PersonalCycle> tagList(SiteUser user, String tag) {
+        return personalCycleRepository.tagList(user,tag);
+    }
+
+    public void save(PersonalCycle personalCycle) {
+        personalCycleRepository.save(personalCycle);
     }
 }
