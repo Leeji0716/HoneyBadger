@@ -10,5 +10,5 @@ public interface PersonalCycleRepositoryCustom {
 
     List<PersonalCycle> myMonthCycle(SiteUser user, LocalDateTime startDate, LocalDateTime endDate);
 
-    List<PersonalCycle> searchCycle(String param);
+    List<PersonalCycle> tagList(SiteUser user,String tag);
 }

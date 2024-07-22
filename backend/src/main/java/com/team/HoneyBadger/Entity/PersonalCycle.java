@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -25,7 +26,7 @@ public class PersonalCycle {
     private LocalDateTime createDate;
     @ManyToOne(fetch = FetchType.LAZY)
     private SiteUser user;
-
+    @ElementCollection
     private List<String> tag;
 
     @Builder
@@ -36,5 +37,6 @@ public class PersonalCycle {
         this.startDate = startDate;
         this.endDate = endDate;
         this.createDate = LocalDateTime.now();
+        this.tag= new ArrayList<>();
     }
 }

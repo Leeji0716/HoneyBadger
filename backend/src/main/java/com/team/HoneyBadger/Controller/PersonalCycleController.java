@@ -1,9 +1,6 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.DTO.PersonalCycleRequestDTO;
-import com.team.HoneyBadger.DTO.PersonalCycleRequestTagDTO;
-import com.team.HoneyBadger.DTO.PersonalCycleResponseDTO;
-import com.team.HoneyBadger.DTO.TokenDTO;
+import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.NotAllowedException;
 import com.team.HoneyBadger.Service.MultiService;
@@ -12,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -72,7 +71,7 @@ public class PersonalCycleController {
     public ResponseEntity<?> myMonthCycle(@RequestHeader("Authorization") String accessToken, @RequestHeader("startDate") String startDate, @RequestHeader("endDate") String endDate){
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if(tokenDTO.isOK()) {
-            List<PersonalCycleResponseDTO> personalCycleResponseDTOS = multiService.getMyCycle(tokenDTO.username(), LocalDateTime.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")), LocalDateTime.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
+            List<PersonalCycleResponseDTO> personalCycleResponseDTOS = multiService.getMyCycle(tokenDTO.username(), LocalDateTime.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")), LocalDateTime.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
             return ResponseEntity.status(HttpStatus.OK).body(personalCycleResponseDTOS);
         }
         else return tokenDTO.getResponseEntity();
@@ -92,5 +91,15 @@ public class PersonalCycleController {
         }
         else return tokenDTO.getResponseEntity();
     }
+    @GetMapping("/tagList")
+    public ResponseEntity<?> tagList(@RequestHeader("Authorization") String accessToken,@RequestHeader("tag") String tag){
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if(tokenDTO.isOK()){
 
+         List<PersonalCycleDTO> personalCycleDTOList =  multiService.personalCycleTagList(tokenDTO.username(), URLDecoder.decode(tag, StandardCharsets.UTF_8));
+         return ResponseEntity.status(HttpStatus.OK).body(personalCycleDTOList);
+        }
+
+        else return tokenDTO.getResponseEntity();
+    }
 }
