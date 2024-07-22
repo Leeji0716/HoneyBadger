@@ -25,4 +25,8 @@ public class PersonalCycleRepositoryCustomImpl implements PersonalCycleRepositor
                 .fetch();
     }
 
+    public List<PersonalCycle> searchCycle(String param){
+        return jpaQueryFactory.selectFrom(qPersonalCycle).where(qPersonalCycle.title.contains(param)).fetch();
+    }
+
 }
