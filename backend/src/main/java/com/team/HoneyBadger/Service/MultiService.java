@@ -33,6 +33,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 
@@ -906,19 +908,31 @@ public class MultiService {
         return fileName;
     }
 
+    private final Lock lock = new ReentrantLock();
+
     @Transactional
     public void readMessage(Long chatroomId, String username) throws DataNotFoundException { //메세지 읽기 처리
-        SiteUser reader = userService.get(username);
-        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        lock.lock();
+        try {
+            SiteUser reader = userService.get(username);
+            Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
 
-        LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
-        Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
+            LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
+            Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
 
-        for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
-            HashSet<String> sets = new HashSet<>(message.getReadUsers());
-            sets.add(reader.getUsername());
-            messageService.updateRead(message, sets.stream().toList());
+            for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
+                HashSet<String> sets = new HashSet<>(message.getReadUsers());
+                sets.add(reader.getUsername());
+                messageService.updateRead(message, sets.stream().toList());
+            }
+
         }
+        catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            lock.unlock();
+        }
+
 //        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
     }
 
