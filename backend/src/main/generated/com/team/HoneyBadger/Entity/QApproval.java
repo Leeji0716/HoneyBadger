@@ -22,7 +22,9 @@ public class QApproval extends EntityPathBase<Approval> {
 
     public static final QApproval approval = new QApproval("approval");
 
-    public final QSiteUser approver;
+    public final ListPath<Approver, QApprover> approvers = this.<Approver, QApprover>createList("approvers", Approver.class, QApprover.class, PathInits.DIRECT2);
+
+    public final StringPath content = createString("content");
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
@@ -52,7 +54,6 @@ public class QApproval extends EntityPathBase<Approval> {
 
     public QApproval(Class<? extends Approval> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.approver = inits.isInitialized("approver") ? new QSiteUser(forProperty("approver"), inits.get("approver")) : null;
         this.sender = inits.isInitialized("sender") ? new QSiteUser(forProperty("sender"), inits.get("sender")) : null;
     }
 

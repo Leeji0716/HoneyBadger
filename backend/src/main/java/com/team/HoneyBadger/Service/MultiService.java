@@ -475,7 +475,7 @@ public class MultiService {
     public String emailContentUpload(String username, MultipartFile file) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
-        String fileName = "/api/user/" + username + "/temp/" + uuid.toString() + "." + (Objects.requireNonNull (file.getOriginalFilename ()).contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        String fileName = "/api/user/" + username + "/temp/" + uuid.toString() + "." + (Objects.requireNonNull(file.getOriginalFilename()).contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
         // 멀티키
         String keyString = KeyPreset.USER_TEMP_MULTI.getValue(username);
@@ -1224,7 +1224,7 @@ public class MultiService {
             boolean holiday = false;
             String holidayTitle = "";
             for (PersonalCycle personalCycle : personalCycleList) {
-                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()){
+                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()) {
                     PersonalCycleDTO personalCycleDTO = PersonalCycleDTO.builder().id(personalCycle.getId()).title(personalCycle.getTitle()).content(personalCycle.getContent()).startDate(dateTimeTransfer(personalCycle.getStartDate())).endDate(dateTimeTransfer(personalCycle.getEndDate())).tag(personalCycle.getTag()).build();
                     personalCycleDTOList.add(personalCycleDTO);
                 }
@@ -1240,9 +1240,8 @@ public class MultiService {
         } while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
         return personalCycleResponseDTOList;
     }
-    
-  
-  
+
+
     @Transactional
     public void personalCycleTag(String username, Long id, List<String> tag) {
         PersonalCycle personalCycle = personalCycleService.findById(id);
@@ -1250,42 +1249,37 @@ public class MultiService {
         if (personalCycle.getUser() != user) {
             throw new NotAllowedException("접근 권한이 없습니다.");
         }
-            personalCycleService.setTag(personalCycle, tag);
+        personalCycleService.setTag(personalCycle, tag);
     }
+
     @Transactional
     public List<PersonalCycleDTO> personalCycleTagList(String username, String tag) {
         SiteUser user = userService.get(username);
-        List<PersonalCycle> personalCycleList = personalCycleService.tagList(user,tag);
+        List<PersonalCycle> personalCycleList = personalCycleService.tagList(user, tag);
         return personalCycleList.stream().map(this::getPersonalCycleDTO).toList();
     }
-@Transactional
-    public PersonalCycleDTO getPersonalCycleDTO(PersonalCycle personalCycle){
 
-          return   PersonalCycleDTO.builder()
-                    .id(personalCycle.getId())
-                    .title(personalCycle.getTitle())
-                    .content(personalCycle.getContent())
-                    .startDate(dateTimeTransfer(personalCycle.getStartDate()))
-                    .endDate(dateTimeTransfer(personalCycle.getEndDate()))
-                    .tag(personalCycle.getTag())
-                    .build();
+    @Transactional
+    public PersonalCycleDTO getPersonalCycleDTO(PersonalCycle personalCycle) {
+
+        return PersonalCycleDTO.builder().id(personalCycle.getId()).title(personalCycle.getTitle()).content(personalCycle.getContent()).startDate(dateTimeTransfer(personalCycle.getStartDate())).endDate(dateTimeTransfer(personalCycle.getEndDate())).tag(personalCycle.getTag()).build();
 
     }
 
     public void deleteTag(String username, Long id, String tag) {
         SiteUser user = userService.get(username);
         PersonalCycle personalCycle = personalCycleService.findById(id);
-        if(user != personalCycle.getUser()){
+        if (user != personalCycle.getUser()) {
             throw new NotAllowedException("접근 권한이 없습니다.");
         }
         boolean intag = personalCycle.getTag().remove(tag);
-        if(!intag){
+        if (!intag) {
             throw new IllegalArgumentException("잘못된 태그 입니다.");
         }
         personalCycleService.save(personalCycle);
 
     }
-  
+
 
     /*
      * Approval
@@ -1294,7 +1288,7 @@ public class MultiService {
     @Transactional
     private ApprovalResponseDTO getApproval(Approval approval, String username) {
 
-        List<String> approversUsernames = approval.getApprovers ().stream().map(approver -> approver.getUser().getUsername()).toList();
+        List<String> approversUsernames = approval.getApprovers().stream().map(approver -> approver.getUser().getUsername()).toList();
         List<String> viewersUsernames = approval.getViewers().stream().map(viewer -> viewer.getUser().getUsername()).toList();
 
         // 승인자(UserResponseDTO 리스트) 생성
@@ -1310,34 +1304,26 @@ public class MultiService {
         boolean isApproved = false;  // 실제 로직에 따라 결정되어야 함
 
 
-        return ApprovalResponseDTO.builder()
-                .id(approval.getId())
-                .title(approval.getTitle())
-                .content(approval.getContent())
-                .sender(senderDTO)
-                .approvals(approvers)
-                .viewers(viewers)
-                .approval(isApproved)
-                .build();
+        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvals(approvers).viewers(viewers).approval(isApproved).build();
     }
 
     @Transactional
     public ApprovalResponseDTO createApproval(ApprovalRequestDTO approvalRequestDTO, String loginUser) {
-        SiteUser sender = userService.get (loginUser);
-        Approval approval = approvalService.create(approvalRequestDTO,sender);
+        SiteUser sender = userService.get(loginUser);
+        Approval approval = approvalService.create(approvalRequestDTO, sender);
 
-        for (String username : approvalRequestDTO.approversname ()) {
+        for (String username : approvalRequestDTO.approversname()) {
             SiteUser user = userService.get(username);
-           approverService.save(user, approval);
+            approverService.save(user, approval);
         }
 
-        for (String username : approvalRequestDTO.viewersname ()) {
+        for (String username : approvalRequestDTO.viewersname()) {
             SiteUser user = userService.get(username);
             viewerService.save(user, approval);
         }
 
 
-        return getApproval (approval, loginUser);
+        return getApproval(approval, loginUser);
     }
 
     @Transactional
@@ -1349,6 +1335,7 @@ public class MultiService {
             users.add(userResponseDTO);
         }
         return users;
+    }
 
     /*
      * Storage
@@ -1358,10 +1345,8 @@ public class MultiService {
         Pageable pageable = PageRequest.of(page, 15);
 
         File file = new File(path + location);
-        if (!file.exists())
-            file.mkdirs();
-        if (!file.isDirectory())
-            throw new NotAllowedException("not folder");
+        if (!file.exists()) file.mkdirs();
+        if (!file.isDirectory()) throw new NotAllowedException("not folder");
         int total = 0;
 
         File[] files = file.listFiles();
@@ -1379,21 +1364,17 @@ public class MultiService {
     public FileResponseDTO getStorageFile(String location) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         File file = new File(path + location);
-        if (!file.exists())
-            throw new DataNotFoundException("file not found");
+        if (!file.exists()) throw new DataNotFoundException("file not found");
         return transferFileToDTO(file);
     }
 
     public List<FolderResponseDTO> getFileFolders(String location) {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         File file = new File(path + location);
-        if (!file.exists())
-            throw new DataNotFoundException("file not found");
+        if (!file.exists()) throw new DataNotFoundException("file not found");
         List<FolderResponseDTO> list = new ArrayList<>();
-        if(file.isDirectory())
-            for (File child : file.listFiles())
-                if (child.isDirectory())
-                    list.add(transferFolderToDTO(file));
+        if (file.isDirectory()) for (File child : file.listFiles())
+            if (child.isDirectory()) list.add(transferFolderToDTO(file));
         return list;
     }
 
@@ -1401,8 +1382,7 @@ public class MultiService {
         if (file.isDirectory()) {
             List<FolderResponseDTO> list = new ArrayList<>();
             for (File child : file.listFiles())
-                if (child.isDirectory())
-                    list.add(transferFolderToDTO(file));
+                if (child.isDirectory()) list.add(transferFolderToDTO(file));
             return FolderResponseDTO.builder().name(file.getName()).child(list).build();
         } else return null;
     }
@@ -1421,7 +1401,6 @@ public class MultiService {
             size += file.length();
         }
         return size;
-
     }
 
 }
