@@ -1312,7 +1312,7 @@ public class MultiService {
                 .collect(Collectors.toList());
 
         // 승인자(UserResponseDTO 리스트) 생성
-        List<UserResponseDTO> approversUser = approverUserFind(approval, approverusernames);
+        List<ApproverResponseDTO> approversUser = approverUserFind (approval,approverusernames);
 
         // 참고인(UserResponseDTO 리스트) 생성
         List<UserResponseDTO> viewerUser = viewerUserFind (approval,viewernames);
@@ -1323,21 +1323,31 @@ public class MultiService {
         // 승인 여부 처리 (이 예제에서는 승인 여부를 어떻게 결정하는지 명확하지 않음, 예제 값으로 false 사용)
         boolean isApproved = false;  // 실제 로직에 따라 결정되어야 함
 
+       List<String> readUser = approvalService.get(approval.getId ()).getReadUsers ();
 
-        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvals(approversUser).viewers(viewerUser).approval(isApproved).build();
+
+        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvers (approversUser).viewers(viewerUser).approval(isApproved).readUsers (readUser).build();
     }
 
     @Transactional
-    private List<UserResponseDTO> approverUserFind(Approval approval, List<String> usernames) {
-        List<UserResponseDTO> users = new ArrayList<>();
+    private List<ApproverResponseDTO> approverUserFind(Approval approval, List<String> usernames) {
+
+        List<ApproverResponseDTO> users = new ArrayList<>();
 
         for (String username : usernames) {
             SiteUser siteUser = userService.get(username);
             Approver approver = approverService.get (siteUser, approval);
-            SiteUser sitesUer1 = approver.getUser ();
-            UserResponseDTO userResponseDTO = getUserResponseDTO(sitesUer1);
-            users.add(userResponseDTO);
+
+            UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
+
+            int approverStatus = approver.getApproverStatus ().ordinal ();
+
+
+            ApproverResponseDTO approverResponseDTO = ApproverResponseDTO.builder().approver (userResponseDTO).apporverStatus (approverStatus).build();
+
+            users.add (approverResponseDTO);
         }
+
         return users;
     }
 
@@ -1384,14 +1394,19 @@ public class MultiService {
         approvalService.delete (approval);
     }
 
-    public ApprovalResponseDTO getApproval(Long approvalId) throws NotAllowedException{
+    public ApprovalResponseDTO addApproval(Long approvalId) throws NotAllowedException{
         if(approvalId == null) throw new NotAllowedException ("아이디는 하나 이상 필수입니다.");
         Approval approval = approvalService.get (approvalId);
 
         return getApproval (approval);
     }
 
+    public ApprovalResponseDTO addReader(Long approvalId, String username) throws NotAllowedException {
+        Approval approval = approvalService.get (approvalId);
+        Approval updateApproval = approvalService.addReader (approval,username);
 
+        return getApproval (updateApproval);
+    }
 
     /*
      * Storage
