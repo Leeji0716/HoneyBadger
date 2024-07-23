@@ -40,8 +40,8 @@ public class PersonalCycleController {
     public ResponseEntity<?> personalCycle(@RequestHeader("Authorization") String accessToken, @RequestHeader("id") Long id, @RequestBody PersonalCycleRequestDTO personalCycleRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            multiService.updatePersonalCycle(tokenDTO.username(), id, personalCycleRequestDTO);
-            return ResponseEntity.status(HttpStatus.OK).body("update");
+           PersonalCycleDTO personalCycleDTO = multiService.updatePersonalCycle(tokenDTO.username(), id, personalCycleRequestDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(personalCycleDTO);
         } catch (IllegalArgumentException | NotAllowedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (DataNotFoundException ex) {
@@ -76,7 +76,7 @@ public class PersonalCycleController {
         } else return tokenDTO.getResponseEntity();
     }
 
-
+    //개인일정 태그 설정
     @PostMapping("/tag")
     public ResponseEntity<?> tagMake(@RequestHeader("Authorization") String accessToken, @RequestBody PersonalCycleRequestTagDTO personalCycleRequestTagDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
@@ -91,6 +91,7 @@ public class PersonalCycleController {
         else return tokenDTO.getResponseEntity();
     }
 
+    //개인일정 태그리스트
     @GetMapping("/tagList")
     public ResponseEntity<?> tagList(@RequestHeader("Authorization") String accessToken, @RequestHeader("tag") String tag) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
@@ -101,6 +102,7 @@ public class PersonalCycleController {
         } else return tokenDTO.getResponseEntity();
     }
 
+    //개인일정 태그삭제
     @PutMapping("/tagDelete")
     public ResponseEntity<?> tagDelete(@RequestHeader("Authorization") String accessToken, @RequestBody PersonalCycleRequestTagDTO personalCycleRequestTagDTO) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);

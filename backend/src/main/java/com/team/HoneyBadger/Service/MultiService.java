@@ -61,6 +61,7 @@ public class MultiService {
     private final ApprovalService approvalService;
     private final ApproverService approverService;
     private final ViewerService viewerService;
+    private final GroupCycleService groupCycleService;
 
     /**
      * Auth
@@ -1204,7 +1205,7 @@ public class MultiService {
     }
 
     @Transactional
-    public void updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
+    public PersonalCycleDTO updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
         SiteUser user = userService.get(username);
         PersonalCycle personalCycle = personalCycleService.findById(id);
         if (personalCycle.getUser() != user) {
@@ -1218,7 +1219,8 @@ public class MultiService {
         } else if (personalCycleRequestDTO.endDate() == null) {
             throw new NotAllowedException("종료 시간을 입력해주세요.");
         }
-        personalCycleService.upDate(personalCycle, personalCycleRequestDTO);
+
+        return getPersonalCycleDTO(personalCycleService.upDate(personalCycle, personalCycleRequestDTO)); //여기 잘봐주.. 내가 건드려버림..
     }
 
     @Transactional
@@ -1242,7 +1244,7 @@ public class MultiService {
             boolean holiday = false;
             String holidayTitle = "";
             for (PersonalCycle personalCycle : personalCycleList) {
-                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()) {
+                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth() || personalCycle.getEndDate().getDayOfMonth() == startDate.getDayOfMonth()) {
                     PersonalCycleDTO personalCycleDTO = PersonalCycleDTO.builder().id(personalCycle.getId()).title(personalCycle.getTitle()).content(personalCycle.getContent()).startDate(dateTimeTransfer(personalCycle.getStartDate())).endDate(dateTimeTransfer(personalCycle.getEndDate())).tag(personalCycle.getTag()).build();
                     personalCycleDTOList.add(personalCycleDTO);
                 }
@@ -1486,4 +1488,21 @@ public class MultiService {
     }
 
 
+    /*
+        GroupCycle
+    */
+    public void createGroupCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) {
+        SiteUser user = userService.get(username);
+        if(user.getDepartment() == null){
+            throw new NotAllowedException("그룹이 없습니다.");
+        }
+        if(personalCycleRequestDTO.title() == null){
+            throw new DataNotFoundException("제목을 입력해주세요.");
+        }else if(personalCycleRequestDTO.content() == null){
+            throw new DataNotFoundException("내용을 입력해주세요.");
+        }else if(personalCycleRequestDTO.startDate() == null || personalCycleRequestDTO.endDate() == null || personalCycleRequestDTO.startDate().equals(personalCycleRequestDTO.endDate())||personalCycleRequestDTO.startDate().isAfter(personalCycleRequestDTO.endDate())) {
+            throw new DataNotFoundException("시간설정을 다시 확인해주세요.");
+        }
+        groupCycleService.create(user,personalCycleRequestDTO);
+    }
 }
