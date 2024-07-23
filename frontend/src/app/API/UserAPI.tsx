@@ -484,7 +484,10 @@ export const readUsersName = async (messageId: number, username: string) => {
         headers: {
             messageId: messageId,
             username: username
-          
+        }
+    });
+    return response.data;
+}
 export const getStorageFiles = async (data: { Location: string, Page?: number, Type?: number, Order: number }) => {
     const response = await UserApi.get('/api/file/list', {
         headers: {
