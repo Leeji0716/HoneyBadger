@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -24,6 +26,8 @@ public class GroupCycle {
     private LocalDateTime createDate;
     @ManyToOne(fetch = FetchType.LAZY)
     private Department group;
+    @ElementCollection
+    private List<String> tag;
 
     @Builder
     public GroupCycle(String title, String content, LocalDateTime startDate, LocalDateTime endDate, Department group) {
@@ -33,5 +37,6 @@ public class GroupCycle {
         this.endDate = endDate;
         this.createDate = LocalDateTime.now();
         this.group = group;
+        this.tag = new ArrayList<>();
     }
 }
