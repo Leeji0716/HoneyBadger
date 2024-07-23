@@ -25,7 +25,7 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: 
+  background:
     rgb(var(--background-start-rgb));
 }
 
@@ -44,19 +44,22 @@ body {
 }
 
 .login-button:hover {
-  background-color: #1d4ed8; 
+  background-color: #1d4ed8;
 }
+
 .official-color {
-  background-color: rgb(143, 190, 233); /* RGB 값으로 배경 색상 설정 */
+  background-color: rgb(143, 190, 233);
+  /* RGB 값으로 배경 색상 설정 */
 }
 
 
 .text-official-color {
-  color: rgb(143, 190, 233); /* RGB 값으로 텍스트 색상 설정 */
+  color: rgb(143, 190, 233);
+  /* RGB 값으로 텍스트 색상 설정 */
 }
 
 
-.mail-hover:hover{
+.mail-hover:hover {
   border: solid 2px rgb(143, 190, 233);
   border-radius: 5px;
 }
@@ -71,11 +74,15 @@ body {
 
 .hamburger span {
   display: block;
-  width: 25px;  /* 줄의 너비 */
-  height: 3px;  /* 줄의 높이 */
+  width: 25px;
+  /* 줄의 너비 */
+  height: 3px;
+  /* 줄의 높이 */
   margin: 5px auto;
-  background-color: white;  /* 줄의 색상 */
-  transition: all 0.3s ease; /* 애니메이션 효과 */
+  background-color: white;
+  /* 줄의 색상 */
+  transition: all 0.3s ease;
+  /* 애니메이션 효과 */
   border-radius: 1.5px;
 }
 
@@ -89,28 +96,33 @@ body {
 
 .hamburger1:hover {
   background-color: #e0e0e0;
-  
+
 }
 
 .hamburger1 span {
   display: block;
-  width: 25px;  /* 줄의 너비 */
-  height: 3px;  /* 줄의 높이 */
+  width: 25px;
+  /* 줄의 너비 */
+  height: 3px;
+  /* 줄의 높이 */
   margin: 5px auto;
-  background-color: black;  /* 줄의 색상 */
-  transition: all 0.3s ease; /* 애니메이션 효과 */
+  background-color: black;
+  /* 줄의 색상 */
+  transition: all 0.3s ease;
+  /* 애니메이션 효과 */
   border-radius: 1.5px;
 }
 
-.send{
+.send {
   background-color: white;
 }
-.send:hover{
+
+.send:hover {
   background-color: #e0e0e0;
-  
+
 }
 
-.mail-hamburger{
+.mail-hamburger {
   display: inline-block;
   cursor: pointer;
   background: transparent;
@@ -122,10 +134,22 @@ body {
 
 .mail-hamburger span {
   display: block;
-  width: 2px;  /* 줄의 너비 */
-  height: 2px;  /* 줄의 높이 */
+  width: 2px;
+  /* 줄의 너비 */
+  height: 2px;
+  /* 줄의 높이 */
   margin: 5px auto;
-  background-color: black;  /* 줄의 색상 */
-  transition: all 0.3s ease; /* 애니메이션 효과 */
+  background-color: black;
+  /* 줄의 색상 */
+  transition: all 0.3s ease;
+  /* 애니메이션 효과 */
   border-radius: 1.5px;
 }
+
+/* body {
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+} */
