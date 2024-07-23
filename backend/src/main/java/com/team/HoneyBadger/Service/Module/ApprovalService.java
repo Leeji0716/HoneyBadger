@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +31,7 @@ public class ApprovalService {
                 .title (approvalRequestDTO.title ())
                 .content (approvalRequestDTO.content ())
                 .sender (sender)
-                .status (ApprovalStatus.NOT_READ)
+                .status (ApprovalStatus.READY)
                 .build());
     }
 
@@ -39,8 +40,20 @@ public class ApprovalService {
         return approval;
     }
 
+    public Approval addReader(Approval approval, String username){
+        List<String> readUsers = approval.getReadUsers ();
+
+        if(!readUsers.contains (username)){
+            readUsers.add (username);
+            approvalRepository.save (approval);
+        }
+
+        return approval;
+    }
+
     public void delete(Approval approval){
         approvalRepository.delete (approval);
     }
+
 
 }
