@@ -144,7 +144,7 @@ export function getStorageDate(data: number) {
     if (now.getFullYear() == date.getFullYear() && now.getMonth() == date.getMonth() && now.getDate() == date.getDate())
         return "오늘 " + (date.getHours() < 12 ? '오전 ' + date.getHours() : '오후 ' + (date.getHours() - 12)) + ":" + date.getMinutes();
     else
-        return date.getFullYear() + ". " + (date.getMonth() < 9 ? '0' : '') + (date.getMonth() + 1) + ". " + (date.getDate() < 9 ? '0' : 0) + date.getDate() + ". " + (date.getHours() < 12 ? '오전 ' + date.getHours() : '오후 ' + (date.getHours() - 12)) + ":" + date.getMinutes();
+        return date.getFullYear() + ". " + (date.getMonth() < 9 ? '0' : '') + (date.getMonth() + 1) + ". " + (date.getDate() < 9 ? '0' : '') + date.getDate() + ". " + (date.getHours() < 12 ? '오전 ' + date.getHours() : '오후 ' + (date.getHours() - 12)) + ":" + date.getMinutes();
 
 
 }

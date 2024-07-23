@@ -8,6 +8,8 @@ import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -68,6 +70,10 @@ public class UserService {
     public List<SiteUser> getUsernameAll(String username) {
         return userRepository.findAll().stream().filter(u -> !u.getUsername().equals(username)) // username과 동일하지 않은 이름만 필터링
                 .toList();
+    }
+
+    public Page<SiteUser> getUsers(String keyword, int page, int size) {
+        return userRepository.getUsers(keyword, PageRequest.of(page, size));
     }
 
     public List<SiteUser> getUsersDepartmentIsNull() {

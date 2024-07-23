@@ -113,7 +113,7 @@ export const sendEmail = async (data: CreateEmail) => {
 }
 
 export const getChat = async (keyword: string, Page: number) => {
-    const response = await UserApi.get('/api/chatroom/list',{
+    const response = await UserApi.get('/api/chatroom/list', {
         headers: {
             keyword: encodeURIComponent(keyword),
             Page: Page
@@ -124,9 +124,9 @@ export const getChat = async (keyword: string, Page: number) => {
 
 
 export const getChatDetail = async (chatroomId: number, page: number) => {
-    const response = await UserApi.get('/api/chatroom', 
-        { 
-            headers: { chatroomId: chatroomId, Page: page} 
+    const response = await UserApi.get('/api/chatroom',
+        {
+            headers: { chatroomId: chatroomId, Page: page }
         }
     );
 
@@ -316,6 +316,16 @@ export const postUser = async (data: userInfo) => {
     return response.data;
 }
 
+export const searchUsers = async (keyword: string, page: number, size?: number) => {
+    const response = await UserApi.get('/api/user/search', {
+        headers: {
+            Keyword: keyword ? encodeURIComponent(keyword) : '',
+            Page: page,
+            Size: size
+        }
+    });
+    return response.data;
+}
 
 export const makeChatroom = async (chatroomRequestDTO: chatroomRequestDTO) => {
     const response = await UserApi.post('/api/chatroom', chatroomRequestDTO);
@@ -358,7 +368,7 @@ interface createQuestionProp {
     content: string,
     author: string,
     password: string,
-    lock:boolean
+    lock: boolean
 }
 export const createQuestion = async (data: createQuestionProp) => {
     const response = await UserApi.post('/api/question', data);
@@ -374,43 +384,64 @@ export const getQuestions = async (page: number, keyword: string) => {
     });
     return response.data;
 };
-export const checkQuestion = async (data: {password:string, id:number}) => {
+export const checkQuestion = async (data: { password: string, id: number }) => {
     const response = await UserApi.post('/api/question/check', data);
     return response.data;
 };
-export const updateQuestionAnswer = async (data: {answer:string, id:number}) => {
+export const updateQuestionAnswer = async (data: { answer: string, id: number }) => {
     const response = await UserApi.put('/api/question', data);
     return response.data;
 };
 
-export const readUsersName = async (messageId:number, username:string)=>{
-    const response = await UserApi.get('/api/message/readUsernames',{
-        headers : {
-            messageId : messageId,
-            username : username
+export const readUsersName = async (messageId: number, username: string) => {
+    const response = await UserApi.get('/api/message/readUsernames', {
+        headers: {
+            messageId: messageId,
+            username: username
         }
     });
     return response.data;
 }
-interface getFileProps{
-    Location:string,
-    Page?:number;
-}
-export const getStorageFiles = async (data:getFileProps)=>{
-    const response = await UserApi.get('/api/file/list',{
-        headers : {...data}
+
+export const getStorageFiles = async (data: {
+    Location: string,
+    Page?: number,
+    Type?: number,
+    Order: number
+}) => {
+    const response = await UserApi.get('/api/file/list', {
+        headers: {
+            Location: data.Location ? encodeURIComponent(data.Location) : '',
+            Page: data.Page,
+            Type: data.Type,
+            Order: data.Order
+        }
     });
     return response.data;
 }
-export const getFileFolders = async (data:getFileProps)=>{
-    const response = await UserApi.get('/api/file/folders',{
-        headers : {...data}
+export const createFileFolder = async (data: { Location: string, Page?: number }) => {
+    const response = await UserApi.post('/api/file/folder', {}, {
+        headers: {
+            Location: data.Location ? encodeURIComponent(data.Location) : '',
+            Page: data.Page
+        }
     });
     return response.data;
 }
-export const getStorageFile = async (data:getFileProps)=>{
-    const response = await UserApi.get('/api/file',{
-        headers : {...data}
+
+export const getFileFolders = async (data: { Location: string }) => {
+    const response = await UserApi.get('/api/file/folders', {
+        headers: {
+            Location: data.Location ? encodeURIComponent(data.Location) : '',
+        }
+    });
+    return response.data;
+}
+export const getStorageFile = async (data: { Location: string }) => {
+    const response = await UserApi.get('/api/file', {
+        headers: {
+            Location: data.Location ? encodeURIComponent(data.Location) : '',
+        }
     });
     return response.data;
 }
