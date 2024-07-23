@@ -63,10 +63,10 @@ public class ApprovalController {
     }
 
     @PutMapping("/updateRead") // 기안서 읽음 처리
-    public ResponseEntity<?> approvalRead(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestHeader("username") String username) {
+    public ResponseEntity<?> approvalRead(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if (tokenDTO.isOK ()) try {
-            ApprovalResponseDTO approvalResponseDTO = multiService.addReader(approvalId, username);
+            ApprovalResponseDTO approvalResponseDTO = multiService.addReader(approvalId, tokenDTO.username ());
             return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
         } catch (NotAllowedException ex) {
             return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
