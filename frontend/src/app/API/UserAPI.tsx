@@ -95,6 +95,14 @@ interface chatroomRequestDTO {
     users: string[]
 }
 
+interface approvalRequestDTO {
+    title: string,
+    content: string,
+    sender: string,
+    approversname: string[],
+    viewersname: string[]
+}
+
 export const getEmail = async (status: number, page: number) => {
     const response = await UserApi.get('/api/email/list', {
         headers:
@@ -414,3 +422,8 @@ export const getStorageFile = async (data:getFileProps)=>{
     });
     return response.data;
 }
+
+export const createApproval = async (approvalRequestDTO: approvalRequestDTO) => {
+    const response = await UserApi.post('/api/approval', approvalRequestDTO);
+    return response.data;
+};
