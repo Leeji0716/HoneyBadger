@@ -6,6 +6,7 @@ import com.team.HoneyBadger.Entity.Approval;
 import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Enum.ApprovalStatus;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.ApprovalRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -33,5 +34,13 @@ public class ApprovalService {
                 .build());
     }
 
+    public Approval get(Long approvalId){
+        Approval approval = approvalRepository.findById (approvalId).orElseThrow (() -> new DataNotFoundException ("approval not found"));
+        return approval;
+    }
+
+    public void delete(Approval approval){
+        approvalRepository.delete (approval);
+    }
 
 }
