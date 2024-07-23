@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
+
 @SpringBootTest
 class HoneyBadgerApplicationTests {
     @Autowired
@@ -20,7 +22,7 @@ class HoneyBadgerApplicationTests {
 
     @Test
     void contextLoads() {
-        userRepository.save(SiteUser.builder().username("admin").password(encoder.encode("1")).phoneNumber("01055344735").name("관리자").role(UserRole.ADMIN).build());
+        userRepository.save(SiteUser.builder().username("admin5").password(encoder.encode("1")).phoneNumber("01022222343").name("직원").role(UserRole.STAFF).build());
 //        for (int i = 0; i < 5; i++) {
 //            Department top = departmentRepository.save(Department.builder().name("top" + i).build());
 //            for (int j = 0; j < 5; j++) {
@@ -30,6 +32,31 @@ class HoneyBadgerApplicationTests {
 //                }
 //            }
 //        }
+
+
+    }
+
+    @Test
+    void getMyCycle() {
+        System.out.println("for");
+        {
+            LocalDateTime startDate = LocalDateTime.now();
+            LocalDateTime endDate = LocalDateTime.now().plusDays(5);
+
+            for (; !startDate.isAfter(endDate); startDate = startDate.plusDays(1)) {
+                System.out.println(startDate.toString());
+            }
+        }
+        System.out.println("while");
+        {
+            LocalDateTime startDate = LocalDateTime.now();
+            LocalDateTime endDate = LocalDateTime.now().plusDays(5);
+
+            while (!(startDate = startDate.plusDays(1)).isAfter(endDate)) {
+                System.out.println(startDate.toString());
+            }
+        }
+
 
 
     }

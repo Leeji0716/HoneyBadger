@@ -10,5 +10,5 @@ public record EmailReservationResponseDTO(Long id,
                                           String content,
                                           Long senderTime,
                                           List<String> receiverIds,
-                                          List<FileResponseDTO> files) {
+                                          List<OriginFileResponseDTO> files) {
 }

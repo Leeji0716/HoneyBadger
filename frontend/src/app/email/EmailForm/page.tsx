@@ -40,8 +40,6 @@ export default function EmailForm() {
     // const [email, setEmail] = useState<Email | null>(null);
     const quillInstance = useRef<ReactQuill>(null);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
-    console.log("flag : " + flag);
-    useEffect(() => { console.log(time) }, [time])
     useEffect(() => {
         if (ACCESS_TOKEN) {
             getUser().then(r => {
@@ -98,7 +96,6 @@ export default function EmailForm() {
                 const formData = new FormData();
                 formData.append('file', file as any);
                 const imgUrl = await mailImage(formData);
-                console.log(imgUrl);
                 const editor = (quillInstance?.current as any).getEditor();
                 const range = editor.getSelection();
                 editor.insertEmbed(range.index, 'image', imgUrl);
@@ -108,7 +105,6 @@ export default function EmailForm() {
             }
         });
     };
-    // console.log(content);
     const modules = useMemo(
         () => ({
             toolbar: {
@@ -137,7 +133,6 @@ export default function EmailForm() {
     function getEmail() {
         return { content: content, title: title, receiverIds: receiverIds, senderId: user.username, sendTime: time, attachments: fileList }
     }
-    console.log({ id: id, content: content, title: title, receiverIds: receiverIds, sendTime: eontransferLocalTime(time), files: files });
     function test() {
         if (flag == 2) {
             if (fileList.length == 0) {

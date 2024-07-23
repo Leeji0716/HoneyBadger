@@ -12,11 +12,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 @RestController
@@ -24,6 +27,28 @@ import java.util.List;
 @RequestMapping("/api/message")
 public class MessageController {
     private final MultiService multiService;
+//    private final SimpUserRegistry simpUserRegistry;
+    private final SimpMessagingTemplate messagingTemplate;
+
+//    @Scheduled(fixedRate = 5000) // 1초마다 실행
+//    public void processMessages() {
+//        List<String> readUserToProcess = new ArrayList<>();
+//        String username;
+//
+//        while ((username = messageQueue.poll()) != null) {
+//            readUserToProcess.add(username);
+//        }
+//
+//        if (!readUserToProcess.isEmpty()) {
+//            // 처리 로직 예: 모든 수집된 메시지를 클라이언트로 브로드캐스트
+////            messagingTemplate.convertAndSend("/topic/messages", readUserToProcess);
+//            for (String reader : readUserToProcess){
+//                multiService.readMessage(3L, reader);
+//            }
+//
+//        }
+//    }
+    private final ConcurrentLinkedQueue<String> messageQueue = new ConcurrentLinkedQueue<>();
 
     @DeleteMapping //메세지 삭제
     public ResponseEntity<?> deleteMessage(@RequestHeader("Authorization") String accessToken, @RequestHeader("messageId") Long messageId) {
@@ -71,7 +96,23 @@ public class MessageController {
     @SendTo("/api/sub/message/{id}") //메세지 보내기
     public ResponseEntity<?> sendMessage(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
         try {
+//            Set<SimpUser> users = simpUserRegistry.getUsers();
+//            List<String> subscriberIds = new ArrayList<>();
+//
+//            for (SimpUser user : users) {
+//                for (SimpSession session : user.getSessions()) {
+//                    for (SimpSubscription subscription : session.getSubscriptions()) {
+//                        if (subscription.getDestination().equals("/api/sub/message/"+id)) {
+//                            subscriberIds.add(user.getName());
+//                            System.out.println(user.getName());
+//                            multiService.readMessage(id, messageRequestDTO.username());
+//                        }
+//                    }
+//                }
+//            }
             MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO);
+            this.processMessages();
+
             return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
@@ -80,22 +121,56 @@ public class MessageController {
         }
     }
 
+    // 주기적으로 메시지를 처리하는 메서드
+//    @Scheduled(fixedRate = 5000) // 1초마다 실행
+    public void processMessages() {
+        List<String> readUserToProcess = new ArrayList<>();
+        String username;
+
+        while ((username = messageQueue.poll()) != null) {
+            readUserToProcess.add(username);
+        }
+
+        if (!readUserToProcess.isEmpty()) {
+            // 처리 로직 예: 모든 수집된 메시지를 클라이언트로 브로드캐스트
+//            messagingTemplate.convertAndSend("/topic/messages", readUserToProcess);
+            for (String reader : readUserToProcess){
+                multiService.readMessage(3L, reader);
+            }
+
+        }
+    }
+
     @MessageMapping("/read/{id}")
     @SendTo("/api/sub/read/{id}") //메세지 읽기 -> readUsers 리스트에 추가
     public ResponseEntity<?> readMessages(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
         try {
-            multiService.readMessage(id, messageRequestDTO.username());
+            messageQueue.add(messageRequestDTO.username());
+//            multiService.readMessage(id, messageRequestDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body("Read OK");
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
     }
 
+
+
+
     @PutMapping("/read")
     public ResponseEntity<?> readMessagesTest(@RequestHeader Long id, @RequestHeader String username) {
         try {
             multiService.readMessage(id, username);
             return ResponseEntity.status(HttpStatus.OK).body("Read OK");
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/readUsernames") //테스트용
+    public ResponseEntity<?> readUserMessagesTest(@RequestHeader Long messageId, @RequestHeader String username) {
+        try {
+            List<String> readUsers = multiService.readUserMessage(messageId, username);
+            return ResponseEntity.status(HttpStatus.OK).body(readUsers);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }

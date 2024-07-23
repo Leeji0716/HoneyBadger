@@ -48,8 +48,12 @@ body {
 }
 
 .official-color {
+
   background-color: rgb(143, 190, 233);
   /* RGB 값으로 배경 색상 설정 */
+
+  background-color: #8fbee9; /* RGB 값으로 배경 색상 설정 */
+
 }
 
 
@@ -146,10 +150,9 @@ body {
   border-radius: 1.5px;
 }
 
-/* body {
-  -ms-overflow-style: none;
+@layer components {
+  .checkbox-div:has(input:checked) {
+    @apply border-2 border-[#8fbee9] group-hover:bg-[#dce2e8];
+  }
 }
 
-::-webkit-scrollbar {
-  display: none;
-} */

@@ -455,3 +455,36 @@ export const deleteSchedule = async (id: number): Promise<void> => {
         throw error;
     }
 };
+
+export const readUsersName = async (messageId:number, username:string)=>{
+    const response = await UserApi.get('/api/message/readUsernames',{
+        headers : {
+            messageId : messageId,
+            username : username
+        }
+    });
+    return response.data;
+}
+interface getFileProps{
+    Location:string,
+    Page?:number;
+}
+export const getStorageFiles = async (data:getFileProps)=>{
+    const response = await UserApi.get('/api/file/list',{
+        headers : {...data}
+    });
+    return response.data;
+}
+export const getFileFolders = async (data:getFileProps)=>{
+    const response = await UserApi.get('/api/file/folders',{
+        headers : {...data}
+    });
+    return response.data;
+}
+export const getStorageFile = async (data:getFileProps)=>{
+    const response = await UserApi.get('/api/file',{
+        headers : {...data}
+    });
+    return response.data;
+}
+

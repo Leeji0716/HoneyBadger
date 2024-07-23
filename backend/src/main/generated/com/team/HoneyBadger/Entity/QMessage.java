@@ -38,6 +38,8 @@ public class QMessage extends EntityPathBase<Message> {
 
     public final QSiteUser sender;
 
+    public final NumberPath<Integer> version = createNumber("version", Integer.class);
+
     public QMessage(String variable) {
         this(Message.class, forVariable(variable), INITS);
     }

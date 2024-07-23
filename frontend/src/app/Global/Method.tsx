@@ -137,7 +137,17 @@ export function getDateEmailTime(data: any) {
         (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + "월 "
         + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + "일 " + formattedTime;
 }
+export function getStorageDate(data: number) {
+    const date = new Date(data);
+    const now = new Date();
+    
+    if (now.getFullYear() == date.getFullYear() && now.getMonth() == date.getMonth() && now.getDate() == date.getDate())
+        return "오늘 " + (date.getHours() < 12 ? '오전 ' + date.getHours() : '오후 ' + (date.getHours() - 12)) + ":" + date.getMinutes();
+    else
+        return date.getFullYear() + ". " + (date.getMonth() < 9 ? '0' : '') + (date.getMonth() + 1) + ". " + (date.getDate() < 9 ? '0' : 0) + date.getDate() + ". " + (date.getHours() < 12 ? '오전 ' + date.getHours() : '오후 ' + (date.getHours() - 12)) + ":" + date.getMinutes();
 
+
+}
 export function getDepartmentRole(role: number) {
     switch (role) {
         case 0: return '일반';
@@ -296,3 +306,4 @@ export function isHoliday(date: Date) {
     ];
     return solarHoliday.includes(solar) || lunarHoliday.includes(lunar);
 }
+
