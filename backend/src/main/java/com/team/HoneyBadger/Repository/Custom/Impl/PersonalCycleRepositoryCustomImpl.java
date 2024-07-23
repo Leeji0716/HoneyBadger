@@ -21,7 +21,7 @@ public class PersonalCycleRepositoryCustomImpl implements PersonalCycleRepositor
     public List<PersonalCycle> myMonthCycle(SiteUser user, LocalDateTime startDate, LocalDateTime endDate) {
         return jpaQueryFactory
                 .selectFrom(qPersonalCycle)
-                .where(qPersonalCycle.startDate.goe(startDate).and(qPersonalCycle.startDate.before(endDate)))
+                .where(qPersonalCycle.startDate.between(startDate,endDate).or(qPersonalCycle.endDate.between(startDate,endDate).or(qPersonalCycle.endDate.after(endDate))))
                 .fetch();
     }
 

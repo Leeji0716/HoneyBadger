@@ -34,6 +34,8 @@ public class QGroupCycle extends EntityPathBase<GroupCycle> {
 
     public final DateTimePath<java.time.LocalDateTime> startDate = createDateTime("startDate", java.time.LocalDateTime.class);
 
+    public final ListPath<String, StringPath> tag = this.<String, StringPath>createList("tag", String.class, StringPath.class, PathInits.DIRECT2);
+
     public final StringPath title = createString("title");
 
     public QGroupCycle(String variable) {

@@ -6,12 +6,14 @@ import com.team.HoneyBadger.Entity.Approval;
 import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Enum.ApprovalStatus;
+import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.ApprovalRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +31,28 @@ public class ApprovalService {
                 .title (approvalRequestDTO.title ())
                 .content (approvalRequestDTO.content ())
                 .sender (sender)
-                .status (ApprovalStatus.NOT_READ)
+                .status (ApprovalStatus.READY)
                 .build());
+    }
+
+    public Approval get(Long approvalId){
+        Approval approval = approvalRepository.findById (approvalId).orElseThrow (() -> new DataNotFoundException ("approval not found"));
+        return approval;
+    }
+
+    public Approval addReader(Approval approval, String username){
+        List<String> readUsers = approval.getReadUsers ();
+
+        if(!readUsers.contains (username)){
+            readUsers.add (username);
+            approvalRepository.save (approval);
+        }
+
+        return approval;
+    }
+
+    public void delete(Approval approval){
+        approvalRepository.delete (approval);
     }
 
 
