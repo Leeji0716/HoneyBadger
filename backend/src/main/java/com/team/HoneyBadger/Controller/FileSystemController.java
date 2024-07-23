@@ -66,7 +66,7 @@ public class FileSystemController {
     }
 
     @PostMapping("/folder")
-    public ResponseEntity<?> createFolder(@RequestHeader("Authorization") String accessToken, @RequestHeader("Location") String location) {
+    public ResponseEntity<?> createFolder(@RequestHeader("Authorization") String accessToken, @RequestHeader("Location") String location, @RequestHeader("Base") String base) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
             multiService.createFolder(URLDecoder.decode(location, StandardCharsets.UTF_8));

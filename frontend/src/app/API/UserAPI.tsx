@@ -480,16 +480,6 @@ export const deleteSchedule = async (id: number): Promise<void> => {
     }
 };
 
-export const readUsersName = async (messageId:number, username:string)=>{
-    const response = await UserApi.get('/api/message/readUsernames',{
-        headers : {
-            messageId : messageId,
-            username : username
-        }
-    });
-    return response.data;
-}
-
 export const getStorageFiles = async (data: {
     Location: string,
     Page?: number,
