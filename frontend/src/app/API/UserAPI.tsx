@@ -519,7 +519,6 @@ export const getFileFolders = async (data: getFileProps) => {
 export const getStorageFile = async (data: getFileProps) => {
     const response = await UserApi.get('/api/file', {
         headers: { ...data }
-        }
     });
     return response.data;
 }
