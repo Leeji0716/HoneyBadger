@@ -69,10 +69,12 @@ public class FileSystemController {
     public ResponseEntity<?> createFolder(@RequestHeader("Authorization") String accessToken, @RequestHeader("Location") String location, @RequestHeader("Base") String base) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try {
-            multiService.createFolder(URLDecoder.decode(location, StandardCharsets.UTF_8));
+            multiService.createFolder(URLDecoder.decode(location, StandardCharsets.UTF_8),URLDecoder.decode(base, StandardCharsets.UTF_8));
             return ResponseEntity.status(HttpStatus.OK).body("created");
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("file error");
+        }catch(NotAllowedException ex){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
         else return tokenDTO.getResponseEntity();
     }

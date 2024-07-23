@@ -480,12 +480,7 @@ export const deleteSchedule = async (id: number): Promise<void> => {
     }
 };
 
-export const getStorageFiles = async (data: {
-    Location: string,
-    Page?: number,
-    Type?: number,
-    Order: number
-}) => {
+export const getStorageFiles = async (data: { Location: string, Page?: number, Type?: number, Order: number }) => {
     const response = await UserApi.get('/api/file/list', {
         headers: {
             Location: data.Location ? encodeURIComponent(data.Location) : '',
@@ -496,11 +491,12 @@ export const getStorageFiles = async (data: {
     });
     return response.data;
 }
-export const createFileFolder = async (data: { Location: string, Page?: number }) => {
+export const createFileFolder = async (data: { Location: string, Page?: number, Base: string }) => {
     const response = await UserApi.post('/api/file/folder', {}, {
         headers: {
             Location: data.Location ? encodeURIComponent(data.Location) : '',
-            Page: data.Page
+            Page: data.Page,
+            Base:  data.Base ? encodeURIComponent(data.Base) : ''
         }
     });
     return response.data;

@@ -931,10 +931,9 @@ public class MultiService {
                 messageService.updateRead(message, sets.stream().toList());
             }
 
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             lock.unlock();
         }
 
@@ -1307,20 +1306,18 @@ public class MultiService {
     @Transactional
     private ApprovalResponseDTO getApproval(Approval approval) {
 
-       List<Approver> approvers = approverService.getAll (approval);
-        List<String> approverusernames = approvers.stream()
-                .map(approver -> approver.getUser().getUsername()) // 사용자 이름 추출
+        List<Approver> approvers = approverService.getAll(approval);
+        List<String> approverusernames = approvers.stream().map(approver -> approver.getUser().getUsername()) // 사용자 이름 추출
                 .collect(Collectors.toList());
-        List<Viewer> viewers = viewerService.getAll (approval);
-        List<String> viewernames = viewers.stream()
-                .map(approver -> approver.getUser().getUsername()) // 사용자 이름 추출
+        List<Viewer> viewers = viewerService.getAll(approval);
+        List<String> viewernames = viewers.stream().map(approver -> approver.getUser().getUsername()) // 사용자 이름 추출
                 .collect(Collectors.toList());
 
         // 승인자(UserResponseDTO 리스트) 생성
         List<UserResponseDTO> approversUser = approverUserFind(approval, approverusernames);
 
         // 참고인(UserResponseDTO 리스트) 생성
-        List<UserResponseDTO> viewerUser = viewerUserFind (approval,viewernames);
+        List<UserResponseDTO> viewerUser = viewerUserFind(approval, viewernames);
 
         // 승인 요청자(sender) 정보 생성
         UserResponseDTO senderDTO = getUserResponseDTO(approval.getSender());
@@ -1338,8 +1335,8 @@ public class MultiService {
 
         for (String username : usernames) {
             SiteUser siteUser = userService.get(username);
-            Approver approver = approverService.get (siteUser, approval);
-            SiteUser sitesUer1 = approver.getUser ();
+            Approver approver = approverService.get(siteUser, approval);
+            SiteUser sitesUer1 = approver.getUser();
             UserResponseDTO userResponseDTO = getUserResponseDTO(sitesUer1);
             users.add(userResponseDTO);
         }
@@ -1352,8 +1349,8 @@ public class MultiService {
 
         for (String username : usernames) {
             SiteUser siteUser = userService.get(username);
-            Viewer viewer = viewerService.get (siteUser, approval);
-            SiteUser sitesUer1 = viewer.getUser ();
+            Viewer viewer = viewerService.get(siteUser, approval);
+            SiteUser sitesUer1 = viewer.getUser();
             UserResponseDTO userResponseDTO = getUserResponseDTO(sitesUer1);
             users.add(userResponseDTO);
         }
@@ -1361,11 +1358,11 @@ public class MultiService {
     }
 
 
-    public ApprovalResponseDTO createApproval(ApprovalRequestDTO approvalRequestDTO, String loginUser) throws NotAllowedException{
+    public ApprovalResponseDTO createApproval(ApprovalRequestDTO approvalRequestDTO, String loginUser) throws NotAllowedException {
         SiteUser sender = userService.get(loginUser);
         Approval approval = approvalService.create(approvalRequestDTO, sender);
 
-        if(approvalRequestDTO.approversname ().isEmpty ()) throw new NotAllowedException ("승인자를 한 명 이상 추가해주세요.");
+        if (approvalRequestDTO.approversname().isEmpty()) throw new NotAllowedException("승인자를 한 명 이상 추가해주세요.");
 
         for (String username : approvalRequestDTO.approversname()) {
             SiteUser user = userService.get(username);
@@ -1381,28 +1378,30 @@ public class MultiService {
         return getApproval(approval);
     }
 
-    public void deleteApproval(Long approvalId) throws NotAllowedException{
+    public void deleteApproval(Long approvalId) throws NotAllowedException {
 
-        if(approvalId == null) throw new NotAllowedException ("아이디는 하나 이상 필수입니다.");
+        if (approvalId == null) throw new NotAllowedException("아이디는 하나 이상 필수입니다.");
 
-        Approval approval = approvalService.get (approvalId);
-        approvalService.delete (approval);
+        Approval approval = approvalService.get(approvalId);
+        approvalService.delete(approval);
     }
 
-    public ApprovalResponseDTO getApproval(Long approvalId) throws NotAllowedException{
-        if(approvalId == null) throw new NotAllowedException ("아이디는 하나 이상 필수입니다.");
-        Approval approval = approvalService.get (approvalId);
+    public ApprovalResponseDTO getApproval(Long approvalId) throws NotAllowedException {
+        if (approvalId == null) throw new NotAllowedException("아이디는 하나 이상 필수입니다.");
+        Approval approval = approvalService.get(approvalId);
 
-        return getApproval (approval);
+        return getApproval(approval);
     }
-
 
 
     /*
      * Storage
      */
-    public void createFolder(String location) throws IOException {
+    public void createFolder(String location, String base) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
+        File baseFolder = new File(path + base);
+        long size = FileOrder.getSize(baseFolder);
+        if (size > 10737418240L) throw new NotAllowedException("storage");
         File folder = new File(path + location + "/새폴더");
         if (!folder.exists()) folder.mkdirs();
         else for (int i = 0; ; i++) {

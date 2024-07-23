@@ -140,7 +140,7 @@ export default function Home() {
         setLocation(location);
         setPage(page);
         setType(type);
-        getStorageFiles({ Location: location, Page: page, Type: type, Order: getOrder() }).then(r => { setMaxPage(r.totalPages); setFiles(r.content);}).catch(e => console.log(e));
+        getStorageFiles({ Location: location, Page: page, Type: type, Order: getOrder() }).then(r => { setMaxPage(r.totalPages); setFiles(r.content); }).catch(e => console.log(e));
         getStorageFile({ Location: baseLocation }).then(r => { setUsed(r.size); }).catch(e => console.log(e));
     }
     function Folder(props: { folder: any, stack?: number, url: string }) {
@@ -258,7 +258,7 @@ export default function Home() {
                             document.getElementsByName('check').forEach(check => (check as HTMLInputElement).checked = (e.target as HTMLInputElement)?.checked);
                         }} />
                         <button className="btn btn-info btn-sm text-white mr-2">올리기</button>
-                        <button className="btn btn-sm mr-2 hover:underline" onClick={() => createFileFolder({ Location: location, Page: page }).then(() => {
+                        <button className="btn btn-sm mr-2 hover:underline" onClick={() => createFileFolder({ Location: location, Page: page, Base: baseLocation }).then(() => {
                             renew(location, page, -1);
                             getFileFolders({ Location: baseLocation }).then(r => {
                                 baseFolders[base] = r;
