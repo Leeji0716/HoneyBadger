@@ -22,7 +22,9 @@ class HoneyBadgerApplicationTests {
 
     @Test
     void contextLoads() {
-        userRepository.save(SiteUser.builder().username("admin5").password(encoder.encode("1")).phoneNumber("01022222343").name("직원").role(UserRole.STAFF).build());
+        for (int i = 0; i < 50; i++)
+            userRepository.save(SiteUser.builder().username("user" + i).password(encoder.encode("1")).phoneNumber("011" + String.format("%d", i) + String.format("%04d", i)).name("사원" + i).role(UserRole.STAFF).build());
+//        userRepository.save(SiteUser.builder().username("admin5").password(encoder.encode("1")).phoneNumber("01022222343").name("직원").role(UserRole.STAFF).build());
 //        for (int i = 0; i < 5; i++) {
 //            Department top = departmentRepository.save(Department.builder().name("top" + i).build());
 //            for (int j = 0; j < 5; j++) {
@@ -56,7 +58,6 @@ class HoneyBadgerApplicationTests {
                 System.out.println(startDate.toString());
             }
         }
-
 
 
     }

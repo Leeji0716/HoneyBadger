@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
-import { deleteDepartment, getDepartmentTopList, getDepartmentUsers, getUser, postDepartment, postDepartmentImage, postUser, updateActiveUser, updateUser } from "../API/UserAPI";
+import { deleteDepartment, getDepartmentTopList, getDepartmentUsers, getUser, postDepartment, postDepartmentImage, postUser, searchUsers, updateActiveUser, updateUser } from "../API/UserAPI";
 
 import { getDateFormatInput, getDateKorean, getDepartmentRole, getRole, PhoneNumberCheck, translateDex } from "../Global/Method";
 import Modal from "../Global/Modal";
@@ -36,6 +36,12 @@ export default function Page() {
     const [departmentRole, setDepartmentRole] = useState(0);
     const [addPeople, setAddPeople] = useState(false);
     const [isClientLoading, setClientLoading] = useState(true);
+    const [isUserLoadOpen, setUserLoadOpen] = useState(false);
+    const [keyword, setKeyword] = useState('');
+    const [searchInterval, setSearchInterval] = useState(null as any);
+    const [searchedUsers, setSearchedUsers] = useState([] as any[]);
+    const [page, setPage] = useState(0);
+    const [maxPage, setMaxPage] = useState(0);
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
@@ -160,15 +166,24 @@ export default function Page() {
                         </table>
                     </div>
                 }
-                <button className="self-start btn btn-xs mt-1" onClick={() => {
-                    setUsername('');
-                    setName('');
-                    setRole(12)
-                    setPhoneNumber('');
-                    setJoinDate(getDateFormatInput(new Date()))
-                    setDepartmentId(departmentUsers?.name);
-                    setAddPeople(true);
-                }}>인원 추가</button>
+                <div className="self-start mt-1">
+                    <button className="btn btn-xs mr-2" onClick={() => {
+                        setUsername('');
+                        setName('');
+                        setRole(12)
+                        setPhoneNumber('');
+                        setJoinDate(getDateFormatInput(new Date()))
+                        setDepartmentId(departmentUsers?.name);
+                        setAddPeople(true);
+                    }}>계정 생성</button>
+                    <button className="btn btn-xs" onClick={() => {
+                        setSearchedUsers([]);
+                        setUserLoadOpen(true);
+                        if (searchInterval)
+                            clearInterval(searchInterval);
+                        searchUsers(keyword, 0).then(r => { setSearchedUsers(r.content); setMaxPage(r?.totalPages); setPage(0); }).catch(e => console.log(e));
+                    }}>인원 불러오기</button>
+                </div>
                 {departmentUsers?.child?.length > 0 ? detailFolds.includes(departmentUsers) ?
                     <button className="self-start btn btn-xs mt-2" onClick={() => { setDetailFold([...detailFolds.filter(f => f.name != departmentUsers?.name)]); }}>하위 그룹 닫기</button>
                     :
@@ -181,7 +196,6 @@ export default function Page() {
             {detailFolds.includes(departmentUsers) ? (departmentUsers?.child as any[])?.map((child, index) => <Detail key={index} departmentUsers={child} stack={stack} />) : <></>}
         </>
     }
-
     return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-4/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-[847px] w-11/12 bg-white shadow p-2 ">
@@ -213,7 +227,125 @@ export default function Page() {
                         <Detail departmentUsers={departmentUsers} />
                     }
                 </div>
+                <Modal open={isUserLoadOpen} onClose={() => setUserLoadOpen(false)} escClose={true} outlineClose={true} className="w-[500px] h-[500px] flex flex-col items-center p-4">
+                    <div className="flex border border-gray-500 rounded-full px-4 py-2 w-3/4 items-center">
+                        <input id="searchInput" type="text" placeholder="이름 또는 부서명 검색" defaultValue={keyword} className="outline-none w-full" onChange={e => {
+                            const keyword = e.target.value;
+                            setKeyword(keyword);
+                            if (searchInterval)
+                                clearInterval(searchInterval);
+                            const interval = setInterval(() => { searchUsers(keyword, 0).then(r => { setSearchedUsers(r.content); setMaxPage(r?.totalPages); setPage(0); }).catch(e => console.log(e)); clearInterval(interval); }, 500);
+                            setSearchInterval(interval);
+                        }} onKeyDown={e => { if (e.key == "Enter") document.getElementById('searchUser')?.click(); }} />
+                        {keyword ? <img src="/x.png" className="cursor-pointer w-[16px] h-[16px] hover:border rounded-full border-gray-400 mr-2" onClick={() => {
+                            const keyword = '';
+                            setKeyword(keyword);
+                            (document.getElementById('searchInput') as HTMLInputElement).value = '';
+                            if (searchInterval)
+                                clearInterval(searchInterval);
+                            searchUsers(keyword, 0).then(r => { setSearchedUsers(r.content); setMaxPage(r?.totalPages); setPage(0); }).catch(e => console.log(e));
+                        }} /> : <></>}
+                        <img id="searchUser" src="/searchb.png" className="cursor-pointer w-[16px] h-[16px]" onClick={() => {
+                            if (searchInterval)
+                                clearInterval(searchInterval);
+                            searchUsers(keyword, 0).then(r => { setSearchedUsers(r.content); setMaxPage(r?.totalPages); setPage(0); }).catch(e => console.log(e));
+                        }} />
+                    </div>
+                    <div className="divider divider-info my-1"></div>
+                    <div className="flex flex-col w-full h-[300px] overflow-y-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th className="w-[16px]"></th>
+                                    <th>이름</th>
+                                    <th>소속 부서</th>
+                                    <th>아이디</th>
+                                    <th>입사일</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-center">
+                                {searchedUsers?.map((u, index) => <tr key={index}>
+                                    <td>
+                                        <img src={u?.url ? u.url : '/base_profile.png'} className="w-[16px] h-[16px]" />
+                                    </td>
+                                    <td>
+                                        {u?.name}
+                                    </td>
+                                    <td>
+                                        {u?.department?.name}
+                                    </td>
+                                    <td>
+                                        {u?.username}
+                                    </td>
+                                    <td className="text-right">
+                                        {getDateKorean(u?.joinDate)}
+                                    </td>
+                                    <td>
+                                        <button disabled={u?.department?.name == select?.name} className="btn btn-xs btn-warning text-white" onClick={() => {
+                                            updateUser({ username: u?.username, name: u?.name, password: '', role: u?.role, phoneNumber: u?.phoneNumber, joinDate: null, department_id: select ? select.name : null })
+                                                .then(r => {
+                                                    getDepartmentUsers(departmentUsers?.name).then(r => setDepartmentUsers(r)).catch(e => console.log(e));
+                                                    if (r.username == user.username)
+                                                        setUser(r);
+                                                }).catch(e => console.log(e))
+                                            setUserLoadOpen(false);
+                                        }}>불러오기</button>
+                                    </td>
+                                </tr>)}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="flex justify-center mt-2 items-center">
+                        <img src={page > 0 ? "/lleft.png" : '/lleftg.png'} className={"w-[16px] h-[16px]" + (page > 0 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
+                            if (searchInterval)
+                                clearInterval(searchInterval);
+                            const now = Math.max(0, page - (page % 10) - 1);
+                            setSearchedUsers([]);
+                            setPage(now);
+                            searchUsers(keyword, now).then(r => { setSearchedUsers(r.content); setMaxPage(r?.totalPages); }).catch(e => console.log(e));
+                        }} />
+                        <img src={page > 0 ? "/left.png" : '/leftg.png'} className={"w-[16px] h-[16px]" + (page > 0 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
+                            if (searchInterval)
+                                clearInterval(searchInterval);
+                            const now = Math.max(0, page - 1);
+                            setSearchedUsers([]);
+                            setPage(now);
+                            searchUsers(keyword, now).then(r => { setSearchedUsers(r.content); setMaxPage(r?.totalPages); }).catch(e => console.log(e));
+                        }} />
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => {
+                            const now = page - page % 10 + n;
+                            if (now >= maxPage)
+                                return;
+                            return <button key={n} disabled={now == page} className="btn btn-xs" onClick={() => {
+                                if (searchInterval)
+                                    clearInterval(searchInterval);
+                                setSearchedUsers([]);
+                                setPage(now);
+                                searchUsers(keyword, now).then(r => { setSearchedUsers(r.content); setMaxPage(r?.totalPages); }).catch(e => console.log(e));
+                            }}>{now + 1}</button>;
+                        })}
+                        <img src={page < maxPage - 1 ? "/right.png" : '/rrightg.png'} className={"w-[16px] h-[16px]" + (page < maxPage - 1 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
+                            if (searchInterval)
+                                clearInterval(searchInterval);
+                            const now = Math.min(maxPage - 1, page + 1);
+                            setSearchedUsers([]);
+                            setPage(now);
+                            searchUsers(keyword, now).then(r => { setSearchedUsers(r.content); setMaxPage(r?.totalPages); }).catch(e => console.log(e));
+                        }} />
+                        <img src={page < maxPage - 1 ? "/rright.png" : '/rightg.png'} className={"w-[16px] h-[16px]" + (page < maxPage - 1 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
+                            if (searchInterval)
+                                clearInterval(searchInterval);
+                            const now = Math.min(maxPage - 1, (page - page % 10) + 10);
+                            setSearchedUsers([]);
+                            setPage(now);
+                            searchUsers(keyword, now).then(r => { setSearchedUsers(r.content); setMaxPage(r?.totalPages); }).catch(e => console.log(e));
+                        }} />
+                    </div>
+                    <div className="divider divider-info mt-0 mb-1"></div>
 
+                    <button className="btn btn-error text-white">닫기</button>
+                </Modal>
                 <Modal open={selectUser || addPeople} onClose={() => { setSelectUser(null); setAddPeople(false); }} className="w-[500px] min-h-[450px] flex flex-col items-center" escClose={true} outlineClose={true}>
                     <div className="w-full h-[50px] bg-[#8fbee9] text-white text-2xl flex items-center justify-center">
                         {addPeople ?
