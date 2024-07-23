@@ -21,4 +21,7 @@ public enum FileType {
         }
         return ETC;
     }
+    public boolean isAllow(File file){
+        return this.equals(get(file));
+    }
 }

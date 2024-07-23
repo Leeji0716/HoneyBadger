@@ -10,12 +10,15 @@ import com.team.HoneyBadger.Exception.DataNotSameException;
 import com.team.HoneyBadger.Exception.InvalidFileTypeException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -106,6 +109,19 @@ public class UserController {
         } else return tokenDTO.getResponseEntity();
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<?> getUsers(@RequestHeader("Authorization") String accessToken, @RequestHeader(value = "Keyword", defaultValue = "") String keyword, @RequestHeader(value = "Page", defaultValue = "0") int page,@RequestHeader(value = "Size",defaultValue = "10") int size) {
+        TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            try {
+                Page<UserResponseDTO> pageDTO = multiService.getUsers(keyword != null ? URLDecoder.decode(keyword, StandardCharsets.UTF_8) : "", page,size);
+                return ResponseEntity.status(HttpStatus.OK).body(pageDTO);
+            } catch (DataDuplicateException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+            }
+        } else return tokenDTO.getResponseEntity();
+    }
+
     @PutMapping
     public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String accessToken, @RequestBody PasswordChangeDTO passwordChangeDTO) {
         TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
@@ -137,12 +153,12 @@ public class UserController {
         TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
             try {
-                UserResponseDTO dto= multiService.changeUserStatus(username);
+                UserResponseDTO dto = multiService.changeUserStatus(username);
                 return ResponseEntity.status(HttpStatus.OK).body(dto);
             } catch (DataNotFoundException ex) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
             }
-          } else return tokenDTO.getResponseEntity();
+        } else return tokenDTO.getResponseEntity();
     }
 
     @DeleteMapping("/temp")
