@@ -16,6 +16,7 @@ export default function Approval() {
         viewers: string[],
     }
 
+    //테스트 데이터
     const testData: approvalResponseDTO[] = [
         {
             id: 1,
@@ -170,7 +171,7 @@ export default function Approval() {
             case 1:
                 return "안 읽음";
             case 2:
-                return "결제 대기중..";
+                return "결재 대기중..";
             case 3:
                 return "허가";
             case 4:
