@@ -29,6 +29,7 @@ public class Approval {
     private List<Approver> approvers; //승인자
     @OneToMany(mappedBy = "approval", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<Viewer> viewers; //참고인
+    private List<String> readUsers;
 
     @Builder
     public Approval(String title, String content, ApprovalStatus status, SiteUser sender) {
@@ -38,5 +39,6 @@ public class Approval {
         this.sender = sender;
         this.approvers = new ArrayList<> ();
         this.viewers = new ArrayList<> ();
+        this.readUsers = new ArrayList<> ();
     }
 }
