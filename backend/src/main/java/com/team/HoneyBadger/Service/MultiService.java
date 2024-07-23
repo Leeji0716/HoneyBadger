@@ -33,6 +33,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -911,19 +913,31 @@ public class MultiService {
         return fileName;
     }
 
+    private final Lock lock = new ReentrantLock();
+
     @Transactional
     public void readMessage(Long chatroomId, String username) throws DataNotFoundException { //메세지 읽기 처리
-        SiteUser reader = userService.get(username);
-        Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+        lock.lock();
+        try {
+            SiteUser reader = userService.get(username);
+            Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
 
-        LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
-        Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
+            LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
+            Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
 
-        for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
-            HashSet<String> sets = new HashSet<>(message.getReadUsers());
-            sets.add(reader.getUsername());
-            messageService.updateRead(message, sets.stream().toList());
+            for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
+                HashSet<String> sets = new HashSet<>(message.getReadUsers());
+                sets.add(reader.getUsername());
+                messageService.updateRead(message, sets.stream().toList());
+            }
+
         }
+        catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            lock.unlock();
+        }
+
 //        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
     }
 
@@ -1291,16 +1305,22 @@ public class MultiService {
      */
 
     @Transactional
-    private ApprovalResponseDTO getApproval(Approval approval, String username) {
+    private ApprovalResponseDTO getApproval(Approval approval) {
 
-        List<String> approversUsernames = approval.getApprovers().stream().map(approver -> approver.getUser().getUsername()).toList();
-        List<String> viewersUsernames = approval.getViewers().stream().map(viewer -> viewer.getUser().getUsername()).toList();
+       List<Approver> approvers = approverService.getAll (approval);
+        List<String> approverusernames = approvers.stream()
+                .map(approver -> approver.getUser().getUsername()) // 사용자 이름 추출
+                .collect(Collectors.toList());
+        List<Viewer> viewers = viewerService.getAll (approval);
+        List<String> viewernames = viewers.stream()
+                .map(approver -> approver.getUser().getUsername()) // 사용자 이름 추출
+                .collect(Collectors.toList());
 
         // 승인자(UserResponseDTO 리스트) 생성
-        List<UserResponseDTO> approvers = this.userFind(approval, approversUsernames);
+        List<UserResponseDTO> approversUser = approverUserFind(approval, approverusernames);
 
         // 참고인(UserResponseDTO 리스트) 생성
-        List<UserResponseDTO> viewers = this.userFind(approval, viewersUsernames);
+        List<UserResponseDTO> viewerUser = viewerUserFind (approval,viewernames);
 
         // 승인 요청자(sender) 정보 생성
         UserResponseDTO senderDTO = getUserResponseDTO(approval.getSender());
@@ -1309,13 +1329,43 @@ public class MultiService {
         boolean isApproved = false;  // 실제 로직에 따라 결정되어야 함
 
 
-        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvals(approvers).viewers(viewers).approval(isApproved).build();
+        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvals(approversUser).viewers(viewerUser).approval(isApproved).build();
     }
 
     @Transactional
-    public ApprovalResponseDTO createApproval(ApprovalRequestDTO approvalRequestDTO, String loginUser) {
+    private List<UserResponseDTO> approverUserFind(Approval approval, List<String> usernames) {
+        List<UserResponseDTO> users = new ArrayList<>();
+
+        for (String username : usernames) {
+            SiteUser siteUser = userService.get(username);
+            Approver approver = approverService.get (siteUser, approval);
+            SiteUser sitesUer1 = approver.getUser ();
+            UserResponseDTO userResponseDTO = getUserResponseDTO(sitesUer1);
+            users.add(userResponseDTO);
+        }
+        return users;
+    }
+
+    @Transactional
+    private List<UserResponseDTO> viewerUserFind(Approval approval, List<String> usernames) {
+        List<UserResponseDTO> users = new ArrayList<>();
+
+        for (String username : usernames) {
+            SiteUser siteUser = userService.get(username);
+            Viewer viewer = viewerService.get (siteUser, approval);
+            SiteUser sitesUer1 = viewer.getUser ();
+            UserResponseDTO userResponseDTO = getUserResponseDTO(sitesUer1);
+            users.add(userResponseDTO);
+        }
+        return users;
+    }
+
+
+    public ApprovalResponseDTO createApproval(ApprovalRequestDTO approvalRequestDTO, String loginUser) throws NotAllowedException{
         SiteUser sender = userService.get(loginUser);
         Approval approval = approvalService.create(approvalRequestDTO, sender);
+
+        if(approvalRequestDTO.approversname ().isEmpty ()) throw new NotAllowedException ("승인자를 한 명 이상 추가해주세요.");
 
         for (String username : approvalRequestDTO.approversname()) {
             SiteUser user = userService.get(username);
@@ -1328,19 +1378,25 @@ public class MultiService {
         }
 
 
-        return getApproval(approval, loginUser);
+        return getApproval(approval);
     }
 
-    @Transactional
-    private List<UserResponseDTO> userFind(Approval approval, List<String> usernames) {
-        List<UserResponseDTO> users = new ArrayList<>();
-        for (String username : usernames) {
-            SiteUser siteUser = userService.get(username);
-            UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
-            users.add(userResponseDTO);
-        }
-        return users;
+    public void deleteApproval(Long approvalId) throws NotAllowedException{
+
+        if(approvalId == null) throw new NotAllowedException ("아이디는 하나 이상 필수입니다.");
+
+        Approval approval = approvalService.get (approvalId);
+        approvalService.delete (approval);
     }
+
+    public ApprovalResponseDTO getApproval(Long approvalId) throws NotAllowedException{
+        if(approvalId == null) throw new NotAllowedException ("아이디는 하나 이상 필수입니다.");
+        Approval approval = approvalService.get (approvalId);
+
+        return getApproval (approval);
+    }
+
+
 
     /*
      * Storage

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class ApprovalController {
     private final MultiService multiService;
 
-    @PostMapping
+    @PostMapping // 기안서 생성
     public ResponseEntity<?> approvalCreate(@RequestHeader("Authorization") String accessToken, @RequestBody ApprovalRequestDTO approvalRequestDTO){
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if(tokenDTO.isOK()) try {
@@ -26,8 +26,39 @@ public class ApprovalController {
         } catch (NotAllowedException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
+        catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
         else return tokenDTO.getResponseEntity();
+    }
 
+    @DeleteMapping // 기안서 삭제
+    public ResponseEntity<?> approvalDelete(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId){
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            multiService.deleteApproval(approvalId);
+            return ResponseEntity.status(HttpStatus.OK).body("DELETE SUCCESS");
+        } catch (NotAllowedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
+        catch (DataNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
+    @GetMapping // 기안서 가져오기
+    public ResponseEntity<?> approvalGet(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId) {
+        TokenDTO tokenDTO = multiService.checkToken (accessToken);
+        if (tokenDTO.isOK ()) try {
+            ApprovalResponseDTO approvalResponseDTO = multiService.getApproval (approvalId);
+            return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
+        } catch (NotAllowedException ex) {
+            return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
+        }
+        else return tokenDTO.getResponseEntity ();
     }
 
 }
