@@ -500,28 +500,6 @@ export const getStorageFiles = async (data: { Location: string, Page?: number, T
     return response.data;
 }
 
-interface getFileProps {
-    Location: string,
-    Page?: number;
-}
-export const getStorageFiles = async (data: getFileProps) => {
-    const response = await UserApi.get('/api/file/list', {
-        headers: { ...data }
-    });
-    return response.data;
-}
-export const getFileFolders = async (data: getFileProps) => {
-    const response = await UserApi.get('/api/file/folders', {
-        headers: { ...data }
-    });
-    return response.data;
-}
-export const getStorageFile = async (data: getFileProps) => {
-    const response = await UserApi.get('/api/file', {
-        headers: { ...data }
-    });
-    return response.data;
-}
 export const createFileFolder = async (data: { Location: string, Page?: number, Base: string }) => {
     const response = await UserApi.post('/api/file/folder', {}, {
         headers: {
@@ -546,7 +524,6 @@ export const getStorageFile = async (data: { Location: string }) => {
         headers: {
             Location: data.Location ? encodeURIComponent(data.Location) : '',
         }
-
     });
     return response.data;
 }
