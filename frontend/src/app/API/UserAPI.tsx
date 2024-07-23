@@ -519,7 +519,10 @@ export const getFileFolders = async (data: getFileProps) => {
 export const getStorageFile = async (data: getFileProps) => {
     const response = await UserApi.get('/api/file', {
         headers: { ...data }
-
+        }
+    });
+    return response.data;
+}
 export const createFileFolder = async (data: { Location: string, Page?: number, Base: string }) => {
     const response = await UserApi.post('/api/file/folder', {}, {
         headers: {
