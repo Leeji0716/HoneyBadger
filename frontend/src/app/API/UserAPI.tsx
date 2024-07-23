@@ -479,15 +479,6 @@ export const deleteSchedule = async (id: number) => {
     await UserApi.delete(`/api/personal/${id}`);
 };
 
-export const readUsersName = async (messageId: number, username: string) => {
-    const response = await UserApi.get('/api/message/readUsernames', {
-        headers: {
-            messageId: messageId,
-            username: username
-        }
-    });
-    return response.data;
-}
 export const getStorageFiles = async (data: { Location: string, Page?: number, Type?: number, Order: number }) => {
     const response = await UserApi.get('/api/file/list', {
         headers: {
