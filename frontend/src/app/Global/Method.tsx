@@ -60,6 +60,11 @@ export function transferLocalTime(date: Date) {
 
 }
 
+export function getjyDate(data: any) {
+    const date = new Date(data);
+    return date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-' + date.getDate();
+}
+
 export function eontransferLocalTime(date: Date | null) {
     if (date != null) {
         return new Date(date.getTime() + 9 * 1000 * 60 * 60);
@@ -170,6 +175,7 @@ export function getRole(role: number) {
         case 11: return '주임'
         case 12: return '직원'
         case 13: return '관리자'
+        default: return null
     }
 }
 export function CardFront({ user }: { user: any }) {
