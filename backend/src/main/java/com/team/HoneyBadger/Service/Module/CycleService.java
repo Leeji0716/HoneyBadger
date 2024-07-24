@@ -28,10 +28,18 @@ public class CycleService {
     }
 
     public Cycle upDate(Cycle cycle, CycleRequestDTO cycleRequestDTO) {
+            cycle.setTitle(cycleRequestDTO.title());
+            cycle.setContent(cycleRequestDTO.content());
+            cycle.setStartDate(cycleRequestDTO.startDate());
+            cycle.setEndDate(cycleRequestDTO.endDate());
+            return cycleRepository.save(cycle);
+    }
+    public Cycle upDateToTag(Cycle cycle, CycleRequestDTO cycleRequestDTO,CycleTag cycleTag) {
         cycle.setTitle(cycleRequestDTO.title());
         cycle.setContent(cycleRequestDTO.content());
         cycle.setStartDate(cycleRequestDTO.startDate());
         cycle.setEndDate(cycleRequestDTO.endDate());
+        cycle.setTag(cycleTag);
         return cycleRepository.save(cycle);
     }
 
