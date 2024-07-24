@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="com.team.HoneyBadger" target="21" />
+      <module name="com.team.HoneyBadger.main" target="21" />
+      <module name="com.team.HoneyBadger.test" target="21" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

@@ -7,30 +7,6 @@ import { use, useEffect, useState } from "react";
 
 
 export default function Approval() {
-    interface approvalResponseDTO {
-        id?: number,
-        title: string,
-        content: string,
-        status: number,
-        sender: string,
-        approver: string,
-        viewers: string[],
-    }
-
-    interface userResponseDTO {
-        username: string,
-        name: string,
-        phoneNumber: string,
-        role: number,
-        createDate: number,
-        joinDate: number,
-        url: string,
-        DepartmentResponseDTO: DepartmentResponseDTO
-    }
-
-    interface DepartmentResponseDTO {
-        name: string
-    }
 
     interface approvalRequestDTO {
         title: string,
@@ -62,6 +38,7 @@ export default function Approval() {
     const [sevenOpen, setSevenOpen] = useState(false);
     const [eightOpen, setEightOpen] = useState(false);
     const selectedViewersText = selectedViewer.map(viewer => viewer.name).join(', ');
+    const [fileList, setFileList] = useState<File[]>([]);
 
     //users 가져오기
     useEffect(() => {
@@ -76,19 +53,6 @@ export default function Approval() {
         fetchData();
     }, []);
 
-    //참조인 추가 & 참조인 제거
-    const handleUsersSelect = (user: { username: any; }) => {
-        setSelectedViewer((prevSelectedViewers) => {
-            const isUserSelected = prevSelectedViewers.find((u) => u.username === user.username);
-            if (isUserSelected) {
-                // 이미 선택된 유저가 있으면 배열에서 제거
-                return prevSelectedViewers.filter((u) => u.username !== user.username);
-            }
-            return [...prevSelectedViewers, user];
-        });
-        setSettingOpen(false); // 드롭다운을 닫음
-    };
-
     //승인 유저 추가 & 승인 유저 제거
     const handleUserSelect = (user: { username: any; }, approvarIndex: number) => {
         setSelectedApprovar((prevSelectedApprovar) => {
@@ -101,28 +65,6 @@ export default function Approval() {
             newSelectedApprovar[approvarIndex] = user;
             return newSelectedApprovar;
         });
-    };
-
-    // 참조인 유저 선택
-    const renderUsersList = () => {
-        const filteredUserList = userList.filter(user =>
-            !selectedApprovar.some(selected => selected && selected.username === user.username) &&
-            !selectedViewer.some(selected => selected && selected.username === user.username)
-        );
-        return (
-            <ul>
-                {filteredUserList.map((user, index) => (
-
-                    <li
-                        key={index}
-                        onClick={() => handleUsersSelect(user)}
-                        className="font-bold hover:underline cursor-pointer"
-                    >
-                        {user.name} - {user.username}
-                    </li>
-                ))}
-            </ul>
-        );
     };
 
     // 승인 유저 선택
@@ -147,6 +89,58 @@ export default function Approval() {
         );
     };
 
+    // 승인자 인덱스로 찾기
+    const getSpecificApprover = (index: number) => {
+        if (index >= 0 && index < selectedApprovar.length) {
+            return selectedApprovar[index];
+        }
+        return null; // 인덱스가 범위를 벗어난 경우 null 반환
+    };
+
+    // 참조인 유저 선택
+    const renderUsersList = () => {
+        const filteredUserList = userList.filter(user =>
+            !selectedApprovar.some(selected => selected && selected.username === user.username)
+        );
+        return (
+            <ul>
+                {filteredUserList.map((user, index) => (
+
+                    <li
+                        key={index}
+                        onClick={() => handleUsersSelect(user)}
+                        className="font-bold hover:underline cursor-pointer"
+                    >
+                        {user.name} - {user.username}
+                    </li>
+                ))}
+            </ul>
+        );
+    };
+
+    // 참조인 제거
+    const handleInputChange = (event: any) => {
+        const inputValue = event.target.value;
+        const selectedUserNames = inputValue.split(',').map((username: string) => username.trim());
+
+        setSelectedViewer((prevSelectedViewers) =>
+            prevSelectedViewers.filter(user => selectedUserNames.includes(user.name))
+        );
+    };
+
+    //참조인 추가 & 참조인 제거
+    const handleUsersSelect = (user: { username: any; }) => {
+        setSelectedViewer((prevSelectedViewers) => {
+            const isUserSelected = prevSelectedViewers.find((u) => u.username === user.username);
+            if (isUserSelected) {
+                // 이미 선택된 유저가 있으면 배열에서 제거
+                return prevSelectedViewers.filter((u) => u.username !== user.username);
+            }
+            return [...prevSelectedViewers, user];
+        });
+        setSettingOpen(false); // 드롭다운을 닫음
+    };
+
     // 현재 날짜 가져오기
     useEffect(() => {
         const currentDate = new Date();
@@ -165,14 +159,6 @@ export default function Approval() {
         else
             location.href = '/';
     }, [ACCESS_TOKEN])
-
-    // 승인자 인덱스로 찾기
-    const getSpecificApprover = (index: number) => {
-        if (index >= 0 && index < selectedApprovar.length) {
-            return selectedApprovar[index];
-        }
-        return null; // 인덱스가 범위를 벗어난 경우 null 반환
-    };
 
     // 결재 만들기
     const handleCreateApproval = () => {
@@ -193,8 +179,12 @@ export default function Approval() {
         }
     };
 
+    const sliceText = (text: string) => {
+        const slice: string[] = text.split(".");
+        const extension: string = slice[slice.length - 1];
 
-
+        return extension;
+    }
 
     //페이지 시작//
     return <Main user={user} isClientLoading={isClientLoading}>
@@ -431,7 +421,7 @@ export default function Approval() {
                     <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
                         <label htmlFor="selectViewer" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">참조인</label>
                         <input type="text" id="selectViewer" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="참조인을 선택해주세요."
-                            value={selectedViewersText} onClick={() => setSettingOpen(!settingOpen)} readOnly />
+                            value={selectedViewersText} onClick={() => setSettingOpen(!settingOpen)} onChange={(e) => handleInputChange(e)} />
                         <DropDown
                             open={settingOpen}
                             onClose={() => setSettingOpen(false)}
@@ -448,6 +438,14 @@ export default function Approval() {
                         <button className="btn btn-sm absolute top-[5px] right-[5px]">파일 선택</button>
                         {/* <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" ></img> */}
                     </div>
+
+                    {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}>
+                        <div className="flex items-center bg-white p-2">
+                            <img src="/x.png" alt="" className="mr-2  w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...fileList]; removeFile.splice(index, 1); setFileList(removeFile); }}></img>
+                            <img src={"/" + sliceText(f.name) + ".PNG"} className="w-[26px] h-[31px] mr-2" alt="" />
+                            <p>{f.name}</p>
+                        </div>
+                    </ul>) : <></>}
                 </div>
             </div>
         </div>
