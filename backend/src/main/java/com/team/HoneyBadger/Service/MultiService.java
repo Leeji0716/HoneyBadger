@@ -56,12 +56,12 @@ public class MultiService {
     private final LastReadMessageService lastReadMessageService;
     private final DepartmentService departmentService;
     private final QuestionService questionService;
-    private final PersonalCycleService personalCycleService;
+    private final CycleService cycleService;
     private final HolidayService holidayService;
     private final ApprovalService approvalService;
     private final ApproverService approverService;
     private final ViewerService viewerService;
-    private final GroupCycleService groupCycleService;
+    private final CycleTagService cycleTagService;
 
     /**
      * Auth
@@ -1188,65 +1188,77 @@ public class MultiService {
      * PersonalCycle
      */
     @Transactional
-    public void createPersonalCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) throws NotAllowedException {
-        SiteUser user = userService.get(username);
-        if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
+    public void createPersonalCycle(String k,CycleRequestDTO cycleRequestDTO) throws NotAllowedException {
+        if (cycleRequestDTO.title() == null || cycleRequestDTO.title().isEmpty()) {
             throw new NotAllowedException("제목을 입력해주세요.");
-        } else if (personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()) {
+        } else if (cycleRequestDTO.content() == null || cycleRequestDTO.content().isEmpty()) {
             throw new NotAllowedException("내용을 입력해주세요.");
-        } else if (personalCycleRequestDTO.startDate() == null) {
+        } else if (cycleRequestDTO.startDate() == null) {
             throw new NotAllowedException("시작 시간을 입력해주세요.");
-        } else if (personalCycleRequestDTO.endDate() == null) {
+        } else if (cycleRequestDTO.endDate() == null) {
             throw new NotAllowedException("종료 시간을 입력해주세요.");
-        } else if (personalCycleRequestDTO.endDate().isBefore(personalCycleRequestDTO.startDate()) || personalCycleRequestDTO.startDate().equals(personalCycleRequestDTO.endDate())) {
+        } else if (cycleRequestDTO.endDate().isBefore(cycleRequestDTO.startDate()) || cycleRequestDTO.startDate().equals(cycleRequestDTO.endDate())) {
             throw new NotAllowedException("시간 설정을 다시 해주세요.");
+        }else if(cycleRequestDTO.tagName() != null && cycleRequestDTO.tagColor() == null){
+            throw new NotAllowedException("색상 설정을 다시 해주세요.");
         }
-        personalCycleService.create(user, personalCycleRequestDTO);
+        if(cycleRequestDTO.tagName() == null){
+            cycleService.create(k, cycleRequestDTO);
+        }else{
+            CycleTag cycleTag = cycleTagService.findByName(k,cycleRequestDTO.tagName());
+            if(cycleTag == null){
+                CycleTag cycleTag1 = cycleTagService.create(k,cycleRequestDTO.tagName(),cycleRequestDTO.tagColor());
+                cycleService.createByTag(k,cycleRequestDTO.title(),cycleRequestDTO.content(),cycleRequestDTO.startDate(),cycleRequestDTO.endDate(),cycleTag1);
+            }else{
+                cycleService.createByTag(k,cycleRequestDTO.title(),cycleRequestDTO.content(),cycleRequestDTO.startDate(),cycleRequestDTO.endDate(),cycleTag);
+            }
+        }
     }
 
     @Transactional
-    public PersonalCycleDTO updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
-        SiteUser user = userService.get(username);
-        PersonalCycle personalCycle = personalCycleService.findById(id);
-        if (personalCycle.getUser() != user) {
+    public CycleDTO updatePersonalCycle(String k, Long id, CycleRequestDTO cycleRequestDTO) {
+        Cycle cycle = cycleService.findById(id);
+        if (!cycle.getK().equals(k)) {
             throw new NotAllowedException("접근 권한이 없습니다.");
-        } else if (personalCycleRequestDTO.title() == null || personalCycleRequestDTO.title().isEmpty()) {
+        } else if (cycleRequestDTO.title() == null || cycleRequestDTO.title().isEmpty()) {
             throw new NotAllowedException("제목을 입력해주세요.");
-        } else if (personalCycleRequestDTO.content() == null || personalCycleRequestDTO.content().isEmpty()) {
+        } else if (cycleRequestDTO.content() == null || cycleRequestDTO.content().isEmpty()) {
             throw new NotAllowedException("내용을 입력해주세요.");
-        } else if (personalCycleRequestDTO.startDate() == null) {
+        } else if (cycleRequestDTO.startDate() == null) {
             throw new NotAllowedException("시작 시간을 입력해주세요.");
-        } else if (personalCycleRequestDTO.endDate() == null) {
+        } else if (cycleRequestDTO.endDate() == null) {
             throw new NotAllowedException("종료 시간을 입력해주세요.");
         }
 
-        return getPersonalCycleDTO(personalCycleService.upDate(personalCycle, personalCycleRequestDTO)); //여기 잘봐주.. 내가 건드려버림..
+        return getCycleDTO(cycleService.upDate(cycle, cycleRequestDTO));
     }
-
     @Transactional
-    public void deletePersonalCycle(String username, Long id) {
-        SiteUser user = userService.get(username);
-        PersonalCycle personalCycle = personalCycleService.findById(id);
-        if (personalCycle.getUser() != user) {
+    public void deleteCycle(String k, Long id) {
+        Cycle cycle = cycleService.findById(id);
+        if (!cycle.getK().equals(k)) {
             throw new NotAllowedException("접근 권한이 없습니다.");
         }
-        personalCycleService.delete(personalCycle);
+        cycleService.delete(cycle);
     }
 
     @Transactional
-    public List<PersonalCycleResponseDTO> getMyCycle(String username, LocalDateTime startDate, LocalDateTime endDate) {
-        List<PersonalCycleResponseDTO> personalCycleResponseDTOList = new ArrayList<>();
-        SiteUser user = userService.get(username);
-        List<PersonalCycle> personalCycleList = personalCycleService.myMonthCycle(user, startDate, endDate);
-        List<PersonalCycleDTO> personalCycleDTOList = new ArrayList<>();
+    public List<CycleResponseDTO> getMyCycle(String k, LocalDateTime startDate, LocalDateTime endDate) {
+        List<CycleResponseDTO> cycleResponseDTOList = new ArrayList<>();
+        List<Cycle> cycleList = cycleService.myMonthCycle(k, startDate, endDate);
+        List<CycleDTO> cycleDTOList = new ArrayList<>();
 
         do {
             boolean holiday = false;
             String holidayTitle = "";
-            for (PersonalCycle personalCycle : personalCycleList) {
-                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth() || personalCycle.getEndDate().getDayOfMonth() == startDate.getDayOfMonth()) {
-                    PersonalCycleDTO personalCycleDTO = PersonalCycleDTO.builder().id(personalCycle.getId()).title(personalCycle.getTitle()).content(personalCycle.getContent()).startDate(dateTimeTransfer(personalCycle.getStartDate())).endDate(dateTimeTransfer(personalCycle.getEndDate())).tag(personalCycle.getTag()).build();
-                    personalCycleDTOList.add(personalCycleDTO);
+            for (Cycle cycle : cycleList) {
+                if (startDate.getDayOfMonth() == cycle.getStartDate().getDayOfMonth() || cycle.getEndDate().getDayOfMonth() == startDate.getDayOfMonth()) {
+                    if(cycle.getTag() != null) {
+                        CycleDTO cycleDTO = CycleDTO.builder().id(cycle.getId()).title(cycle.getTitle()).content(cycle.getContent()).startDate(dateTimeTransfer(cycle.getStartDate())).endDate(dateTimeTransfer(cycle.getEndDate())).tag(CycleTagDTO.builder().name(cycle.getTag().getName()).color(cycle.getTag().getColor()).build()).build();
+                        cycleDTOList.add(cycleDTO);
+                    }else{
+                        CycleDTO cycleDTO = CycleDTO.builder().id(cycle.getId()).title(cycle.getTitle()).content(cycle.getContent()).startDate(dateTimeTransfer(cycle.getStartDate())).endDate(dateTimeTransfer(cycle.getEndDate())).tag(CycleTagDTO.builder().name(null).color(null).build()).build();
+                        cycleDTOList.add(cycleDTO);
+                    }
                 }
             }
             if (holidayService.getHoliday(startDate.toLocalDate()) != null) {
@@ -1254,51 +1266,35 @@ public class MultiService {
                 holiday = true;
                 holidayTitle = holiday1.getTitle();
             }
-            PersonalCycleResponseDTO personalCycleResponseDTO = PersonalCycleResponseDTO.builder().personalCycleDTOList(new ArrayList<>(personalCycleDTOList)).holiday(holiday).build();
-            personalCycleResponseDTOList.add(personalCycleResponseDTO);
-            personalCycleDTOList.clear();
+            CycleResponseDTO cycleResponseDTO = CycleResponseDTO.builder().cycleDTOList(new ArrayList<>(cycleDTOList)).holiday(holiday).build();
+            cycleResponseDTOList.add(cycleResponseDTO);
+            cycleDTOList.clear();
         } while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
-        return personalCycleResponseDTOList;
-    }
-
-
-    @Transactional
-    public void personalCycleTag(String username, Long id, List<String> tag) {
-        PersonalCycle personalCycle = personalCycleService.findById(id);
-        SiteUser user = userService.get(username);
-        if (personalCycle.getUser() != user) {
-            throw new NotAllowedException("접근 권한이 없습니다.");
-        }
-        personalCycleService.setTag(personalCycle, tag);
+        return cycleResponseDTOList;
     }
 
     @Transactional
-    public List<PersonalCycleDTO> personalCycleTagList(String username, String tag) {
-        SiteUser user = userService.get(username);
-        List<PersonalCycle> personalCycleList = personalCycleService.tagList(user, tag);
-        return personalCycleList.stream().map(this::getPersonalCycleDTO).toList();
-    }
-
-    @Transactional
-    public PersonalCycleDTO getPersonalCycleDTO(PersonalCycle personalCycle) {
-
-        return PersonalCycleDTO.builder().id(personalCycle.getId()).title(personalCycle.getTitle()).content(personalCycle.getContent()).startDate(dateTimeTransfer(personalCycle.getStartDate())).endDate(dateTimeTransfer(personalCycle.getEndDate())).tag(personalCycle.getTag()).build();
-
-    }
-
-    public void deleteTag(String username, Long id, String tag) {
-        SiteUser user = userService.get(username);
-        PersonalCycle personalCycle = personalCycleService.findById(id);
-        if (user != personalCycle.getUser()) {
-            throw new NotAllowedException("접근 권한이 없습니다.");
+    public CycleDTO getCycleDTO(Cycle cycle) {
+        if(cycle.getTag() != null){
+        return CycleDTO.builder().id(cycle.getId()).title(cycle.getTitle()).content(cycle.getContent()).startDate(dateTimeTransfer(cycle.getStartDate())).endDate(dateTimeTransfer(cycle.getEndDate())).tag(CycleTagDTO.builder().name(cycle.getTag().getName()).color(cycle.getTag().getColor()).build()).build();
+        }else{
+            return CycleDTO.builder().id(cycle.getId()).title(cycle.getTitle()).content(cycle.getContent()).startDate(dateTimeTransfer(cycle.getStartDate())).endDate(dateTimeTransfer(cycle.getEndDate())).tag(CycleTagDTO.builder().name(null).color(null).build()).build();
         }
-        boolean intag = personalCycle.getTag().remove(tag);
-        if (!intag) {
-            throw new IllegalArgumentException("잘못된 태그 입니다.");
-        }
-        personalCycleService.save(personalCycle);
 
     }
+//    public void deleteTag(String username, Long id, String tag) {
+//        SiteUser user = userService.get(username);
+//        PersonalCycle personalCycle = personalCycleService.findById(id);
+//        if (user != personalCycle.getUser()) {
+//            throw new NotAllowedException("접근 권한이 없습니다.");
+//        }
+//        boolean intag = personalCycle.getTag().remove(tag);
+//        if (!intag) {
+//            throw new IllegalArgumentException("잘못된 태그 입니다.");
+//        }
+//        personalCycleService.save(personalCycle);
+//
+//    }
 
 
     /*
@@ -1488,21 +1484,4 @@ public class MultiService {
     }
 
 
-    /*
-        GroupCycle
-    */
-    public void createGroupCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) {
-        SiteUser user = userService.get(username);
-        if(user.getDepartment() == null){
-            throw new NotAllowedException("그룹이 없습니다.");
-        }
-        if(personalCycleRequestDTO.title() == null){
-            throw new DataNotFoundException("제목을 입력해주세요.");
-        }else if(personalCycleRequestDTO.content() == null){
-            throw new DataNotFoundException("내용을 입력해주세요.");
-        }else if(personalCycleRequestDTO.startDate() == null || personalCycleRequestDTO.endDate() == null || personalCycleRequestDTO.startDate().equals(personalCycleRequestDTO.endDate())||personalCycleRequestDTO.startDate().isAfter(personalCycleRequestDTO.endDate())) {
-            throw new DataNotFoundException("시간설정을 다시 확인해주세요.");
-        }
-        groupCycleService.create(user,personalCycleRequestDTO);
-    }
 }

@@ -24,6 +24,8 @@ public class QApprover extends EntityPathBase<Approver> {
 
     public final QApproval approval;
 
+    public final EnumPath<com.team.HoneyBadger.Enum.ApproverStatus> approverStatus = createEnum("approverStatus", com.team.HoneyBadger.Enum.ApproverStatus.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final QSiteUser user;
