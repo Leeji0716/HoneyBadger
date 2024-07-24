@@ -11,16 +11,16 @@ import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
- * QGroupCycle is a Querydsl query type for GroupCycle
+ * QCycle is a Querydsl query type for Cycle
  */
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QGroupCycle extends EntityPathBase<GroupCycle> {
+public class QCycle extends EntityPathBase<Cycle> {
 
-    private static final long serialVersionUID = 938558346L;
+    private static final long serialVersionUID = -1540006621L;
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QGroupCycle groupCycle = new QGroupCycle("groupCycle");
+    public static final QCycle cycle = new QCycle("cycle");
 
     public final StringPath content = createString("content");
 
@@ -28,35 +28,35 @@ public class QGroupCycle extends EntityPathBase<GroupCycle> {
 
     public final DateTimePath<java.time.LocalDateTime> endDate = createDateTime("endDate", java.time.LocalDateTime.class);
 
-    public final QDepartment group;
-
     public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    public final StringPath k = createString("k");
 
     public final DateTimePath<java.time.LocalDateTime> startDate = createDateTime("startDate", java.time.LocalDateTime.class);
 
-    public final ListPath<String, StringPath> tag = this.<String, StringPath>createList("tag", String.class, StringPath.class, PathInits.DIRECT2);
+    public final QCycleTag tag;
 
     public final StringPath title = createString("title");
 
-    public QGroupCycle(String variable) {
-        this(GroupCycle.class, forVariable(variable), INITS);
+    public QCycle(String variable) {
+        this(Cycle.class, forVariable(variable), INITS);
     }
 
-    public QGroupCycle(Path<? extends GroupCycle> path) {
+    public QCycle(Path<? extends Cycle> path) {
         this(path.getType(), path.getMetadata(), PathInits.getFor(path.getMetadata(), INITS));
     }
 
-    public QGroupCycle(PathMetadata metadata) {
+    public QCycle(PathMetadata metadata) {
         this(metadata, PathInits.getFor(metadata, INITS));
     }
 
-    public QGroupCycle(PathMetadata metadata, PathInits inits) {
-        this(GroupCycle.class, metadata, inits);
+    public QCycle(PathMetadata metadata, PathInits inits) {
+        this(Cycle.class, metadata, inits);
     }
 
-    public QGroupCycle(Class<? extends GroupCycle> type, PathMetadata metadata, PathInits inits) {
+    public QCycle(Class<? extends Cycle> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.group = inits.isInitialized("group") ? new QDepartment(forProperty("group"), inits.get("group")) : null;
+        this.tag = inits.isInitialized("tag") ? new QCycleTag(forProperty("tag")) : null;
     }
 
 }

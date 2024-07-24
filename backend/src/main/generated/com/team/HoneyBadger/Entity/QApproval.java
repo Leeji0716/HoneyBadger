@@ -28,6 +28,8 @@ public class QApproval extends EntityPathBase<Approval> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
+    public final ListPath<String, StringPath> readUsers = this.<String, StringPath>createList("readUsers", String.class, StringPath.class, PathInits.DIRECT2);
+
     public final QSiteUser sender;
 
     public final EnumPath<com.team.HoneyBadger.Enum.ApprovalStatus> status = createEnum("status", com.team.HoneyBadger.Enum.ApprovalStatus.class);

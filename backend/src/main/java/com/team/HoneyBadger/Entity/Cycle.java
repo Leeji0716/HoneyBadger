@@ -4,14 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-public class PersonalCycle {
+public class Cycle {
     // 개인 일정
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,20 +22,19 @@ public class PersonalCycle {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private LocalDateTime createDate;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private SiteUser user;
-    @ElementCollection
-    private List<String> tag;
+    private String k;
+    @ManyToOne
+    private CycleTag tag;
 
 
     @Builder
-    public PersonalCycle(String title, String content, SiteUser user, LocalDateTime startDate, LocalDateTime endDate) {
+    public Cycle(String title, String content, String k, LocalDateTime startDate, LocalDateTime endDate,CycleTag tag) {
         this.title = title;
         this.content = content;
-        this.user = user;
+        this.k = k;
         this.startDate = startDate;
         this.endDate = endDate;
         this.createDate = LocalDateTime.now();
-        this.tag= new ArrayList<>();
+        this.tag = tag;
     }
 }
