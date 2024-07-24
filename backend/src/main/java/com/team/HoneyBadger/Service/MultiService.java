@@ -1201,6 +1201,8 @@ public class MultiService {
             throw new NotAllowedException("시간 설정을 다시 해주세요.");
         }else if(cycleRequestDTO.tagName() != null && cycleRequestDTO.tagColor() == null){
             throw new NotAllowedException("색상 설정을 다시 해주세요.");
+        } else if (cycleRequestDTO.tagName() == null && cycleRequestDTO.tagColor() != null) {
+            throw new NotAllowedException("태그없이 색상설정은 할수없습니다.");
         }
         if(cycleRequestDTO.tagName() == null){
             cycleService.create(k, cycleRequestDTO);
@@ -1229,8 +1231,18 @@ public class MultiService {
         } else if (cycleRequestDTO.endDate() == null) {
             throw new NotAllowedException("종료 시간을 입력해주세요.");
         }
-
-        return getCycleDTO(cycleService.upDate(cycle, cycleRequestDTO));
+        if(cycleRequestDTO.tagName() == null) {
+            return getCycleDTO(cycleService.upDate(cycle, cycleRequestDTO));
+        }else{
+            CycleTag cycleTag = cycleTagService.findByName(k,cycleRequestDTO.tagName());
+            if(cycleTag != null) {
+                return getCycleDTO(cycleService.upDateToTag(cycle, cycleRequestDTO, cycleTag));
+            }else{
+                CycleTag cycleTag1 = cycleTagService.create(k,cycleRequestDTO.tagName(),cycleRequestDTO.tagColor());
+                return getCycleDTO(cycleService.upDateToTag(cycle, cycleRequestDTO, cycleTag1));
+            }
+        }
+        //TODO 프론트에서 태그기능 생성 버튼 만들지 여부 확인하기
     }
     @Transactional
     public void deleteCycle(String k, Long id) {
