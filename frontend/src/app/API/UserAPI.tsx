@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import { getAPI } from './AxiosAPI';
 
 export const UserApi = getAPI();
@@ -527,3 +528,37 @@ export const createApproval = async (approvalRequestDTO: approvalRequestDTO) => 
     const response = await UserApi.post('/api/approval', approvalRequestDTO);
     return response.data;
 };
+
+export const readApproval = async (approvalId: number) => {
+    const response = await UserApi.put('/api/approval/updateRead',null ,{
+        headers: {
+            approvalId: approvalId
+        }
+    });
+    return response.data;
+};
+
+export const deleteApproval = async (approvalId: number) => {
+    const response = await UserApi.delete('/api/approval',{
+        headers: {
+            approvalId: approvalId
+        }
+    });
+    return response.data;
+};
+
+export const getApprovalList = async () => {
+    const response = await UserApi.get('/api/approval/list');
+    return response.data;
+};
+
+
+// export const getApprovalList = async (keyword: string, page: number) => {
+//     const response = await UserApi.get('/api/approval/list', {
+//         headers: {
+//             keyword: encodeURIComponent(keyword),
+//             Page: page
+//         }
+//     });
+//     return response.data;
+// };

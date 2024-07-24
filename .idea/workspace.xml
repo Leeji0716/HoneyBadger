@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8c0f5d3b-5021-4fd6-9f76-16f1ae5e0d71" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QAlarm.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QApproval.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QApprover.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QAttendance.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QChatroom.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QDepartment.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QEmail.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QEmailReceiver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QEmailReservation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QEmailTag.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QFacility.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QFacilityReservation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QFileSystem.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QGroupCycle.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QHoliday.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QLastReadMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QMessageReservation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QMultiKey.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QParticipant.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QPersonalCycle.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QQuestion.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QRecent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QSiteUser.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QTeam.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QTeamPeople.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QViewer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QVote.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QVoteContent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/team/HoneyBadger/Service/Module/ApprovalService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/HoneyBadger/Service/Module/ApprovalService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/API/AxiosAPI.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/API/AxiosAPI.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/API/SocketAPI.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/API/SocketAPI.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/API/UserAPI.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/API/UserAPI.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/Global/Method.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/Global/Method.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/approval/ApprovalForm/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/approval/ApprovalForm/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/approval/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/approval/page.tsx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeInsightWorkspaceSettings">
+    <option name="optimizeImportsOnTheFly" value="true" />
+  </component>
+  <component name="CompilerWorkspaceConfiguration">
+    <option name="MAKE_PROJECT_ON_SAVE" value="true" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$/backend">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="HoneyBadger" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="2il3HHZSrzIR05N3hsMXQcUBhEZ" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.HoneyBadgerApplication.executor": "Debug",
+    "DefaultHtmlFileTemplate": "HTML File",
+    "Gradle.backend [:HoneyBadgerApplication.main()].executor": "Run",
+    "JUnit.HoneyBadgerApplicationTests.contextLoads.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "jy",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/admin/Desktop/Leeji/Project/MMP/MMP",
+    "settings.editor.selected.configurable": "editor.preferences.import"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.team.HoneyBadger.Service" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.team.HoneyBadger.Exception" />
+      <recent name="com.team.HoneyBadger.DTO" />
+      <recent name="com.team.HoneyBadger.Component" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Application.HoneyBadgerApplication">
+    <configuration name="HoneyBadgerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.team.HoneyBadger.HoneyBadgerApplication" />
+      <module name="com.team.HoneyBadger.main" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.team.HoneyBadger.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="HoneyBadgerApplicationTests.contextLoads" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="com.team.HoneyBadger.test" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.team.HoneyBadger.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.team.HoneyBadger" />
+      <option name="MAIN_CLASS_NAME" value="com.team.HoneyBadger.HoneyBadgerApplicationTests" />
+      <option name="METHOD_NAME" value="contextLoads" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.HoneyBadgerApplication" />
+        <item itemvalue="JUnit.HoneyBadgerApplicationTests.contextLoads" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8c0f5d3b-5021-4fd6-9f76-16f1ae5e0d71" name="Changes" comment="" />
+      <created>1720051247257</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1720051247257</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/backend/src/main/java/com/team/HoneyBadger/Controller/EmailReservationController.java</url>
+          <line>39</line>
+          <properties class="com.team.HoneyBadger.Controller.EmailReservationController" method="saveFiles">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/backend/src/main/java/com/team/HoneyBadger/Controller/MessageController.java</url>
+          <line>96</line>
+          <properties class="com.team.HoneyBadger.Controller.MessageController" method="sendMessage">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="49" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/backend/src/main/java/com/team/HoneyBadger/Controller/EmailReservationController.java</url>
+          <line>43</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="org.springframework.web.servlet.resource.ResourceUrlEncodingFilter$ResourceUrlEncodingRequestWrapper" memberName="request" />
+        <PinnedItemInfo parentTag="org.springframework.web.socket.sockjs.transport.session.WebSocketServerSockJsSession" memberName="config" />
+        <PinnedItemInfo parentTag="java.lang.Long" memberName="value" />
+      </pinned-members>
+    </pin-to-top-manager>
+  </component>
+</project>
