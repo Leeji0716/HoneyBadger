@@ -1,5 +1,5 @@
 "use client";
-import { Client, Stomp } from '@stomp/stompjs';
+import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 export interface Subscribe {
@@ -12,11 +12,14 @@ export function getSocket(subs: Subscribe[], setIsReady: () => void) {
             return new SockJS("http://localhost:8080/api/ws-stomp");
             // return new SockJS("http://www.벌꿀오소리.메인.한국:8080/api/ws-stomp");
         },
-        beforeConnect: () => {
-            console.log("beforeConnect");
-        },
-        debug(str) {
-            console.log(`debug`, str);
+        // beforeConnect: () => {
+        //     console.log("beforeConnect");
+        // },
+        // debug(str) {
+        //     console.log(`debug`, str);
+        // },        
+        onWebSocketError: () => {
+            window.location.reload();
         },
         reconnectDelay: 50000, // 자동 재연결
         heartbeatIncoming: 4000,
