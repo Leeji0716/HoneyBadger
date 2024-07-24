@@ -2,6 +2,8 @@ package com.team.HoneyBadger.Repository.Custom.Impl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team.HoneyBadger.Entity.*;
+import com.team.HoneyBadger.Enum.ApprovalStatus;
+import com.team.HoneyBadger.Enum.ApproverStatus;
 import com.team.HoneyBadger.Repository.Custom.ApproverRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 
@@ -18,4 +20,5 @@ public class ApproverRepositoryCustomImpl implements ApproverRepositoryCustom {
     public List<Approver> findByApproval(Approval approval){
         return jpaQueryFactory.selectFrom(qApprover).where(qApprover.approval.eq(approval)).fetch ();
     }
+
 }

@@ -1324,8 +1324,8 @@ public class MultiService {
         // 승인 요청자(sender) 정보 생성
         UserResponseDTO senderDTO = getUserResponseDTO(approval.getSender());
 
-        // 승인 여부 처리 (이 예제에서는 승인 여부를 어떻게 결정하는지 명확하지 않음, 예제 값으로 false 사용)
-        boolean isApproved = false;  // 실제 로직에 따라 결정되어야 함
+        // 승인 여부 처리
+        boolean isApproved = false;
 
        List<String> readUser = approvalService.get(approval.getId ()).getReadUsers ();
 
@@ -1413,9 +1413,16 @@ public class MultiService {
         Approval approval = approvalService.get (approvalId);
         Approval updateApproval = approvalService.addReader (approval,username);
 
-
+        List<Approver> approvers = approval.getApprovers ();
+        for(Approver approver : approvers){
+           if(approver.getUser ().getUsername ().equals (username)){
+               approverService.updateApproverStatus (approver.getId (),ApproverStatus.READY);
+           }
+        }
         return getApproval (updateApproval);
     }
+
+
 
 
     /*
