@@ -156,3 +156,12 @@ body {
   }
 }
 
+.truncate {
+  display: inline-block; /* Ensure it takes the width of its content */
+  width: 5em; /* Set the width to a value that fits 5 characters */
+  overflow: hidden; /* Hide overflow content */
+  text-overflow: ellipsis; /* Show ... when text overflows */
+  white-space: nowrap; /* Prevent line breaks */
+  text-align: center; /* Center the text within the element */
+}
+
