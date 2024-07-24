@@ -49,10 +49,12 @@ export default function Main(props: Readonly<pageInterface>) {
           <input type="text" placeholder="search" className="bolder-0 px-2 outline-none bg-white text-black" />
         </div>
         <div className="m-1 ml-auto flex items-center">
-          <img id="setting" src="/setting.png" alt="세팅" className="w-[20px] h-[20px] cursor-pointer" onClick={() => setSettingOpen(!isSettingOpen)} />
-          <DropDown open={isSettingOpen} onClose={() => setSettingOpen(false)} className="bg-white flex flex-col" button="setting" defaultDriection={Direcion.DOWN} height={40} width={80} y={-5}>
-            <label className="font-bold hover:underline text-red-500 cursor-pointer" onClick={() => { localStorage.clear(); location.href = "/" }}>로그아웃</label>
-          </DropDown>
+          <div className="relative">
+            <img id="setting" src="/setting.png" alt="세팅" className="w-[20px] h-[20px] cursor-pointer" onClick={() => setSettingOpen(!isSettingOpen)} />
+            <div className={"absolute w-[100px] h-[40px] top-7 -left-4 bg-white flex flex-col p-2" + (isSettingOpen ? '' : ' hidden')} >
+              <label className="font-bold hover:underline text-red-500 cursor-pointer" onClick={() => { localStorage.clear(); location.href = "/" }}>로그아웃</label>
+            </div>
+          </div>
           <img src="/bell.png" alt="알림" className="w-[20px] h-[20px] ml-3" />
           <img src="/MyPage.png" alt="마이페이지" className="w-[20px] h-[20px] mx-3 cursor-pointer" onClick={() => location.href = "/profile"} />
 
