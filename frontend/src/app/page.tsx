@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Login } from "./API/AuthAPI";
 import { getUser } from "./API/UserAPI";
+import { redirect, RedirectType } from "next/navigation";
 
 // { params, searchParam }: { params: any, searchParam: any }
 export default function Home() {
@@ -28,7 +29,7 @@ export default function Home() {
       localStorage.setItem('tokenType', r.tokenType);
       localStorage.setItem('accessToken', r.accessToken);
       localStorage.setItem('refreshToken', r.refreshToken);
-      window.location.href = '/main';
+      window.location.href = "/main";
     }).catch(e => {
       if (e.response.status == 404)
         if (e.response.data.message == "entity not found")
