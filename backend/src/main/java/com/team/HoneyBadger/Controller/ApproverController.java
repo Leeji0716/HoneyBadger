@@ -9,10 +9,7 @@ import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,11 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApproverController {
     private final MultiService multiService;
 
-    @PutMapping // 승인자 상태 변경
-    public ResponseEntity<?> approverStatus(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId) {
+    // 승인 상태
+    @PostMapping
+    public ResponseEntity<?> acceptApprover(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestHeader boolean Binary) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if (tokenDTO.isOK ()) try {
-            ApprovalResponseDTO approvalResponseDTO = multiService.addReader(approvalId, tokenDTO.username ());
+            ApprovalResponseDTO approvalResponseDTO = multiService.acceptApprover (approvalId, tokenDTO.username (), Binary);
             return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
         } catch (NotAllowedException ex) {
             return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
@@ -33,7 +31,6 @@ public class ApproverController {
         }
         else return tokenDTO.getResponseEntity ();
     }
-
 
 
 

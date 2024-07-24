@@ -1325,12 +1325,14 @@ public class MultiService {
         UserResponseDTO senderDTO = getUserResponseDTO(approval.getSender());
 
         // 승인 여부 처리
-        boolean isApproved = false;
+        int approvalStatus = approval.getStatus ().ordinal ();
 
        List<String> readUser = approvalService.get(approval.getId ()).getReadUsers ();
 
+       Long sendDate = dateTimeTransfer (approval.getCreateDate ());
 
-        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvers (approversUser).viewers(viewerUser).approval(isApproved).readUsers (readUser).build();
+
+        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvers (approversUser).viewers(viewerUser).approvalStatus (approvalStatus).readUsers (readUser).sendDate (sendDate).build();
     }
 
     @Transactional
@@ -1341,17 +1343,25 @@ public class MultiService {
         for (String username : usernames) {
             SiteUser siteUser = userService.get(username);
           
-            Approver approver = approverService.get (siteUser, approval);
+            Approver approver = approverService.get (siteUser.getUsername (), approval);
 
             UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
 
             int approverStatus = approver.getApproverStatus ().ordinal ();
 
+            Long approvalDate = dateTimeTransfer (approver.getCreateDate ());
 
-            ApproverResponseDTO approverResponseDTO = ApproverResponseDTO.builder().approver (userResponseDTO).apporverStatus (approverStatus).build();
+            ApproverResponseDTO approverResponseDTO = ApproverResponseDTO.builder().approver (userResponseDTO).apporverStatus (approverStatus).approvalDate (approvalDate).build();
 
             users.add (approverResponseDTO);
 
+        }
+
+        for(ApproverResponseDTO approverResponseDTO : users){
+            if(approverResponseDTO.apporverStatus () == 0){
+                approverService.updateApproverStatus (approval, approverResponseDTO.approver ().username () ,ApprovalStatus.RUNNING);
+                break;
+            }
         }
 
         return users;
@@ -1400,11 +1410,9 @@ public class MultiService {
         approvalService.delete(approval);
     }
 
-
     public ApprovalResponseDTO addApproval(Long approvalId) throws NotAllowedException{
         if(approvalId == null) throw new NotAllowedException ("아이디는 하나 이상 필수입니다.");
         Approval approval = approvalService.get (approvalId);
-
 
         return getApproval(approval);
     }
@@ -1413,16 +1421,42 @@ public class MultiService {
         Approval approval = approvalService.get (approvalId);
         Approval updateApproval = approvalService.addReader (approval,username);
 
-        List<Approver> approvers = approval.getApprovers ();
-        for(Approver approver : approvers){
-           if(approver.getUser ().getUsername ().equals (username)){
-               approverService.updateApproverStatus (approver.getId (),ApproverStatus.READY);
-           }
-        }
         return getApproval (updateApproval);
     }
 
+    public ApprovalResponseDTO acceptApprover(Long approvalId, String username, Boolean Binary) throws NotAllowedException{
+        Approval approval = approvalService.get (approvalId);
 
+        if(Binary.equals (true)){
+            approverService.updateApproverStatus (approval,username,ApprovalStatus.ALLOW);
+            approvalService.updateStatus (approvalId,ApprovalStatus.RUNNING);
+        } else{
+            approverService.updateApproverStatus (approval,username,ApprovalStatus.DENY);
+            approvalService.updateStatus (approvalId,ApprovalStatus.DENY);
+        }
+
+        int approverNum=0;
+
+        for(Approver approver : approval.getApprovers ()){
+            approverNum += approver.getApproverStatus ().ordinal ();
+        }
+        if(approval.getApprovers ().size ()*2 == approverNum){
+            approvalService.updateStatus (approvalId,ApprovalStatus.ALLOW);
+        }
+
+        return getApproval (approval);
+    }
+
+    public List<ApprovalResponseDTO> getApprovalList(String username){
+        List<Approval> approvalList = approvalService.getList (username);
+        List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<> ();
+
+        for(Approval approval : approvalList){
+            ApprovalResponseDTO approvalResponseDTO = getApproval (approval);
+            approvalResponseDTOS.add (approvalResponseDTO);
+        }
+        return approvalResponseDTOS;
+    }
 
 
     /*

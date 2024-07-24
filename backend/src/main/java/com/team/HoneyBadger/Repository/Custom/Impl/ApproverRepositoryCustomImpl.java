@@ -2,8 +2,6 @@ package com.team.HoneyBadger.Repository.Custom.Impl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team.HoneyBadger.Entity.*;
-import com.team.HoneyBadger.Enum.ApprovalStatus;
-import com.team.HoneyBadger.Enum.ApproverStatus;
 import com.team.HoneyBadger.Repository.Custom.ApproverRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 
@@ -16,6 +14,10 @@ public class ApproverRepositoryCustomImpl implements ApproverRepositoryCustom {
 
     public Approver findByUserAndApproval(SiteUser user, Approval approval){
         return jpaQueryFactory.selectFrom(qApprover).where(qApprover.user.eq(user).and(qApprover.approval.eq(approval))).fetchOne ();
+    }
+
+    public Approver findByUsernameAndApproval(String username, Approval approval){
+        return jpaQueryFactory.selectFrom(qApprover).where(qApprover.user.username.eq(username).and(qApprover.approval.eq(approval))).fetchOne ();
     }
     public List<Approver> findByApproval(Approval approval){
         return jpaQueryFactory.selectFrom(qApprover).where(qApprover.approval.eq(approval)).fetch ();
