@@ -78,7 +78,7 @@ public class ApprovalController {
         else return tokenDTO.getResponseEntity ();
     }
 
-    @GetMapping("/list") // 로그인된 유저와 관련된 전체 기안 리스트
+    @GetMapping("/list") // 기안서 리스트 가져오기
     public ResponseEntity<?> approvalList(@RequestHeader("Authorization") String accessToken) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if (tokenDTO.isOK ()) try {
