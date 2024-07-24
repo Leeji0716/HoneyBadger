@@ -425,12 +425,6 @@ interface PersonalCycleDTO {
     tag: string[];
 }
 
-interface PersonalCycleResponseDTO {
-    personalCycleDTOList: PersonalCycleDTO[];
-    holiday: boolean;
-    holidayTitle: string;
-}
-
 export const createSchedule = async (data: ScheduleRequestDTO) => {
     const response = await UserApi.post('/api/personal', data);
     return response.data;
@@ -470,13 +464,22 @@ export const fetchSchedules = async (startDate: Date, endDate: Date) => {
 
 export const updateSchedule = async (id: number, data: ScheduleRequestDTO) => {
     console.log('Updating schedule:', id, data);
-    const response = await UserApi.put(`/api/personal/${id}`, data);
+    const response = await UserApi.put(`/api/personal`, data, {
+        headers: {
+            id: id
+        }
+    });
     return response.data;
 };
 
 export const deleteSchedule = async (id: number) => {
     console.log('Deleting schedule:', id);
-    await UserApi.delete(`/api/personal/${id}`);
+    const response = await UserApi.delete(`/api/personal`, {
+        headers: {
+            id: id
+        }
+    });
+    return response.data;
 };
 
 export const getStorageFiles = async (data: { Location: string, Page?: number, Type?: number, Order: number }) => {
