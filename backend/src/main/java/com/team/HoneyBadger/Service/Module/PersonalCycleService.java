@@ -26,13 +26,12 @@ public class PersonalCycleService {
                 .build());
     }
 
-    public void upDate(PersonalCycle personalCycle, PersonalCycleRequestDTO personalCycleRequestDTO) {
+    public PersonalCycle upDate(PersonalCycle personalCycle, PersonalCycleRequestDTO personalCycleRequestDTO) {
         personalCycle.setTitle(personalCycleRequestDTO.title());
         personalCycle.setContent(personalCycleRequestDTO.content());
         personalCycle.setStartDate(personalCycleRequestDTO.startDate());
         personalCycle.setEndDate(personalCycleRequestDTO.endDate());
-        personalCycleRepository.save(personalCycle);
-
+        return personalCycleRepository.save(personalCycle);
     }
 
     public PersonalCycle findById(Long id) throws DataNotFoundException {

@@ -10,4 +10,6 @@ public interface ApproverRepositoryCustom {
     Approver findByUserAndApproval(SiteUser user, Approval approval);
 
     List<Approver> findByApproval(Approval approval);
+
+    Approver findByUsernameAndApproval(String username, Approval approval);
 }

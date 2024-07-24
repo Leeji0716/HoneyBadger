@@ -9,7 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -51,7 +54,7 @@ public class ApprovalController {
     public ResponseEntity<?> approvalGet(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if (tokenDTO.isOK ()) try {
-            ApprovalResponseDTO approvalResponseDTO = multiService.getApproval (approvalId);
+            ApprovalResponseDTO approvalResponseDTO = multiService.addApproval (approvalId);
             return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
         } catch (NotAllowedException ex) {
             return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
@@ -61,4 +64,31 @@ public class ApprovalController {
         else return tokenDTO.getResponseEntity ();
     }
 
+    @PutMapping("/updateRead") // 기안서 읽음 처리
+    public ResponseEntity<?> approvalRead(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId) {
+        TokenDTO tokenDTO = multiService.checkToken (accessToken);
+        if (tokenDTO.isOK ()) try {
+            ApprovalResponseDTO approvalResponseDTO = multiService.addReader(approvalId, tokenDTO.username ());
+            return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
+        } catch (NotAllowedException ex) {
+            return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
+        }
+        else return tokenDTO.getResponseEntity ();
+    }
+
+    @GetMapping("/list") // 로그인된 유저와 관련된 전체 기안 리스트
+    public ResponseEntity<?> approvalList(@RequestHeader("Authorization") String accessToken) {
+        TokenDTO tokenDTO = multiService.checkToken (accessToken);
+        if (tokenDTO.isOK ()) try {
+            List<ApprovalResponseDTO> approvalResponseDTOList = multiService.getApprovalList (tokenDTO.username ());
+            return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTOList);
+        } catch (NotAllowedException ex) {
+            return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
+        }
+        else return tokenDTO.getResponseEntity ();
+    }
 }

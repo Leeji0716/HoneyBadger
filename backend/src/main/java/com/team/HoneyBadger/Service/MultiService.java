@@ -61,6 +61,7 @@ public class MultiService {
     private final ApprovalService approvalService;
     private final ApproverService approverService;
     private final ViewerService viewerService;
+    private final GroupCycleService groupCycleService;
 
     /**
      * Auth
@@ -1204,7 +1205,7 @@ public class MultiService {
     }
 
     @Transactional
-    public void updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
+    public PersonalCycleDTO updatePersonalCycle(String username, Long id, PersonalCycleRequestDTO personalCycleRequestDTO) {
         SiteUser user = userService.get(username);
         PersonalCycle personalCycle = personalCycleService.findById(id);
         if (personalCycle.getUser() != user) {
@@ -1218,7 +1219,8 @@ public class MultiService {
         } else if (personalCycleRequestDTO.endDate() == null) {
             throw new NotAllowedException("종료 시간을 입력해주세요.");
         }
-        personalCycleService.upDate(personalCycle, personalCycleRequestDTO);
+
+        return getPersonalCycleDTO(personalCycleService.upDate(personalCycle, personalCycleRequestDTO)); //여기 잘봐주.. 내가 건드려버림..
     }
 
     @Transactional
@@ -1242,7 +1244,7 @@ public class MultiService {
             boolean holiday = false;
             String holidayTitle = "";
             for (PersonalCycle personalCycle : personalCycleList) {
-                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth()) {
+                if (startDate.getDayOfMonth() == personalCycle.getStartDate().getDayOfMonth() || personalCycle.getEndDate().getDayOfMonth() == startDate.getDayOfMonth()) {
                     PersonalCycleDTO personalCycleDTO = PersonalCycleDTO.builder().id(personalCycle.getId()).title(personalCycle.getTitle()).content(personalCycle.getContent()).startDate(dateTimeTransfer(personalCycle.getStartDate())).endDate(dateTimeTransfer(personalCycle.getEndDate())).tag(personalCycle.getTag()).build();
                     personalCycleDTOList.add(personalCycleDTO);
                 }
@@ -1314,7 +1316,7 @@ public class MultiService {
                 .collect(Collectors.toList());
 
         // 승인자(UserResponseDTO 리스트) 생성
-        List<UserResponseDTO> approversUser = approverUserFind(approval, approverusernames);
+        List<ApproverResponseDTO> approversUser = approverUserFind (approval,approverusernames);
 
         // 참고인(UserResponseDTO 리스트) 생성
         List<UserResponseDTO> viewerUser = viewerUserFind(approval, viewernames);
@@ -1322,24 +1324,46 @@ public class MultiService {
         // 승인 요청자(sender) 정보 생성
         UserResponseDTO senderDTO = getUserResponseDTO(approval.getSender());
 
-        // 승인 여부 처리 (이 예제에서는 승인 여부를 어떻게 결정하는지 명확하지 않음, 예제 값으로 false 사용)
-        boolean isApproved = false;  // 실제 로직에 따라 결정되어야 함
+        // 승인 여부 처리
+        int approvalStatus = approval.getStatus ().ordinal ();
+
+       List<String> readUser = approvalService.get(approval.getId ()).getReadUsers ();
+
+       Long sendDate = dateTimeTransfer (approval.getCreateDate ());
 
 
-        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvals(approversUser).viewers(viewerUser).approval(isApproved).build();
+        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvers (approversUser).viewers(viewerUser).approvalStatus (approvalStatus).readUsers (readUser).sendDate (sendDate).build();
     }
 
     @Transactional
-    private List<UserResponseDTO> approverUserFind(Approval approval, List<String> usernames) {
-        List<UserResponseDTO> users = new ArrayList<>();
+    private List<ApproverResponseDTO> approverUserFind(Approval approval, List<String> usernames) {
+
+        List<ApproverResponseDTO> users = new ArrayList<>();
 
         for (String username : usernames) {
             SiteUser siteUser = userService.get(username);
-            Approver approver = approverService.get(siteUser, approval);
-            SiteUser sitesUer1 = approver.getUser();
-            UserResponseDTO userResponseDTO = getUserResponseDTO(sitesUer1);
-            users.add(userResponseDTO);
+          
+            Approver approver = approverService.get (siteUser.getUsername (), approval);
+
+            UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
+
+            int approverStatus = approver.getApproverStatus ().ordinal ();
+
+            Long approvalDate = dateTimeTransfer (approver.getCreateDate ());
+
+            ApproverResponseDTO approverResponseDTO = ApproverResponseDTO.builder().approver (userResponseDTO).apporverStatus (approverStatus).approvalDate (approvalDate).build();
+
+            users.add (approverResponseDTO);
+
         }
+
+        for(ApproverResponseDTO approverResponseDTO : users){
+            if(approverResponseDTO.apporverStatus () == 0){
+                approverService.updateApproverStatus (approval, approverResponseDTO.approver ().username () ,ApprovalStatus.RUNNING);
+                break;
+            }
+        }
+
         return users;
     }
 
@@ -1386,11 +1410,52 @@ public class MultiService {
         approvalService.delete(approval);
     }
 
-    public ApprovalResponseDTO getApproval(Long approvalId) throws NotAllowedException {
-        if (approvalId == null) throw new NotAllowedException("아이디는 하나 이상 필수입니다.");
-        Approval approval = approvalService.get(approvalId);
+    public ApprovalResponseDTO addApproval(Long approvalId) throws NotAllowedException{
+        if(approvalId == null) throw new NotAllowedException ("아이디는 하나 이상 필수입니다.");
+        Approval approval = approvalService.get (approvalId);
 
         return getApproval(approval);
+    }
+
+    public ApprovalResponseDTO addReader(Long approvalId, String username) throws NotAllowedException {
+        Approval approval = approvalService.get (approvalId);
+        Approval updateApproval = approvalService.addReader (approval,username);
+
+        return getApproval (updateApproval);
+    }
+
+    public ApprovalResponseDTO acceptApprover(Long approvalId, String username, Boolean Binary) throws NotAllowedException{
+        Approval approval = approvalService.get (approvalId);
+
+        if(Binary.equals (true)){
+            approverService.updateApproverStatus (approval,username,ApprovalStatus.ALLOW);
+            approvalService.updateStatus (approvalId,ApprovalStatus.RUNNING);
+        } else{
+            approverService.updateApproverStatus (approval,username,ApprovalStatus.DENY);
+            approvalService.updateStatus (approvalId,ApprovalStatus.DENY);
+        }
+
+        int approverNum=0;
+
+        for(Approver approver : approval.getApprovers ()){
+            approverNum += approver.getApproverStatus ().ordinal ();
+        }
+        if(approval.getApprovers ().size ()*2 == approverNum){
+            approvalService.updateStatus (approvalId,ApprovalStatus.ALLOW);
+        }
+
+        return getApproval (approval);
+    }
+
+    public List<ApprovalResponseDTO> getApprovalList(String username){
+        List<Approval> approvalList = approvalService.getList (username);
+        List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<> ();
+
+        for(Approval approval : approvalList){
+            ApprovalResponseDTO approvalResponseDTO = getApproval (approval);
+            approvalResponseDTOS.add (approvalResponseDTO);
+        }
+        return approvalResponseDTOS;
     }
 
 
@@ -1482,4 +1547,21 @@ public class MultiService {
     }
 
 
+    /*
+        GroupCycle
+    */
+    public void createGroupCycle(String username, PersonalCycleRequestDTO personalCycleRequestDTO) {
+        SiteUser user = userService.get(username);
+        if(user.getDepartment() == null){
+            throw new NotAllowedException("그룹이 없습니다.");
+        }
+        if(personalCycleRequestDTO.title() == null){
+            throw new DataNotFoundException("제목을 입력해주세요.");
+        }else if(personalCycleRequestDTO.content() == null){
+            throw new DataNotFoundException("내용을 입력해주세요.");
+        }else if(personalCycleRequestDTO.startDate() == null || personalCycleRequestDTO.endDate() == null || personalCycleRequestDTO.startDate().equals(personalCycleRequestDTO.endDate())||personalCycleRequestDTO.startDate().isAfter(personalCycleRequestDTO.endDate())) {
+            throw new DataNotFoundException("시간설정을 다시 확인해주세요.");
+        }
+        groupCycleService.create(user,personalCycleRequestDTO);
+    }
 }

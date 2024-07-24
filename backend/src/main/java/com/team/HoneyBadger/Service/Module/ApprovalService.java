@@ -2,6 +2,7 @@ package com.team.HoneyBadger.Service.Module;
 
 import com.team.HoneyBadger.DTO.ApprovalRequestDTO;
 import com.team.HoneyBadger.DTO.ApprovalResponseDTO;
+import com.team.HoneyBadger.DTO.ApproverResponseDTO;
 import com.team.HoneyBadger.Entity.Approval;
 import com.team.HoneyBadger.Entity.Chatroom;
 import com.team.HoneyBadger.Entity.SiteUser;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +32,15 @@ public class ApprovalService {
                 .title (approvalRequestDTO.title ())
                 .content (approvalRequestDTO.content ())
                 .sender (sender)
-                .status (ApprovalStatus.NOT_READ)
+                .status (ApprovalStatus.READY)
                 .build());
+    }
+
+    public Approval updateStatus(Long approvalId, ApprovalStatus newStatus){
+        Approval approval = approvalRepository.findById (approvalId).get ();
+        approval.setStatus (newStatus);
+
+        return approval;
     }
 
     public Approval get(Long approvalId){
@@ -39,8 +48,25 @@ public class ApprovalService {
         return approval;
     }
 
+    public Approval addReader(Approval approval, String username){
+        List<String> readUsers = approval.getReadUsers ();
+
+        if(!readUsers.contains (username)){
+            readUsers.add (username);
+            approvalRepository.save (approval);
+        }
+
+        return approval;
+    }
+
     public void delete(Approval approval){
         approvalRepository.delete (approval);
     }
+
+    public List<Approval> getList(String username){
+        return  approvalRepository.findByUsername (username);
+
+    }
+
 
 }

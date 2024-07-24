@@ -5,6 +5,7 @@ import com.team.HoneyBadger.Enum.ApprovalStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +30,9 @@ public class Approval {
     private List<Approver> approvers; //승인자
     @OneToMany(mappedBy = "approval", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<Viewer> viewers; //참고인
+    private List<String> readUsers;
+    private LocalDateTime createDate;
+    private LocalDateTime modifyDate;
 
     @Builder
     public Approval(String title, String content, ApprovalStatus status, SiteUser sender) {
@@ -38,5 +42,8 @@ public class Approval {
         this.sender = sender;
         this.approvers = new ArrayList<> ();
         this.viewers = new ArrayList<> ();
+        this.readUsers = new ArrayList<> ();
+        this.createDate = LocalDateTime.now ();
+        this.modifyDate = createDate;
     }
 }

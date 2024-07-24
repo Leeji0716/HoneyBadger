@@ -29,6 +29,7 @@ public class PersonalCycle {
     @ElementCollection
     private List<String> tag;
 
+
     @Builder
     public PersonalCycle(String title, String content, SiteUser user, LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;

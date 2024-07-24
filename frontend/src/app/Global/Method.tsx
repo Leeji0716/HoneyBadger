@@ -57,7 +57,10 @@ export function getDateFormatInput(data: any) {
 }
 export function transferLocalTime(date: Date) {
     return new Date(date.getTime() + 9 * 1000 * 60 * 60);
-
+}
+export function getScheduleDate(data: any) {
+    const date = new Date(data);
+    return date.getFullYear() + '-' + (date.getMonth() < 9 ? '0' : '') + (date.getMonth() + 1) + '-' + (date.getDate() < 9 ? '0' : '') + date.getDate();
 }
 
 export function eontransferLocalTime(date: Date | null) {
@@ -140,7 +143,7 @@ export function getDateEmailTime(data: any) {
 export function getStorageDate(data: number) {
     const date = new Date(data);
     const now = new Date();
-    
+
     if (now.getFullYear() == date.getFullYear() && now.getMonth() == date.getMonth() && now.getDate() == date.getDate())
         return "오늘 " + (date.getHours() < 12 ? '오전 ' + date.getHours() : '오후 ' + (date.getHours() - 12)) + ":" + date.getMinutes();
     else
