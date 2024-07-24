@@ -1359,14 +1359,14 @@ public class MultiService {
 
             Long approvalDate = dateTimeTransfer (approver.getCreateDate ());
 
-            ApproverResponseDTO approverResponseDTO = ApproverResponseDTO.builder().approver (userResponseDTO).apporverStatus (approverStatus).approvalDate (approvalDate).build();
+            ApproverResponseDTO approverResponseDTO = ApproverResponseDTO.builder().approver (userResponseDTO).approverStatus (approverStatus).approvalDate (approvalDate).build();
 
             users.add (approverResponseDTO);
 
         }
 
         for(ApproverResponseDTO approverResponseDTO : users){
-            if(approverResponseDTO.apporverStatus () == 0){
+            if(approverResponseDTO.approverStatus () == 0){
                 approverService.updateApproverStatus (approval, approverResponseDTO.approver ().username () ,ApprovalStatus.RUNNING);
                 break;
             }
@@ -1434,6 +1434,7 @@ public class MultiService {
 
     public ApprovalResponseDTO acceptApprover(Long approvalId, String username, Boolean Binary) throws NotAllowedException{
         Approval approval = approvalService.get (approvalId);
+
 
         if(Binary.equals (true)){
             approverService.updateApproverStatus (approval,username,ApprovalStatus.ALLOW);

@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.*;
 public class ApproverController {
     private final MultiService multiService;
 
-    // 승인 상태
-    @PostMapping
+
+    @PostMapping // 승인 기능
     public ResponseEntity<?> acceptApprover(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestHeader boolean Binary) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if (tokenDTO.isOK ()) try {
