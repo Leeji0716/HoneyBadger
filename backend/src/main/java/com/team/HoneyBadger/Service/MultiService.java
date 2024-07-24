@@ -1413,14 +1413,24 @@ public class MultiService {
         }
     }
 
-    public Page<FileResponseDTO> getStorageFiles(String location, int page, FileType type, FileOrder order) throws IOException {
+    public Page<FileResponseDTO> getStorageFiles(String location, int page, FileType type, FileOrder order, String keyword) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         Pageable pageable = PageRequest.of(page, 15);
 
         File file = new File(path + location);
         if (!file.exists()) file.mkdirs();
         if (!file.isDirectory()) throw new NotAllowedException("not folder");
-        Stream<File> stream = Arrays.stream(file.listFiles()).sorted(order.getComparator());
+        Stream<File> stream;
+        if (keyword != null && !keyword.isBlank()) {
+            List<File> list = new ArrayList<>();
+            for (File child : file.listFiles())
+                addAllFiles(list, child, keyword);
+            stream = list.stream().sorted(order.getComparator());
+        } else
+
+            stream = Arrays.stream(file.listFiles()).sorted(order.getComparator());
+
+
         if (type != null) stream = stream.filter(type::isAllow);
         List<File> files = stream.toList();
         long total = files.size();
@@ -1450,6 +1460,14 @@ public class MultiService {
         if (file.isDirectory()) for (File child : file.listFiles())
             if (child.isDirectory()) list.add(transferFolderToDTO(child));
         return list;
+    }
+
+    private void addAllFiles(List<File> list, File file, String keyword) {
+        if (file.getName().toLowerCase().contains(keyword.toLowerCase()))
+            list.add(file);
+        if (file.listFiles() != null)
+            for (File child : file.listFiles())
+                addAllFiles(list, child, keyword);
     }
 
     private FolderResponseDTO transferFolderToDTO(File file) {

@@ -154,5 +154,8 @@ body {
   .checkbox-div:has(input:checked) {
     @apply border-2 border-[#8fbee9] group-hover:bg-[#dce2e8];
   }
+  checkbox {
+    @apply focus:outline-none
+  }
 }
 
