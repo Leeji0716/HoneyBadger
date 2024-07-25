@@ -1473,8 +1473,8 @@ public class MultiService {
         return getApproval (approval);
     }
 
-    public List<ApprovalResponseDTO> getApprovalList(String username){
-        List<Approval> approvalList = approvalService.getList (username);
+    public List<ApprovalResponseDTO> getApprovalList(String username, String keyword){
+        List<Approval> approvalList = approvalService.getList (username,keyword);
         List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<> ();
 
         for(Approval approval : approvalList){

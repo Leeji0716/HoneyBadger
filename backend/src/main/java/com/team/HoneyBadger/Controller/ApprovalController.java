@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -51,7 +53,8 @@ public class ApprovalController {
     }
 
     @GetMapping // 기안서 가져오기
-    public ResponseEntity<?> approvalGet(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId) {
+    public ResponseEntity<?> approvalGet(@RequestHeader("Authorization") String accessToken,
+                                         @RequestHeader("approvalId") Long approvalId) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if (tokenDTO.isOK ()) try {
             ApprovalResponseDTO approvalResponseDTO = multiService.addApproval (approvalId);
@@ -79,10 +82,10 @@ public class ApprovalController {
     }
 
     @GetMapping("/list") // 기안서 리스트 가져오기
-    public ResponseEntity<?> approvalList(@RequestHeader("Authorization") String accessToken) {
+    public ResponseEntity<?> approvalList(@RequestHeader("Authorization") String accessToken, @RequestHeader(value = "keyword", defaultValue = "") String keyword) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if (tokenDTO.isOK ()) try {
-            List<ApprovalResponseDTO> approvalResponseDTOList = multiService.getApprovalList (tokenDTO.username ());
+            List<ApprovalResponseDTO> approvalResponseDTOList = multiService.getApprovalList (tokenDTO.username (), URLDecoder.decode(keyword, StandardCharsets.UTF_8));
             return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTOList);
         } catch (NotAllowedException ex) {
             return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());

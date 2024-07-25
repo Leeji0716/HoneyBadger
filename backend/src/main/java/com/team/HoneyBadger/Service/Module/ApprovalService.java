@@ -60,9 +60,13 @@ public class ApprovalService {
         approvalRepository.delete (approval);
     }
 
-    public List<Approval> getList(String username){
+    public List<Approval> getList(String username,String keyword){
+        if (keyword == null || keyword.isEmpty()) {
         return  approvalRepository.findByUsername (username);
-
+        }
+        else{
+            return  approvalRepository.findByUsernameAndKeyword (username,keyword);
+        }
     }
 
 
