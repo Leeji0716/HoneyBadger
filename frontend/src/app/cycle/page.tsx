@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { getUser, createSchedule, fetchSchedules, updateSchedule, deleteSchedule } from "@/app/API/UserAPI";
 import Main from "@/app/Global/Layout/MainLayout";
-import { eontransferLocalTime, getDateEmailTime, getScheduleDate } from "../Global/Method";
+import { eontransferLocalTime, getDateEmailTime, getScheduleDate, isHoliday } from "../Global/Method";
+import DropDown, { Direcion } from '../Global/DropDown';
 
 export default function Cycle() {
     const [user, setUser] = useState<any>(null);
@@ -16,8 +17,8 @@ export default function Cycle() {
     const [startDateInput, setStartDateInput] = useState<string>("");
     const [endDateInput, setEndDateInput] = useState<string>("");
     const [schedules, setSchedules] = useState([] as any[]);
-    const [daySchedules, setDaySchedules] = useState<PersonalCycleDTO[]>();
-    const [selectCycle, setSelectCycle] = useState<PersonalCycleDTO | null>();
+    const [daySchedules, setDaySchedules] = useState<CycleDTO[]>();
+    const [selectCycle, setSelectCycle] = useState<CycleDTO | null>();
     const [cycleStartDate, setCycleStartDate] = useState<Date | null>(null);
     const [cycleEndDate, setCycleEndDate] = useState<Date | null>(null);
     const [headerDate, setHeaderDate] = useState([] as any[]);
@@ -33,9 +34,10 @@ export default function Cycle() {
     const [tags, setTags] = useState<string[]>([]);
     const [color, setColor] = useState<string>("#ffffff"); // 기본 색상은 흰색으로 설정
 
-    const formatDateToISO = (date: Date): string => {
-        return getScheduleDate(date); // YYYY-MM-DD 형식으로 반환
-    };
+    const formatDateToISO = (date: Date): string => { return getScheduleDate(date); }; // YYYY-MM-DD 형식으로 반환
+
+    const changeMonth = (delta: number) => { setSelectedDate(new Date(year, month + delta, 1)); };
+    const handleDateClick = (date: Date) => { setSelectedDate(date); };
 
     useEffect(() => {
         if (ACCESS_TOKEN) {
@@ -52,32 +54,50 @@ export default function Cycle() {
         }
     }, [ACCESS_TOKEN, selectedDate]);
 
-    interface PersonalCycleDTO {
-        id: number;
-        title: string;
-        content: string;
-        startDate: number;
-        endDate: number;
-        tag: string[];
-    }
-    interface List {
-        personalCycleDTOList: PersonalCycleDTO[],
+    useEffect(() => {
+    }, [schedules]);
+
+    interface CycleResponseDTO {
+        cycleDTOList: CycleDTO[],
         holiday: boolean,
-        holidayTitle: string
+        holidatTitle: string
+    }
+
+    interface CycleDTO {
+        id: number,
+        title: string,
+        content: string,
+        startDate: number,
+        endDate: number,
+        tag: CycleTagDTO
+    }
+
+    interface CycleTagDTO {
+        name: string,
+        color: string
     }
 
     const loadSchedules = async () => {
         if (selectedDate) {
             try {
+                // 날짜 범위 계산 및 로그 출력
                 const { startDate, endDate } = getFetchDateRange();
                 console.log(`Fetching schedules from: ${formatDateToISO(startDate)} to: ${formatDateToISO(endDate)}`);
-                const data = await fetchSchedules(startDate, endDate);
-                console.log("data!!!!!!!!!!!!!!!!!!!!!!!!!");
-                console.log(data)
+
+                // 스케줄 데이터 가져오기 및 로그 출력
+                const data: CycleDTO[] = await fetchSchedules(startDate, endDate);
+
+                // 받아온 데이터 로그 출력
+                console.log("Fetched schedules data:", data);
+
+                // 데이터 상태 업데이트
                 setSchedules(data);
             } catch (error) {
+                // 오류 발생 시 로그 출력
                 console.error("Failed to fetch schedules:", error);
             }
+        } else {
+            console.log("No selected date to fetch schedules.");
         }
     };
 
@@ -96,14 +116,6 @@ export default function Cycle() {
         return { startDate: new Date(), endDate: new Date() };
     };
 
-    const changeMonth = (delta: number) => {
-        setSelectedDate(new Date(year, month + delta, 1));
-    };
-
-    const handleDateClick = (date: Date) => {
-        setSelectedDate(date);
-    };
-
     function DateColumn({ date }: { date: Date }) {
         const now = new Date();
         const isToday = date.toDateString() === now.toDateString();
@@ -111,7 +123,7 @@ export default function Cycle() {
 
         return (
             <div
-                onClick={() => { console.log(date); handleDateClick(date); }}
+                onClick={() => { handleDateClick(date); }}
                 className={`w-[51px] h-[41px] rounded-2xl flex items-center justify-center cursor-pointer
                     ${date.getMonth() !== month ? 'opacity-25' : 'opacity-100'}
                     ${isToday ? 'bg-blue-500 text-white' : ''}
@@ -123,7 +135,6 @@ export default function Cycle() {
 
     useEffect(() => {
         if (selectedDate) {
-            console.log("try")
             const result = [];
             const start = new Date(selectedDate);
             start.setDate(selectedDate.getDate() - 2);
@@ -136,25 +147,24 @@ export default function Cycle() {
                     dayOfMonth: date.getDate()
                 });
             }
-            console.log(result);
             setHeaderDate(result);
         } else
             setHeaderDate([]);
-    }, [selectedDate]); +
+    }, [selectedDate]);
 
-        useEffect(() => {
-            if (isModalOpen && selectCycle) {
-                setTitle(selectCycle.title);
-                setContent(selectCycle.content);
-                setStartDateInput(new Date(selectCycle.startDate).toISOString().slice(0, 16));
-                setEndDateInput(new Date(selectCycle.endDate).toISOString().slice(0, 16));
-            } else {
-                setTitle('');
-                setContent('');
-                setStartDateInput('');
-                setEndDateInput('');
-            }
-        }, [isModalOpen, selectCycle]);
+    useEffect(() => {
+        if (isModalOpen && selectCycle) {
+            setTitle(selectCycle.title);
+            setContent(selectCycle.content);
+            setStartDateInput(new Date(selectCycle.startDate).toISOString().slice(0, 16));
+            setEndDateInput(new Date(selectCycle.endDate).toISOString().slice(0, 16));
+        } else {
+            setTitle('');
+            setContent('');
+            setStartDateInput('');
+            setEndDateInput('');
+        }
+    }, [isModalOpen, selectCycle]);
 
     function getTimeSlots() {
         return Array.from({ length: 24 }, (_, i) => `${i}:00`);
@@ -170,7 +180,9 @@ export default function Cycle() {
             title,
             content,
             startDate: eontransferLocalTime(new Date(startDateInput)),
-            endDate: eontransferLocalTime(new Date(endDateInput))
+            endDate: eontransferLocalTime(new Date(endDateInput)),
+            tagName: tags[0] || '', // 태그의 첫 번째 이름을 사용
+            tagColor: color
         };
 
         try {
@@ -207,6 +219,15 @@ export default function Cycle() {
     };
 
     function ScheduleTable() {
+        const [dropDownOpen, setDropDownOpen] = useState<number | null>(null);
+
+        const handleCycleClick = (cycle: CycleDTO) => {
+            setSelectCycle(cycle);
+            setCycleStartDate(new Date(cycle.startDate));
+            setCycleEndDate(new Date(cycle.endDate));
+            setDropDownOpen(null); // 기존 드롭다운을 닫습니다.
+        };
+
         return (
             <table className="w-full border-collapse">
                 <thead>
@@ -223,34 +244,83 @@ export default function Cycle() {
                     {getTimeSlots().map((slot, slotIndex) => (
                         <tr key={slotIndex}>
                             <td className="border">{slot}</td>
-                            {headerDate.map((headerDate, dateIndex) => (
-                                <td key={`${dateIndex}-${slotIndex}`} className="border h-[60px]">
-                                    {(schedules ?? []).flatMap((schedule: List) => {
-                                        return schedule.personalCycleDTOList.filter(cycle => {
-                                            const cycleStart = new Date(cycle.startDate);
-                                            const cycleEnd = new Date(cycle.endDate);
-                                            const date = new Date(headerDate.dateStr);
-                                            return cycleStart.toDateString() === date.toDateString() &&
-                                                cycleStart.getHours() === slotIndex;
-                                        });
-                                    }).map((cycle: PersonalCycleDTO, index: number) => (
-                                        <div
-                                            key={index}
-                                            className="cursor-pointer truncate"
-                                            onClick={() => {
-                                                if (selectCycle) setSelectCycle(null);
-                                                else setSelectCycle(cycle);
-                                                if (cycleStartDate) setCycleStartDate(null);
-                                                else setCycleStartDate(new Date(cycle.startDate));
-                                                if (cycleEndDate) setCycleEndDate(null);
-                                                else setCycleEndDate(new Date(cycle.endDate));
-                                            }}
-                                        >
-                                            {cycle.title}
+                            {headerDate.map((headerDate, dateIndex) => {
+                                const displayedCycles = new Set<number>(); // 표시된 사이클 ID를 추적
+                                const filteredCycles = (schedules ?? []).flatMap((schedule: CycleResponseDTO) =>
+                                    schedule.cycleDTOList.filter(cycle => {
+                                        const cycleStart = new Date(cycle.startDate);
+                                        const cycleEnd = new Date(cycle.endDate);
+                                        const date = new Date(headerDate.dateStr);
+                                        const cycleStartHour = cycleStart.getHours();
+                                        const cycleEndHour = cycleEnd.getHours();
+
+                                        return (
+                                            (cycleStart.toDateString() === date.toDateString() && cycleStartHour === slotIndex) ||
+                                            (cycleEnd.toDateString() === date.toDateString() && cycleEndHour === slotIndex)
+                                        );
+                                    })
+                                ).filter(cycle => {
+                                    if (displayedCycles.has(cycle.id)) {
+                                        return false; // 이미 표시된 사이클은 제외
+                                    }
+                                    displayedCycles.add(cycle.id);
+                                    return true;
+                                });
+
+                                const showDropDown = filteredCycles.length > 2; // 사이클이 2개 이상이면 드롭다운을 표시
+
+                                return (
+                                    <td key={`${dateIndex}-${slotIndex}`} className="border h-[60px] relative">
+                                        <div className="flex flex-col h-full justify-center items-center">
+                                            {showDropDown ? (
+                                                <>
+                                                    <button
+                                                        className="mt-1 px-2 py-1 bg-purple-300 text-black rounded"
+                                                        onClick={() => setDropDownOpen(dateIndex)}
+                                                    >
+                                                        더보기...
+                                                    </button>
+                                                    {dropDownOpen === dateIndex && (
+                                                        <DropDown
+                                                            open={true}
+                                                            onClose={() => setDropDownOpen(null)}
+                                                            className="bg-white"
+                                                            width={200}
+                                                            height={200}
+                                                            defaultDriection={Direcion.DOWN}
+                                                            button=""
+                                                            x={0}
+                                                            y={0}
+                                                        >
+                                                            {filteredCycles.map((cycle: CycleDTO, index: number) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className="cursor-pointer truncate p-2 rounded mb-1"
+                                                                    onClick={() => handleCycleClick(cycle)} // 클릭 시 디테일 업데이트
+                                                                    style={{ backgroundColor: cycle.tag.color }}
+                                                                >
+                                                                    {cycle.title}
+                                                                </div>
+                                                            ))}
+                                                        </DropDown>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                filteredCycles.map((cycle: CycleDTO, index: number) => (
+                                                    <div
+                                                        key={index}
+                                                        className="cursor-pointer truncate p-2 rounded mb-1"
+                                                        onClick={() => handleCycleClick(cycle)} // 클릭 시 디테일 업데이트
+                                                        style={{ backgroundColor: cycle.tag.color }}
+                                                    >
+                                                        {cycle.title}
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
-                                    ))}
-                                </td>
-                            ))}
+                                    </td>
+                                );
+                            })}
                         </tr>
                     ))}
                 </tbody>
@@ -299,14 +369,21 @@ export default function Cycle() {
                                             return false;
                                         };
 
+                                        const isHolidayDate = isHoliday(date);
+                                        const isSunday = dayIndex === 0; // 일요일
+                                        const isSaturday = dayIndex === 6; // 
+
                                         return (
                                             <td
                                                 key={dayIndex}
-                                                className={`p-0 border border-gray-200 rounded transition-colors duration-200 
-                                                    ${isWithinRange() ? "bg-purple-300 text-white" : "bg-white text-gray-800"}
+                                                className={`p-0 border border-gray-200 rounded transition-colors duration-200
+                                                    ${isHolidayDate ? "text-red-500" : isWithinRange() ? "bg-purple-300 text-white" : "bg-white text-gray-800"}
+                                                    ${isSunday ? "text-red-500" : ""}
+                                                    ${isSaturday ? "text-blue-700" : ""}
                                                     hover:bg-purple-100 hover:text-gray-800`}
                                                 style={{ minWidth: "16px", minHeight: "16px", fontSize: "0.8rem", lineHeight: "1" }}
-                                                onClick={() => handleDateClick(date)}>
+                                                onClick={() => handleDateClick(date)}
+                                            >
                                                 <DateColumn date={date} />
                                             </td>
                                         );
@@ -315,6 +392,9 @@ export default function Cycle() {
                             ))}
                         </tbody>
                     </table>
+                    {/* <div>
+                        여기에 태그리스트 넣을 예정
+                    </div> */}
                 </div>
 
                 <div className="border-t-4 border-b-4 w-[60%]">
@@ -337,30 +417,34 @@ export default function Cycle() {
                     <div className="h-[30%] border-r-4 border-l-4 border-b-4">검색</div>
                     <div className="h-[60%] border-r-4 border-l-4 border-b-4 p-4">
                         <h2 className="text-xl font-bold mb-2">일정 디테일</h2>
-                        {selectCycle ?
+                        {selectCycle ? (
                             <div>
-                                <p><strong>제목:</strong> {selectCycle.title} </p>
-                                <p><strong>내용:</strong> {selectCycle.content} </p>
-                                <p><strong>시작 시간:</strong> {getDateEmailTime(selectCycle.startDate)} </p>
-                                <p><strong>종료 시간:</strong> {getDateEmailTime(selectCycle.endDate)} </p>
-                                <p><strong>태그:</strong> {selectCycle.tag.length > 0 ? selectCycle.tag.join(', ') : '없음'} </p>
-                                {/* <p><strong>색상:</strong>
-                                    <span
-                                        className="inline-block w-6 h-6 rounded-full"
-                                        style={{ backgroundColor: selectCycle.color }}>
-                                    </span>
-                                </p> */}
-                                <div className="flex mt-4">
-                                    <button
-                                        className="px-4 py-2 bg-red-500 text-white rounded-md"
-                                        onClick={() => handleDeleteSchedule(selectCycle.id)}>
-                                        삭제
-                                    </button>
+                                <p><strong>제목:</strong> {selectCycle.title}</p>
+                                <p><strong>내용:</strong> {selectCycle.content}</p>
+                                <p><strong>시작 시간:</strong> {getDateEmailTime(new Date(selectCycle.startDate))}</p>
+                                <p><strong>종료 시간:</strong> {getDateEmailTime(new Date(selectCycle.endDate))}</p>
+                                {selectCycle.tag && selectCycle.tag.color && selectCycle.tag.name ? (
+                                    <p>
+                                        <span
+                                            className="inline-block px-2 py-1 rounded text-black"
+                                            style={{ backgroundColor: selectCycle.tag.color }}
+                                        >
+                                            {selectCycle.tag.name}
+                                        </span>
+                                    </p>
+                                ) : null}
+                                <div className="flex flex-col justify-end items-end h-full">
+                                    <div className="flex mt-4">
+                                        <button
+                                            className="px-4 py-2 bg-red-500 text-white rounded-md"
+                                            onClick={() => handleDeleteSchedule(selectCycle.id)}
+                                        >
+                                            삭제
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            :
-                            <></>
-                        }
+                        ) : null}
                     </div>
                 </div>
             </div>
