@@ -6,7 +6,6 @@ import { getRole } from "@/app/Global/Method";
 import { use, useEffect, useState } from "react";
 
 export default function Approval() {
-
     interface approvalRequestDTO {
         title: string,
         content: string,
@@ -37,7 +36,26 @@ export default function Approval() {
     const selectedViewersText = selectedViewer.map(viewer => viewer.name).join(', ');
     const [fileList, setFileList] = useState<File[]>([]);
 
-    //users 가져오기
+    // 유저 토큰 확인하기
+    useEffect(() => {
+        if (ACCESS_TOKEN)
+            getUser().then(r => {
+                setUser(r);
+                console.log(r);
+                const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
+            }).catch(e => { setClientLoading(false); console.log(e); });
+        else
+            location.href = '/';
+    }, [ACCESS_TOKEN])
+
+    // 현재 날짜 가져오기
+    useEffect(() => {
+        const currentDate = new Date();
+        const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD 형식으로 포맷
+        setNowDate(formattedDate);
+    }, []);
+
+    //userList 가져오기
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -50,7 +68,24 @@ export default function Approval() {
         fetchData();
     }, []);
 
-    //승인 유저 추가 & 승인 유저 제거
+    // 승인 유저 dropdown으로 선택하기
+    function SelectApprover({ index, modal, id }: { index: number, modal: any, id: string }) {
+        return <>
+            {getSpecificApprover(index) == null ? "선택" : ""}
+            <DropDown
+                open={modal}
+                onClose={() => setSettingOpen(false)}
+                children={renderUserList(index)}
+                className={"h-[300px] overflow-y-scroll bg-white"}
+                width={200}
+                height={100}
+                defaultDriection={Direcion.DOWN}
+                button={id}
+            />
+        </>
+    }
+
+    // 승인 유저 추가 & 승인 유저 제거
     const handleUserSelect = (user: { username: any; }, approvarIndex: number) => {
         setSelectedApprover((prevSelectedApprover) => {
             const newSelectedApprovar = [...prevSelectedApprover];
@@ -90,8 +125,7 @@ export default function Approval() {
                     <li
                         key={index}
                         onClick={() => handleUserSelect(user, approvarIndex)}
-                        className="font-bold hover:underline cursor-pointer"
-                    >
+                        className="font-bold hover:underline cursor-pointer">
                         {user.name} - {user.username}
                     </li>
                 ))}
@@ -99,7 +133,7 @@ export default function Approval() {
         );
     };
 
-    // 승인자 인덱스로 찾기
+    // 승인 유저 인덱스로 찾기
     const getSpecificApprover = (index: number) => {
         if (index >= 0 && index < selectedApprover.length) {
             return selectedApprover[index];
@@ -107,10 +141,11 @@ export default function Approval() {
         return null; // 인덱스가 범위를 벗어난 경우 null 반환
     };
 
-    // 참조인 유저 선택
+    // 참조 유저 선택
     const renderUsersList = () => {
         const filteredUserList = userList.filter(user =>
-            !selectedApprover.some(selected => selected && selected.username === user.username)
+            !selectedApprover.some(selected => selected && selected.username === user.username) &&
+            !selectedViewer.some(selected => selected && selected.username === user.username)
         );
         return (
             <ul>
@@ -127,7 +162,7 @@ export default function Approval() {
         );
     };
 
-    // 참조인 제거
+    // 참조 유저 제거
     const handleInputChange = (event: any) => {
         const inputValue = event.target.value;
         const selectedUserNames = inputValue.split(',').map((username: string) => username.trim());
@@ -137,7 +172,7 @@ export default function Approval() {
         );
     };
 
-    //참조인 추가 & 참조인 제거
+    //참조 유저 추가 & 제거
     const handleUsersSelect = (user: { username: any; }) => {
         setSelectedViewer((prevSelectedViewers) => {
             const isUserSelected = prevSelectedViewers.find((u) => u.username === user.username);
@@ -149,25 +184,6 @@ export default function Approval() {
         });
         setSettingOpen(false); // 드롭다운을 닫음
     };
-
-    // 현재 날짜 가져오기
-    useEffect(() => {
-        const currentDate = new Date();
-        const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD 형식으로 포맷
-        setNowDate(formattedDate);
-    }, []);
-
-    // 유저 토큰 확인하기
-    useEffect(() => {
-        if (ACCESS_TOKEN)
-            getUser().then(r => {
-                setUser(r);
-                console.log(r);
-                const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
-            }).catch(e => { setClientLoading(false); console.log(e); });
-        else
-            location.href = '/';
-    }, [ACCESS_TOKEN])
 
     // 결재 만들기
     const handleCreateApproval = () => {
@@ -215,7 +231,7 @@ export default function Approval() {
         return extension;
     }
 
-    //페이지 시작//
+    //페이지
     return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-full flex items-center justify-center h-full pt-10 pb-4">
             <div className="w-11/12 h-full bg-white shadow flex flex-col justify-center items-center gap-2 ">
@@ -264,19 +280,10 @@ export default function Approval() {
                             </div>
                             <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectZero"
                                 onClick={() => setZeroOpen(!zeroOpen)}>
-                                {getSpecificApprover(0) == null ? "선택" : ""}
-                                <DropDown
-                                    open={zeroOpen}
-                                    onClose={() => setSettingOpen(false)}
-                                    children={renderUserList(0)}
-                                    className={"h-[300px] overflow-y-scroll bg-white"}
-                                    width={200}
-                                    height={100}
-                                    defaultDriection={Direcion.DOWN}
-                                    button={"selectZero"}
-                                />
+                                <SelectApprover index={0} modal={zeroOpen} id={"selectZero"} />
                             </div>
                         </div>
+
                         <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(1)?.role)}
@@ -286,19 +293,10 @@ export default function Approval() {
                             </div>
                             <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectOne"
                                 onClick={() => setOneOpen(!oneOpen)}>
-                                {getSpecificApprover(1) == null ? "선택" : ""}
-                                <DropDown
-                                    open={oneOpen}
-                                    onClose={() => setSettingOpen(false)}
-                                    children={renderUserList(1)}
-                                    className={"h-[300px] overflow-y-scroll bg-white"}
-                                    width={200}
-                                    height={100}
-                                    defaultDriection={Direcion.DOWN}
-                                    button={"selectOne"}
-                                />
+                                <SelectApprover index={1} modal={oneOpen} id={"selectOne"} />
                             </div>
                         </div>
+
                         <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(2)?.role)}
@@ -308,19 +306,10 @@ export default function Approval() {
                             </div>
                             <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectTwo"
                                 onClick={() => setTwoOpen(!twoOpen)}>
-                                {getSpecificApprover(2) == null ? "선택" : ""}
-                                <DropDown
-                                    open={twoOpen}
-                                    onClose={() => setSettingOpen(false)}
-                                    children={renderUserList(2)}
-                                    className={"h-[300px] overflow-y-scroll bg-white"}
-                                    width={200}
-                                    height={100}
-                                    defaultDriection={Direcion.DOWN}
-                                    button={"selectTwo"}
-                                />
+                                <SelectApprover index={2} modal={twoOpen} id={"selectTwo"} />
                             </div>
                         </div>
+
                         <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(3)?.role)}
@@ -330,19 +319,10 @@ export default function Approval() {
                             </div>
                             <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectThree"
                                 onClick={() => setThreeOpen(!threeOpen)}>
-                                {getSpecificApprover(3) == null ? "선택" : ""}
-                                <DropDown
-                                    open={threeOpen}
-                                    onClose={() => setSettingOpen(false)}
-                                    children={renderUserList(3)}
-                                    className={"h-[300px] overflow-y-scroll bg-white"}
-                                    width={200}
-                                    height={100}
-                                    defaultDriection={Direcion.DOWN}
-                                    button={"selectThree"}
-                                />
+                                <SelectApprover index={3} modal={threeOpen} id={"selectThree"} />
                             </div>
                         </div>
+
                         <div className="w-[20%] h-[200px] border-l-2 border-r-2 border-b-2 border-gray-300">
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" >
                                 {getRole(getSpecificApprover(4)?.role)}
@@ -352,19 +332,10 @@ export default function Approval() {
                             </div>
                             <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectFour"
                                 onClick={() => setFourOpen(!fourOpen)}>
-                                {getSpecificApprover(4) == null ? "선택" : ""}
-                                <DropDown
-                                    open={fourOpen}
-                                    onClose={() => setSettingOpen(false)}
-                                    children={renderUserList(4)}
-                                    className={"h-[300px] overflow-y-scroll bg-white"}
-                                    width={200}
-                                    height={100}
-                                    defaultDriection={Direcion.DOWN}
-                                    button={"selectFour"}
-                                />
+                                <SelectApprover index={4} modal={fourOpen} id={"selectFour"} />
                             </div>
                         </div>
+
                         <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(5)?.role)}
@@ -374,19 +345,10 @@ export default function Approval() {
                             </div>
                             <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectFive"
                                 onClick={() => setFiveOpen(!fiveOpen)}>
-                                {getSpecificApprover(5) == null ? "선택" : ""}
-                                <DropDown
-                                    open={fiveOpen}
-                                    onClose={() => setSettingOpen(false)}
-                                    children={renderUserList(5)}
-                                    className={"h-[300px] overflow-y-scroll bg-white"}
-                                    width={200}
-                                    height={100}
-                                    defaultDriection={Direcion.DOWN}
-                                    button={"selectFive"}
-                                />
+                                <SelectApprover index={5} modal={fiveOpen} id={"selectFive"} />
                             </div>
                         </div>
+
                         <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(6)?.role)}
@@ -396,19 +358,10 @@ export default function Approval() {
                             </div>
                             <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectSix"
                                 onClick={() => setSixOpen(!sixOpen)}>
-                                {getSpecificApprover(6) == null ? "선택" : ""}
-                                <DropDown
-                                    open={sixOpen}
-                                    onClose={() => setSettingOpen(false)}
-                                    children={renderUserList(6)}
-                                    className={"h-[300px] overflow-y-scroll bg-white"}
-                                    width={200}
-                                    height={100}
-                                    defaultDriection={Direcion.DOWN}
-                                    button={"selectSix"}
-                                />
+                                <SelectApprover index={6} modal={sixOpen} id={"selectSix"} />
                             </div>
                         </div>
+
                         <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(7)?.role)}
@@ -418,19 +371,10 @@ export default function Approval() {
                             </div>
                             <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectSeven"
                                 onClick={() => setSevenOpen(!sevenOpen)}>
-                                {getSpecificApprover(7) == null ? "선택" : ""}
-                                <DropDown
-                                    open={sevenOpen}
-                                    onClose={() => setSettingOpen(false)}
-                                    children={renderUserList(7)}
-                                    className={"h-[300px] overflow-y-scroll bg-white"}
-                                    width={200}
-                                    height={100}
-                                    defaultDriection={Direcion.DOWN}
-                                    button={"selectSeven"}
-                                />
+                                <SelectApprover index={7} modal={sevenOpen} id={"selectSeven"} />
                             </div>
                         </div>
+
                         <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(8)?.role)}
@@ -440,59 +384,55 @@ export default function Approval() {
                             </div>
                             <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectEight"
                                 onClick={() => setEightOpen(!eightOpen)}>
-                                {getSpecificApprover(8) == null ? "선택" : ""}
-                                <DropDown
-                                    open={eightOpen}
-                                    onClose={() => setSettingOpen(false)}
-                                    children={renderUserList(8)}
-                                    className={"w-full h-[300px] overflow-y-scroll bg-white"}
-                                    width={200}
-                                    height={100}
-                                    defaultDriection={Direcion.DOWN}
-                                    button={"selectEight"}
-                                />
+                                <SelectApprover index={8} modal={eightOpen} id={"selectEight"} />
                             </div>
                         </div>
                     </div>
 
-                    <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
-                        <label htmlFor="title" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">제목</label>
-                        <input type="text" id="title" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="제목을 입력해주세요."
-                            defaultValue={title} onChange={(e) => { setTitle(e.target.value); }} />
-                    </div>
-                    <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
-                        <label htmlFor="content" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">내용</label>
-                        <input type="text" id="content" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="내용을 입력해주세요."
-                            defaultValue={content} onChange={(e) => { setContent(e.target.value); }} />
-                    </div>
-                    <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
-                        <label htmlFor="selectViewer" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">참조인</label>
-                        <input type="text" id="selectViewer" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="참조인을 선택해주세요."
-                            value={selectedViewersText} onClick={() => setSettingOpen(!settingOpen)} onChange={(e) => handleInputChange(e)} />
-                        <DropDown
-                            open={settingOpen}
-                            onClose={() => setSettingOpen(false)}
-                            children={renderUsersList()}
-                            className={"w-full h-[300px] overflow-y-scroll"}
-                            width={200}
-                            height={100}
-                            defaultDriection={Direcion.DOWN}
-                            button={"selectViewer"}
-                        />
-                    </div>
-
-                    <div className="relative w-full h-[150px] border border-gary-500 overflow-y-scroll border-r-2 border-l-2 border-b-2 border-gray-300">
-                        <button className="btn btn-sm absolute top-[5px] right-[5px]">파일 선택</button>
-                        {/* <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" ></img> */}
-                    </div>
-
-                    {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}>
-                        <div className="flex items-center bg-white p-2">
-                            <img src="/x.png" alt="" className="mr-2  w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...fileList]; removeFile.splice(index, 1); setFileList(removeFile); }}></img>
-                            <img src={"/" + sliceText(f.name) + ".PNG"} className="w-[26px] h-[31px] mr-2" alt="" />
-                            <p>{f.name}</p>
+                    {/* 제목 & 내용 & 참조인 */}
+                    <>
+                        <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
+                            <label htmlFor="title" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">제목</label>
+                            <input type="text" id="title" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="제목을 입력해주세요."
+                                defaultValue={title} onChange={(e) => { setTitle(e.target.value); }} />
                         </div>
-                    </ul>) : <></>}
+                        <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
+                            <label htmlFor="content" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">내용</label>
+                            <input type="text" id="content" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="내용을 입력해주세요."
+                                defaultValue={content} onChange={(e) => { setContent(e.target.value); }} />
+                        </div>
+                        <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
+                            <label htmlFor="selectViewer" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">참조인</label>
+                            <input type="text" id="selectViewer" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="참조인을 선택해주세요."
+                                value={selectedViewersText} onClick={() => setSettingOpen(!settingOpen)} onChange={(e) => handleInputChange(e)} />
+                            <DropDown
+                                open={settingOpen}
+                                onClose={() => setSettingOpen(false)}
+                                children={renderUsersList()}
+                                className={"w-full h-[300px] overflow-y-scroll"}
+                                width={200}
+                                height={100}
+                                defaultDriection={Direcion.DOWN}
+                                button={"selectViewer"}
+                            />
+                        </div>
+                    </>
+
+                    {/* 파일 */}
+                    <>
+                        <div className="relative w-full h-[150px] border border-gary-500 overflow-y-scroll border-r-2 border-l-2 border-b-2 border-gray-300">
+                            <button className="btn btn-sm absolute top-[5px] right-[5px]">파일 선택</button>
+                            {/* <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" ></img> */}
+                        </div>
+
+                        {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}>
+                            <div className="flex items-center bg-white p-2">
+                                <img src="/x.png" alt="" className="mr-2  w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...fileList]; removeFile.splice(index, 1); setFileList(removeFile); }}></img>
+                                <img src={"/" + sliceText(f.name) + ".PNG"} className="w-[26px] h-[31px] mr-2" alt="" />
+                                <p>{f.name}</p>
+                            </div>
+                        </ul>) : <></>}
+                    </>
                 </div>
             </div>
         </div>
