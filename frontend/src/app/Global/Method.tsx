@@ -65,7 +65,7 @@ export function getScheduleDate(data: any) {
 
 export function getjyDate(data: any) {
     const date = new Date(data);
-    return date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-' + date.getDate();
+    return date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
 }
 
 export function eontransferLocalTime(date: Date | null) {

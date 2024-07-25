@@ -530,7 +530,7 @@ export const createApproval = async (approvalRequestDTO: approvalRequestDTO) => 
 };
 
 export const readApproval = async (approvalId: number) => {
-    const response = await UserApi.put('/api/approval/updateRead',null ,{
+    const response = await UserApi.put('/api/approval/updateRead', null, {
         headers: {
             approvalId: approvalId
         }
@@ -539,7 +539,7 @@ export const readApproval = async (approvalId: number) => {
 };
 
 export const deleteApproval = async (approvalId: number) => {
-    const response = await UserApi.delete('/api/approval',{
+    const response = await UserApi.delete('/api/approval', {
         headers: {
             approvalId: approvalId
         }
@@ -547,8 +547,17 @@ export const deleteApproval = async (approvalId: number) => {
     return response.data;
 };
 
-export const getApprovalList = async () => {
-    const response = await UserApi.get('/api/approval/list');
+// export const getApprovalList = async () => {
+//     const response = await UserApi.get('/api/approval/list');
+//     return response.data;
+// };
+
+export const getApprovalList = async (keyword: string) => {
+    const response = await UserApi.get('/api/approval/list', {
+        headers: {
+            keyword: encodeURIComponent(keyword)
+        }
+    });
     return response.data;
 };
 
@@ -562,3 +571,13 @@ export const getApprovalList = async () => {
 //     });
 //     return response.data;
 // };
+
+export const acceptApproval = async (approvalId: number, binary: boolean) => {
+    const response = await UserApi.post('/api/approver', null, {
+        headers: {
+            approvalId: approvalId,
+            Binary: binary.toString()
+        }
+    });
+    return response.data;
+};

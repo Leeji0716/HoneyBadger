@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface ApprovalRepositoryCustom {
     List<Approval> findByUsername(String username);
+    List<Approval> findByUsernameAndKeyword(String username, String keyword);
 
 }

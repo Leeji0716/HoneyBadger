@@ -35,6 +35,7 @@ public class ApprovalService {
     public Approval updateStatus(Long approvalId, ApprovalStatus newStatus){
         Approval approval = approvalRepository.findById (approvalId).get ();
         approval.setStatus (newStatus);
+        approvalRepository.save (approval);
 
         return approval;
     }
@@ -59,9 +60,13 @@ public class ApprovalService {
         approvalRepository.delete (approval);
     }
 
-    public List<Approval> getList(String username){
+    public List<Approval> getList(String username,String keyword){
+        if (keyword == null || keyword.isEmpty()) {
         return  approvalRepository.findByUsername (username);
-
+        }
+        else{
+            return  approvalRepository.findByUsernameAndKeyword (username,keyword);
+        }
     }
 
 
