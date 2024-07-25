@@ -52,6 +52,7 @@ public class ApprovalController {
         else return tokenDTO.getResponseEntity();
     }
 
+
     @GetMapping // 기안서 가져오기
     public ResponseEntity<?> approvalGet(@RequestHeader("Authorization") String accessToken,
                                          @RequestHeader("approvalId") Long approvalId) {
