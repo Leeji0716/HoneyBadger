@@ -428,7 +428,7 @@ interface PersonalCycleDTO {
 
 export const createSchedule = async (data: ScheduleRequestDTO) => {
     const response = await UserApi.post('/api/personal', data);
-        return response.data;
+    return response.data;
 };
 
 // 날짜를 ISO 문자열로 변환하는 함수
@@ -447,34 +447,34 @@ export const getQues123tions = async (page: number, keyword: string) => {
 };
 
 export const fetchSchedules = async (startDate: Date, endDate: Date) => {
-        const formattedStartDate = formatDateToISO(startDate);
-        const formattedEndDate = formatDateToISO(endDate);
+    const formattedStartDate = formatDateToISO(startDate);
+    const formattedEndDate = formatDateToISO(endDate);
 
-        console.log('Fetching schedules from:', formattedStartDate, 'to:', formattedEndDate);
+    console.log('Fetching schedules from:', formattedStartDate, 'to:', formattedEndDate);
 
     const response = await UserApi.get('/api/personal', {
-            headers: {
-                'startDate': formattedStartDate,
-                'endDate': formattedEndDate
-            }
-        });
+        headers: {
+            'startDate': formattedStartDate,
+            'endDate': formattedEndDate
+        }
+    });
 
-        console.log('Fetched schedules response:', response.data);
-        return response.data;
+    console.log('Fetched schedules response:', response.data);
+    return response.data;
 };
 
 export const updateSchedule = async (id: number, data: ScheduleRequestDTO) => {
-        console.log('Updating schedule:', id, data);
+    console.log('Updating schedule:', id, data);
     const response = await UserApi.put(`/api/personal`, data, {
         headers: {
             id: id
         }
     });
-        return response.data;
+    return response.data;
 };
 
 export const deleteSchedule = async (id: number) => {
-        console.log('Deleting schedule:', id);
+    console.log('Deleting schedule:', id);
     const response = await UserApi.delete(`/api/personal`, {
         headers: {
             id: id
@@ -530,7 +530,7 @@ export const createApproval = async (approvalRequestDTO: approvalRequestDTO) => 
 };
 
 export const readApproval = async (approvalId: number) => {
-    const response = await UserApi.put('/api/approval/updateRead',null ,{
+    const response = await UserApi.put('/api/approval/updateRead', null, {
         headers: {
             approvalId: approvalId
         }
@@ -539,7 +539,7 @@ export const readApproval = async (approvalId: number) => {
 };
 
 export const deleteApproval = async (approvalId: number) => {
-    const response = await UserApi.delete('/api/approval',{
+    const response = await UserApi.delete('/api/approval', {
         headers: {
             approvalId: approvalId
         }
@@ -562,3 +562,13 @@ export const getApprovalList = async () => {
 //     });
 //     return response.data;
 // };
+
+export const acceptApproval = async (approvalId: number, binary: boolean) => {
+    const response = await UserApi.post('/api/approver', null, {
+        headers: {
+            approvalId: approvalId,
+            Binary: binary.toString()
+        }
+    });
+    return response.data;
+};

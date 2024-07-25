@@ -1,5 +1,5 @@
 "use client";
-import { createApproval, deleteApproval, getApprovalList, getUser, readApproval } from "@/app/API/UserAPI";
+import { acceptApproval, createApproval, deleteApproval, getApprovalList, getUser, readApproval } from "@/app/API/UserAPI";
 import Main from "@/app/Global/Layout/MainLayout";
 import { useEffect, useState } from "react";
 import { getjyDate, getRole } from "../Global/Method";
@@ -718,7 +718,8 @@ export default function Approval() {
                                     <h4 className="flex items-center justify-center font-bold w-[80%]">
                                         <a href="#" className="" onClick={() => {
                                             readApproval(approval?.id).then(
-                                                r => {setApproval(r);
+                                                r => {
+                                                    setApproval(r);
                                                     console.log(r);
                                                     const index = approvalList.findIndex(e => e.id === approval.id);
                                                     const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
@@ -769,7 +770,18 @@ export default function Approval() {
                             .filter(e => e.approver.username === user.username && e.approverStatus === 1)
                             .map((e, index) => (
                                 <div key={index}>
-                                    <><button className="btn btn-success mr-2">허가</button><button className="btn btn-error">반환</button></>
+                                    <button className="btn btn-success mr-2" onClick={() => acceptApproval(approval.id, true).then(
+                                        r => {
+                                            setApproval(r);
+                                            const index = approvalList.findIndex(e => e.id === approval.id);
+                                            const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
+                                        })}>허가</button>
+                                    <button className="btn btn-error" onClick={() => acceptApproval(approval.id, false).then(
+                                        r => {
+                                            setApproval(r);
+                                            const index = approvalList.findIndex(e => e.id === approval.id);
+                                            const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
+                                        })}>반환</button>
                                 </div>
                             ))
                         }
