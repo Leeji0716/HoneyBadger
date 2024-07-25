@@ -35,6 +35,7 @@ public class ApprovalService {
     public Approval updateStatus(Long approvalId, ApprovalStatus newStatus){
         Approval approval = approvalRepository.findById (approvalId).get ();
         approval.setStatus (newStatus);
+        approvalRepository.save (approval);
 
         return approval;
     }
