@@ -5,7 +5,6 @@ import Main from "@/app/Global/Layout/MainLayout";
 import { getRole } from "@/app/Global/Method";
 import { use, useEffect, useState } from "react";
 
-
 export default function Approval() {
 
     interface approvalRequestDTO {
@@ -16,16 +15,14 @@ export default function Approval() {
         viewersname: string[]
     }
 
-    const [filter, setFilter] = useState(0); //결제 필터 (전체 + status = 총 5개 : 0~4)
-    const [user, setUser] = useState(null as any); //현재 유저
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
+    const [user, setUser] = useState(null as any); //현재 유저
     const [userList, setUserList] = useState([] as any[])
     const [isClientLoading, setClientLoading] = useState(true);
-    const [keyword, setKeyword] = useState('');
     const [nowDate, setNowDate] = useState("");
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
-    const [selectedApprovar, setSelectedApprovar] = useState([] as any[]);
+    const [selectedApprover, setSelectedApprover] = useState([] as any[]);
     const [selectedViewer, setSelectedViewer] = useState([] as any[]);
     const [settingOpen, setSettingOpen] = useState(false);
     const [zeroOpen, setZeroOpen] = useState(false);
@@ -55,8 +52,8 @@ export default function Approval() {
 
     //승인 유저 추가 & 승인 유저 제거
     const handleUserSelect = (user: { username: any; }, approvarIndex: number) => {
-        setSelectedApprovar((prevSelectedApprovar) => {
-            const newSelectedApprovar = [...prevSelectedApprovar];
+        setSelectedApprover((prevSelectedApprover) => {
+            const newSelectedApprovar = [...prevSelectedApprover];
             // 인덱스가 배열 길이보다 크면 배열 길이만큼 null을 채워서 확장
             while (newSelectedApprovar.length <= approvarIndex) {
                 newSelectedApprovar.push(null);
@@ -67,16 +64,29 @@ export default function Approval() {
         });
     };
 
+    // 승인 유저 제거
+    const handleIndexChange = (index: number) => {
+        const target = selectedApprover[index];
+        if (!target) {
+            return;
+        }
+
+        setSelectedApprover((prevSelectedApprovers) => {
+            const newSelectedApprovers = [...prevSelectedApprovers];
+            newSelectedApprovers[index] = null; // 해당 인덱스의 요소를 null로 설정
+            return newSelectedApprovers;
+        });
+    };
+
     // 승인 유저 선택
     const renderUserList = (approvarIndex: number) => {
         const filteredUserList = userList.filter(user =>
-            !selectedApprovar.some(selected => selected && selected.username === user.username) &&
+            !selectedApprover.some(selected => selected && selected.username === user.username) &&
             !selectedViewer.some(selected => selected && selected.username === user.username)
         );
         return (
             <ul>
                 {filteredUserList.map((user, index) => (
-
                     <li
                         key={index}
                         onClick={() => handleUserSelect(user, approvarIndex)}
@@ -91,8 +101,8 @@ export default function Approval() {
 
     // 승인자 인덱스로 찾기
     const getSpecificApprover = (index: number) => {
-        if (index >= 0 && index < selectedApprovar.length) {
-            return selectedApprovar[index];
+        if (index >= 0 && index < selectedApprover.length) {
+            return selectedApprover[index];
         }
         return null; // 인덱스가 범위를 벗어난 경우 null 반환
     };
@@ -100,12 +110,11 @@ export default function Approval() {
     // 참조인 유저 선택
     const renderUsersList = () => {
         const filteredUserList = userList.filter(user =>
-            !selectedApprovar.some(selected => selected && selected.username === user.username)
+            !selectedApprover.some(selected => selected && selected.username === user.username)
         );
         return (
             <ul>
                 {filteredUserList.map((user, index) => (
-
                     <li
                         key={index}
                         onClick={() => handleUsersSelect(user)}
@@ -162,24 +171,43 @@ export default function Approval() {
 
     // 결재 만들기
     const handleCreateApproval = () => {
-        if (selectedApprovar && title) {
-            const approver = selectedApprovar.map((user) => user.username);
-            const viewer = selectedViewer.map((user) => user.username);
+        if (selectedApprover && title) {
+            const approver = selectedApprover.map(user => user?.username ?? null);
+            let targetIndex = null;
+            for (let i = approver.length - 1; i >= 0; i--) {
+                if (approver[i] !== null) {
+                    targetIndex = i;
+                    break;
+                }
+            }
+            const finalApprover = [];
+            if (targetIndex !== null) {
+                for (let i = 0; i <= targetIndex; i++) {
+                    finalApprover.push(approver[i]);
+                }
+            }
+            if (finalApprover.includes(null)) {
+                window.confirm('승인자가 차례대로 작성되어있는지 확인해주세요.');
+            } else {
+                const viewer = selectedViewer.map(user => user.username);
 
-            const approvalRequest: approvalRequestDTO = { title: title, content: content, sender: user.username, approversname: approver, viewersname: viewer };
-            createApproval(approvalRequest)
-                .then(r => {
-                    console.log(r);
-                    // window.location.href = "/approval"
-                })
-                .catch(e => {
-                    console.error(e);
-                });
+                const approvalRequest: approvalRequestDTO = { title: title, content: content, sender: user.username, approversname: finalApprover, viewersname: viewer };
+                createApproval(approvalRequest)
+                    .then(r => {
+                        // console.log(r);
+                        window.location.href = "/approval"
+                    })
+                    .catch(e => {
+                        console.error(e);
+                    });
+            }
         } else {
             console.error("제목이나 승인자가 없습니다.");
+            window.confirm('각 항목이 모두 입력되었는지 확인해주세요.')
         }
     };
 
+    // 파일 이름
     const sliceText = (text: string) => {
         const slice: string[] = text.split(".");
         const extension: string = slice[slice.length - 1];
@@ -231,10 +259,12 @@ export default function Approval() {
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(0)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(0)}>
                                 {getSpecificApprover(0)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center" id="selectZero" onClick={() => setZeroOpen(!zeroOpen)}>
+                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectZero"
+                                onClick={() => setZeroOpen(!zeroOpen)}>
+                                {getSpecificApprover(0) == null ? "선택" : ""}
                                 <DropDown
                                     open={zeroOpen}
                                     onClose={() => setSettingOpen(false)}
@@ -251,10 +281,12 @@ export default function Approval() {
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(1)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(1)}>
                                 {getSpecificApprover(1)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center" id="selectOne" onClick={() => setOneOpen(!oneOpen)}>
+                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectOne"
+                                onClick={() => setOneOpen(!oneOpen)}>
+                                {getSpecificApprover(1) == null ? "선택" : ""}
                                 <DropDown
                                     open={oneOpen}
                                     onClose={() => setSettingOpen(false)}
@@ -271,10 +303,12 @@ export default function Approval() {
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(2)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(2)}>
                                 {getSpecificApprover(2)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center" id="selectTwo" onClick={() => setTwoOpen(!twoOpen)}>
+                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectTwo"
+                                onClick={() => setTwoOpen(!twoOpen)}>
+                                {getSpecificApprover(2) == null ? "선택" : ""}
                                 <DropDown
                                     open={twoOpen}
                                     onClose={() => setSettingOpen(false)}
@@ -291,10 +325,12 @@ export default function Approval() {
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(3)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(3)}>
                                 {getSpecificApprover(3)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center" id="selectThree" onClick={() => setThreeOpen(!threeOpen)}>
+                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectThree"
+                                onClick={() => setThreeOpen(!threeOpen)}>
+                                {getSpecificApprover(3) == null ? "선택" : ""}
                                 <DropDown
                                     open={threeOpen}
                                     onClose={() => setSettingOpen(false)}
@@ -311,10 +347,12 @@ export default function Approval() {
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" >
                                 {getRole(getSpecificApprover(4)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(4)}>
                                 {getSpecificApprover(4)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center" id="selectFour" onClick={() => setFourOpen(!fourOpen)}>
+                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectFour"
+                                onClick={() => setFourOpen(!fourOpen)}>
+                                {getSpecificApprover(4) == null ? "선택" : ""}
                                 <DropDown
                                     open={fourOpen}
                                     onClose={() => setSettingOpen(false)}
@@ -331,10 +369,12 @@ export default function Approval() {
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(5)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(5)}>
                                 {getSpecificApprover(5)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center" id="selectFive" onClick={() => setFiveOpen(!fiveOpen)}>
+                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectFive"
+                                onClick={() => setFiveOpen(!fiveOpen)}>
+                                {getSpecificApprover(5) == null ? "선택" : ""}
                                 <DropDown
                                     open={fiveOpen}
                                     onClose={() => setSettingOpen(false)}
@@ -351,10 +391,12 @@ export default function Approval() {
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(6)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(6)}>
                                 {getSpecificApprover(6)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center" id="selectSix" onClick={() => setSixOpen(!sixOpen)}>
+                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectSix"
+                                onClick={() => setSixOpen(!sixOpen)}>
+                                {getSpecificApprover(6) == null ? "선택" : ""}
                                 <DropDown
                                     open={sixOpen}
                                     onClose={() => setSettingOpen(false)}
@@ -371,10 +413,12 @@ export default function Approval() {
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(7)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(7)}>
                                 {getSpecificApprover(7)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center" id="selectSeven" onClick={() => setSevenOpen(!sevenOpen)}>
+                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectSeven"
+                                onClick={() => setSevenOpen(!sevenOpen)}>
+                                {getSpecificApprover(7) == null ? "선택" : ""}
                                 <DropDown
                                     open={sevenOpen}
                                     onClose={() => setSettingOpen(false)}
@@ -391,10 +435,12 @@ export default function Approval() {
                             <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(8)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(8)}>
                                 {getSpecificApprover(8)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center" id="selectEight" onClick={() => setEightOpen(!eightOpen)}>
+                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectEight"
+                                onClick={() => setEightOpen(!eightOpen)}>
+                                {getSpecificApprover(8) == null ? "선택" : ""}
                                 <DropDown
                                     open={eightOpen}
                                     onClose={() => setSettingOpen(false)}
