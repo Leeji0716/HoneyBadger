@@ -169,8 +169,9 @@ export default function Approval() {
             const approvalRequest: approvalRequestDTO = { title: title, content: content, sender: user.username, approversname: approver, viewersname: viewer };
             createApproval(approvalRequest)
                 .then(r => {
-                    console.log("이거는 생성"+r);
-                    window.location.href = "/approval"
+                    console.log(r);
+                    // window.location.href = "/approval"
+
                 })
                 .catch(e => {
                     console.error(e);
