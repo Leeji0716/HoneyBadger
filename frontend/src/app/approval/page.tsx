@@ -60,6 +60,15 @@ export default function Approval() {
             location.href = '/';
     }, [ACCESS_TOKEN])
 
+    // 검색
+    const handleSearch = () => {
+        getApprovalList(keyword).then(r => {
+            setApprovalList(r);
+        }).catch(error => {
+            console.error("Search error:", error);
+        });
+    };
+
     // Approval 상태 매핑 함수
     const filtering = (filter: number): string => {
         switch (filter) {
@@ -399,8 +408,13 @@ export default function Approval() {
                         className="bolder-0 outline-none bg-white text-black w-[90%]"
                         value={keyword}
                         onChange={e => setKeyword(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSearch();
+                            }
+                        }}
                     />
-                    <button className="text-gray-300 whitespace-nowrap w-[50px] h-[50px] m-2">
+                    <button className="text-gray-300 whitespace-nowrap w-[50px] h-[50px] m-2" onClick={handleSearch} >
                         검색
                     </button>
                 </div>
