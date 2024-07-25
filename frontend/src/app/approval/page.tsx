@@ -4,7 +4,6 @@ import Main from "@/app/Global/Layout/MainLayout";
 import { useEffect, useState } from "react";
 import { getjyDate, getRole } from "../Global/Method";
 
-
 export default function Approval() {
     interface approvalResponseDTO {
         id: number,
@@ -39,335 +38,9 @@ export default function Approval() {
         name: string
     }
 
-    // // 테스트 데이터
-    // const approvalListTest: approvalResponseDTO[] = [
-    //     {
-    //         id: 13,
-    //         title: '문서 승인 요청 1',
-    //         content: '문서 내용 1',
-    //         sendDate: 1720807454861,
-    //         sender: {
-    //             username: 'admin1',
-    //             name: '이지영1',
-    //             phoneNumber: '010-1111-2222',
-    //             role: 13,
-    //             createDate: Date.now(),
-    //             joinDate: Date.now(),
-    //             url: 'http://example.com/user1',
-    //             DepartmentResponseDTO: {
-    //                 name: '인사부'
-    //             }
-    //         },
-    //         approvers: [
-    //             {
-    //                 approver: {
-    //                     username: 'admin2',
-    //                     name: '김태훈',
-    //                     phoneNumber: '010-9876-5432',
-    //                     role: 12,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'HR'
-    //                     }
-    //                 },
-    //                 approverStatus: 2,
-    //                 approvalDate: Date.now()
-    //             },
-    //             {
-    //                 approver: {
-    //                     username: 'admin',
-    //                     name: '홍성재',
-    //                     phoneNumber: '010-1111-2222',
-    //                     role: 13,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'Finance'
-    //                     }
-    //                 },
-    //                 approverStatus: 1,
-    //                 approvalDate: Date.now()
-    //             }
-    //         ],
-    //         viewers: [{
-    //             username: 'test1',
-    //             name: '참조자 1',
-    //             phoneNumber: '010-1111-2222',
-    //             role: 12,
-    //             createDate: Date.now(),
-    //             joinDate: Date.now(),
-    //             url: 'http://example.com/user1',
-    //             DepartmentResponseDTO: {
-    //                 name: '인사부'
-    //             }
-    //         },
-    //         {
-    //             username: 'test2',
-    //             name: '참조자 2',
-    //             phoneNumber: '010-1111-2222',
-    //             role: 12,
-    //             createDate: Date.now(),
-    //             joinDate: Date.now(),
-    //             url: 'http://example.com/user1',
-    //             DepartmentResponseDTO: {
-    //                 name: '인사부'
-    //             }
-    //         },
-    //         {
-    //             username: 'test3',
-    //             name: '참조자 3',
-    //             phoneNumber: '010-1111-2222',
-    //             role: 12,
-    //             createDate: Date.now(),
-    //             joinDate: Date.now(),
-    //             url: 'http://example.com/user1',
-    //             DepartmentResponseDTO: {
-    //                 name: '인사부'
-    //             }
-    //         }],
-    //         approvalStatus: 0,
-    //         readUsers: ["admin1"]
-    //     },
-    //     {
-    //         id: 13,
-    //         title: '문서 승인 요청 2',
-    //         content: '문서 내용 2',
-    //         sendDate: 1721507454861,
-    //         sender: {
-    //             username: 'admin1',
-    //             name: '이지영',
-    //             phoneNumber: '010-2222-3333',
-    //             role: 10,
-    //             createDate: Date.now(),
-    //             joinDate: Date.now(),
-    //             url: 'http://example.com/user2',
-    //             DepartmentResponseDTO: {
-    //                 name: '재무부'
-    //             }
-    //         },
-    //         approvers: [
-    //             {
-    //                 approver: {
-    //                     username: 'approverUser2',
-    //                     name: 'Approver Name 2',
-    //                     phoneNumber: '010-9876-5432',
-    //                     role: 2,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'HR'
-    //                     }
-    //                 },
-    //                 approverStatus: 1,
-    //                 approvalDate: Date.now()
-    //             },
-    //             {
-    //                 approver: {
-    //                     username: 'admin4',
-    //                     name: '남도원',
-    //                     phoneNumber: '010-1111-2222',
-    //                     role: 3,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'Finance'
-    //                     }
-    //                 },
-    //                 approverStatus: 0,
-    //                 approvalDate: Date.now()
-    //             }
-    //         ],
-    //         viewers: [],
-    //         approvalStatus: 1,
-    //         readUsers: []
-    //     },
-    //     {
-    //         id: 13,
-    //         title: '문서 승인 요청 3',
-    //         content: '문서 내용 3',
-    //         sendDate: 1721628454861,
-    //         sender: {
-    //             username: 'user3',
-    //             name: '사용자 3',
-    //             phoneNumber: '010-3333-4444',
-    //             role: 13,
-    //             createDate: Date.now(),
-    //             joinDate: Date.now(),
-    //             url: 'http://example.com/user3',
-    //             DepartmentResponseDTO: {
-    //                 name: 'IT부'
-    //             }
-    //         },
-    //         approvers: [
-    //             {
-    //                 approver: {
-    //                     username: 'admin1',
-    //                     name: '이지영',
-    //                     phoneNumber: '010-9876-5432',
-    //                     role: 2,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'HR'
-    //                     }
-    //                 },
-    //                 approverStatus: 2,
-    //                 approvalDate: Date.now()
-    //             },
-    //             {
-    //                 approver: {
-    //                     username: 'approverUser2',
-    //                     name: 'Approver Name 2',
-    //                     phoneNumber: '010-1111-2222',
-    //                     role: 3,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'Finance'
-    //                     }
-    //                 },
-    //                 approverStatus: 2,
-    //                 approvalDate: Date.now()
-    //             }, {
-    //                 approver: {
-    //                     username: 'approverUser2',
-    //                     name: 'Approver Name 2',
-    //                     phoneNumber: '010-1111-2222',
-    //                     role: 3,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'Finance'
-    //                     }
-    //                 },
-    //                 approverStatus: 2,
-    //                 approvalDate: Date.now()
-    //             }
-    //         ],
-    //         viewers: [],
-    //         approvalStatus: 2,
-    //         readUsers: []
-    //     }, {
-    //         id: 13,
-    //         title: '문서 승인 요청 4',
-    //         content: '문서 내용 2',
-    //         sendDate: 1721728454861,
-    //         sender: {
-    //             username: 'admin4',
-    //             name: '남도원',
-    //             phoneNumber: '010-2222-3333',
-    //             role: 10,
-    //             createDate: Date.now(),
-    //             joinDate: Date.now(),
-    //             url: 'http://example.com/user2',
-    //             DepartmentResponseDTO: {
-    //                 name: '재무부'
-    //             }
-    //         },
-    //         approvers: [
-    //             {
-    //                 approver: {
-    //                     username: 'approverUser2',
-    //                     name: 'Approver Name 2',
-    //                     phoneNumber: '010-9876-5432',
-    //                     role: 2,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'HR'
-    //                     }
-    //                 },
-    //                 approverStatus: 2,
-    //                 approvalDate: Date.now()
-    //             },
-    //             {
-    //                 approver: {
-    //                     username: 'admin1',
-    //                     name: '이지영',
-    //                     phoneNumber: '010-1111-2222',
-    //                     role: 3,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'Finance'
-    //                     }
-    //                 },
-    //                 approverStatus: 1,
-    //                 approvalDate: Date.now()
-    //             }
-    //         ],
-    //         viewers: [],
-    //         approvalStatus: 1,
-    //         readUsers: []
-    //     }, {
-    //         id: 13,
-    //         title: '문서 승인 요청 5',
-    //         content: '문서 내용 2',
-    //         sendDate: 1721728454861,
-    //         sender: {
-    //             username: 'admin4',
-    //             name: '남도원',
-    //             phoneNumber: '010-2222-3333',
-    //             role: 10,
-    //             createDate: Date.now(),
-    //             joinDate: Date.now(),
-    //             url: 'http://example.com/user2',
-    //             DepartmentResponseDTO: {
-    //                 name: '재무부'
-    //             }
-    //         },
-    //         approvers: [
-    //             {
-    //                 approver: {
-    //                     username: 'approverUser2',
-    //                     name: 'Approver Name 2',
-    //                     phoneNumber: '010-9876-5432',
-    //                     role: 2,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'HR'
-    //                     }
-    //                 },
-    //                 approverStatus: 2,
-    //                 approvalDate: Date.now()
-    //             },
-    //             {
-    //                 approver: {
-    //                     username: 'admin1',
-    //                     name: '이지영',
-    //                     phoneNumber: '010-1111-2222',
-    //                     role: 3,
-    //                     createDate: Date.now(),
-    //                     joinDate: Date.now(),
-    //                     url: 'http://example.com',
-    //                     DepartmentResponseDTO: {
-    //                         name: 'Finance'
-    //                     }
-    //                 },
-    //                 approverStatus: 3,
-    //                 approvalDate: Date.now()
-    //             }
-    //         ],
-    //         viewers: [],
-    //         approvalStatus: 3,
-    //         readUsers: []
-    //     }
-    // ];
-    const [filter, setFilter] = useState(-1); //결제 필터 (전체 + status = 총 5개 : 0~4)
-    const [user, setUser] = useState(null as any);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
+    const [filter, setFilter] = useState(-1); // Approval 필터
+    const [user, setUser] = useState(null as any);
     const [isClientLoading, setClientLoading] = useState(true);
     const [keyword, setKeyword] = useState('');
     const [approval, setApproval] = useState<approvalResponseDTO>(null as any);
@@ -463,7 +136,6 @@ export default function Approval() {
     function ApprovalDetail() {
         return <div>
             <div className="w-full h-[90%]">
-                {/* 작성자 및 결재 승인자 정보 */}
                 <div className="flex flex-wrap w-full">
                     {/* 작성자 정보 */}
                     <div className="w-[20%] h-[200px] border-2 border-red-300">
@@ -501,7 +173,7 @@ export default function Approval() {
                         <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                             {getSpecificApprover(0)?.approver.name}
                         </div>
-                        <div id="selectZero" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center 
+                        <div id="selectZero" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold
                             ${getApprovarStatusColor(getSpecificApprover(0)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(0)?.approverStatus ?? -1)}
                         </div>
                     </div>
@@ -512,7 +184,7 @@ export default function Approval() {
                         <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                             {getSpecificApprover(1)?.approver.name}
                         </div>
-                        <div id="selectOne" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center 
+                        <div id="selectOne" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold
                             ${getApprovarStatusColor(getSpecificApprover(1)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(1)?.approverStatus ?? -1)}
                         </div>
                     </div>
@@ -523,7 +195,7 @@ export default function Approval() {
                         <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                             {getSpecificApprover(2)?.approver.name}
                         </div>
-                        <div id="selectTwo" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center 
+                        <div id="selectTwo" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold
                             ${getApprovarStatusColor(getSpecificApprover(2)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(2)?.approverStatus ?? -1)}
                         </div>
                     </div>
@@ -534,7 +206,7 @@ export default function Approval() {
                         <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                             {getSpecificApprover(3)?.approver.name}
                         </div>
-                        <div id="selectThree" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center 
+                        <div id="selectThree" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold
                             ${getApprovarStatusColor(getSpecificApprover(3)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(3)?.approverStatus ?? -1)}
                         </div>
                     </div>
@@ -545,7 +217,7 @@ export default function Approval() {
                         <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                             {getSpecificApprover(4)?.approver.name}
                         </div>
-                        <div id="selectFour" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center 
+                        <div id="selectFour" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold
                             ${getApprovarStatusColor(getSpecificApprover(4)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(4)?.approverStatus ?? -1)}
                         </div>
                     </div>
@@ -556,7 +228,7 @@ export default function Approval() {
                         <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                             {getSpecificApprover(5)?.approver.name}
                         </div>
-                        <div id="selectFive" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center 
+                        <div id="selectFive" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold
                             ${getApprovarStatusColor(getSpecificApprover(5)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(5)?.approverStatus ?? -1)}
                         </div>
                     </div>
@@ -567,7 +239,7 @@ export default function Approval() {
                         <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                             {getSpecificApprover(6)?.approver.name}
                         </div>
-                        <div id="selectSix" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center 
+                        <div id="selectSix" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold
                             ${getApprovarStatusColor(getSpecificApprover(6)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(6)?.approverStatus ?? -1)}
                         </div>
                     </div>
@@ -578,7 +250,7 @@ export default function Approval() {
                         <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                             {getSpecificApprover(7)?.approver.name}
                         </div>
-                        <div id="selectSeven" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center 
+                        <div id="selectSeven" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold
                             ${getApprovarStatusColor(getSpecificApprover(7)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(7)?.approverStatus ?? -1)}
                         </div>
                     </div>
@@ -589,7 +261,7 @@ export default function Approval() {
                         <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
                             {getSpecificApprover(8)?.approver.name}
                         </div>
-                        <div id="selectEight" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center 
+                        <div id="selectEight" className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold
                             ${getApprovarStatusColor(getSpecificApprover(8)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(8)?.approverStatus ?? -1)}
                         </div>
                     </div>
@@ -606,7 +278,6 @@ export default function Approval() {
                     <label className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">참조인</label>
                     <label className="w-[90%] flex items-center border-r-2 border-gray-300 pl-5">{selectedViewersText}</label>
                 </div>
-
                 <div className="relative w-full h-[150px] border border-gary-500 overflow-y-scroll border-r-2 border-l-2 border-b-2 border-gray-300">
                     <button className="btn btn-sm absolute top-[5px] right-[5px]">파일 선택</button>
                     {/* <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" ></img> */}
@@ -635,6 +306,7 @@ export default function Approval() {
                         검색
                     </button>
                 </div>
+                {/* 필터 */}
                 <div className="bg-white shadow w-full">
                     <div className="bg-gray-200 w-full justify-between h-[50px] flex flex-row mb-5">
                         {filter == -1 ?
@@ -708,9 +380,9 @@ export default function Approval() {
                         }
                     </div>
 
+                    {/* 필터링 된 리스트 -> 누르면 읽음 & 상세보기 */}
                     <div className="relative flex flex-col justify-center w-full h-full">
                         <div className="w-full h-[705px] overflow-x-hidden overflow-y-scroll">
-                            {/* Here we display the filtered approval data */}
                             {approvalList.filter(approval => filter === -1 || approval.approvalStatus === filter).map((approval, index) => (
                                 <div key={index}
                                     className="w-[550px] h-[50px] border-2 border-gray-300 mb-1 ml-1 rounded-lg shadow-md flex justify-between">
@@ -718,8 +390,8 @@ export default function Approval() {
                                     <h4 className="flex items-center justify-center font-bold w-[80%]">
                                         <a href="#" className="" onClick={() => {
                                             readApproval(approval?.id).then(
-                                                r => {setApproval(r);
-                                                    console.log(r);
+                                                r => {
+                                                    setApproval(r);
                                                     const index = approvalList.findIndex(e => e.id === approval.id);
                                                     const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
                                                 })
@@ -729,7 +401,7 @@ export default function Approval() {
                                 </div>
                             ))}
 
-                            {/* 결재 서류 작성 */}
+                            {/* 결재 기안서 만들기 */}
                             <a href="/approval/ApprovalForm" className="absolute bottom-4 right-4 w-[50px] h-[50px] btn rounded-full official-color text-xl font-bold text-white flex items-center justify-center">
                                 +
                             </a>
@@ -745,9 +417,9 @@ export default function Approval() {
                 {approval != null ? <ApprovalDetail /> : <></>}
 
                 {approval && approval.sender.username === user.username ?
-                    <div className="w-full h-[50px] mt-5">
+                    <div className="w-full h-[40px] mt-5 flex justify-end">
                         {approval.approvalStatus < 1 ?
-                            <><button className="btn btn-error mr-2" onClick={() => {
+                            <><button className="px-4 py-2 bg-red-500 text-white rounded-md mr-2" onClick={() => {
                                 if (window.confirm('삭제하시겠습니까?')) {
                                     deleteApproval(approval.id);
                                     setApprovalList(prevApprovalList => prevApprovalList.filter(e => e.id !== approval.id));
@@ -756,31 +428,42 @@ export default function Approval() {
                                     }
                                 }
                             }}>삭제</button>
-                                <button className="btn btn-primary">수정</button></> :
-                            <><button className="btn btn-error mr-2" disabled>삭제</button><button className="btn btn-primary" disabled>수정</button></>
+                                <button className="px-4 py-2 bg-blue-500 text-white rounded-md mr-2">수정</button></> :
+                            <><button className="px-4 py-2 bg-red-500 text-white rounded-md" disabled>삭제</button><button className="px-4 py-2 bg-blue-500 text-white rounded-md mr-2" disabled>수정</button></>
                         }
                     </div>
                     :
                     <></>
                 }
                 {approval && approval.approvers.some(e => e.approver.username === user.username) ? (
-                    <div className="w-full h-[50px] mt-5">
+                    <div className="w-full h-[50px] mt-5 flex justify-end">
                         {approval.approvers
                             .filter(e => e.approver.username === user.username && e.approverStatus === 1)
                             .map((e, index) => (
                                 <div key={index}>
-                                    <button className="btn btn-success mr-2" onClick={() => acceptApproval(approval.id, true).then(
-                                        r => {
-                                            setApproval(r);
-                                            const index = approvalList.findIndex(e => e.id === approval.id);
-                                            const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
-                                        })}>허가</button>
-                                    <button className="btn btn-error" onClick={() => acceptApproval(approval.id, false).then(
-                                        r => {
-                                            setApproval(r);
-                                            const index = approvalList.findIndex(e => e.id === approval.id);
-                                            const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
-                                        })}>반환</button>
+                                    <button className="px-4 py-2 bg-green-500 text-white rounded-md mr-2" onClick={() => {
+                                        if (window.confirm('허가하시겠습니까?')) {
+                                            acceptApproval(approval.id, true).then(
+                                                r => {
+                                                    setApproval(r);
+                                                    const index = approvalList.findIndex(e => e.id === approval.id);
+                                                    const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
+                                                }
+                                            )
+                                        }
+                                    }
+                                    }>허가</button>
+                                    <button className="px-4 py-2 bg-red-500 text-white rounded-md mr-2" onClick={() => {
+                                        if (window.confirm('반환하시겠습니까?')) {
+                                            acceptApproval(approval.id, false).then(
+                                                r => {
+                                                    setApproval(r);
+                                                    const index = approvalList.findIndex(e => e.id === approval.id);
+                                                    const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
+                                                }
+                                            )
+                                        }
+                                    }}>반환</button>
                                 </div>
                             ))
                         }
