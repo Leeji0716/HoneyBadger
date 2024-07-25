@@ -23,7 +23,6 @@ public class Approver {
     private ApprovalStatus approverStatus;
     private LocalDateTime createDate;
 
-
     @Builder
     public Approver(SiteUser user, Approval approval, ApprovalStatus approverStatus, LocalDateTime createDate) {
         this.user = user;
