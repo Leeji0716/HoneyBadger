@@ -413,8 +413,8 @@ export const readUsersName = async (messageId: number, username: string) => {
 interface ScheduleRequestDTO {
     title: string;
     content: string;
-    startDate: Date;
-    endDate: Date;
+    startDate: Date | null;
+    endDate: Date | null;
 }
 
 interface PersonalCycleDTO {
@@ -426,90 +426,86 @@ interface PersonalCycleDTO {
     tag: string[];
 }
 
-interface PersonalCycleResponseDTO {
-    personalCycles: PersonalCycleDTO[];
-    holiday: boolean;
-    holidayTitle: string;
-}
-
-export const createSchedule = async (schedule: ScheduleRequestDTO): Promise<PersonalCycleDTO> => {
-    try {
-        console.log('Creating schedule:', schedule);
-        const response = await UserApi.post<PersonalCycleDTO>('/api/personal', schedule);
+export const createSchedule = async (data: ScheduleRequestDTO) => {
+    const response = await UserApi.post('/api/personal', data);
         return response.data;
-    } catch (error) {
-        console.error("Error creating schedule:", error);
-        throw error;
-    }
 };
 
+// 날짜를 ISO 문자열로 변환하는 함수
 const formatDateToISO = (date: Date): string => {
-    return date.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm" 형식으로 변환
+    return date.toISOString().split('T')[0] + 'T' + date.toTimeString().split(' ')[0].substring(0, 5);
 };
 
-export const fetchSchedules = async (startDate: Date, endDate: Date): Promise<PersonalCycleResponseDTO> => {
-    try {
+export const getQues123tions = async (page: number, keyword: string) => {
+    const response = await UserApi.get('/api/question', {
+        headers: {
+            page: page,
+            keyword: keyword ? encodeURIComponent(keyword) : ''
+        }
+    });
+    return response.data;
+};
+
+export const fetchSchedules = async (startDate: Date, endDate: Date) => {
         const formattedStartDate = formatDateToISO(startDate);
         const formattedEndDate = formatDateToISO(endDate);
 
         console.log('Fetching schedules from:', formattedStartDate, 'to:', formattedEndDate);
 
-        const response = await UserApi.get<PersonalCycleResponseDTO>('/api/personal', {
+    const response = await UserApi.get('/api/personal', {
             headers: {
                 'startDate': formattedStartDate,
                 'endDate': formattedEndDate
             }
         });
+
         console.log('Fetched schedules response:', response.data);
         return response.data;
-    } catch (error) {
-        console.error("Error fetching schedules:", error);
-        throw error;
-    }
 };
 
-export const updateSchedule = async (id: number, data: ScheduleRequestDTO): Promise<PersonalCycleDTO> => {
-    try {
+export const updateSchedule = async (id: number, data: ScheduleRequestDTO) => {
         console.log('Updating schedule:', id, data);
-        const response = await UserApi.put<PersonalCycleDTO>(`/api/personal/${id}`, data);
+    const response = await UserApi.put(`/api/personal`, data, {
+        headers: {
+            id: id
+        }
+    });
         return response.data;
-    } catch (error) {
-        console.error("Error updating schedule:", error);
-        throw error; // 에러를 호출한 곳으로 전달
-    }
 };
 
-export const deleteSchedule = async (id: number): Promise<void> => {
-    try {
+export const deleteSchedule = async (id: number) => {
         console.log('Deleting schedule:', id);
-        await UserApi.delete(`/api/personal/${id}`);
-    } catch (error) {
-        console.error("Error deleting schedule:", error);
-        throw error;
-    }
+    const response = await UserApi.delete(`/api/personal`, {
+        headers: {
+            id: id
+        }
+    });
+    return response.data;
 };
 
-export const getStorageFiles = async (data: { Location: string, Page?: number, Type?: number, Order: number }) => {
+export const getStorageFiles = async (data: { Location: string, Page?: number, Type?: number, Order: number, Keyword: string }) => {
     const response = await UserApi.get('/api/file/list', {
         headers: {
             Location: data.Location ? encodeURIComponent(data.Location) : '',
             Page: data.Page,
             Type: data.Type,
-            Order: data.Order
+            Order: data.Order,
+            Keyword: data.Keyword ? encodeURIComponent(data.Keyword) : ''
         }
     });
     return response.data;
-}
+};
+
 export const createFileFolder = async (data: { Location: string, Page?: number, Base: string }) => {
     const response = await UserApi.post('/api/file/folder', {}, {
         headers: {
             Location: data.Location ? encodeURIComponent(data.Location) : '',
             Page: data.Page,
-            Base:  data.Base ? encodeURIComponent(data.Base) : ''
+            Base: data.Base ? encodeURIComponent(data.Base) : ''
         }
     });
     return response.data;
-}
+};
 
 export const getFileFolders = async (data: { Location: string }) => {
     const response = await UserApi.get('/api/file/folders', {
@@ -518,7 +514,7 @@ export const getFileFolders = async (data: { Location: string }) => {
         }
     });
     return response.data;
-}
+};
 export const getStorageFile = async (data: { Location: string }) => {
     const response = await UserApi.get('/api/file', {
         headers: {
@@ -526,7 +522,7 @@ export const getStorageFile = async (data: { Location: string }) => {
         }
     });
     return response.data;
-}
+};
 
 export const createApproval = async (approvalRequestDTO: approvalRequestDTO) => {
     const response = await UserApi.post('/api/approval', approvalRequestDTO);
@@ -553,7 +549,6 @@ export const deleteApproval = async (approvalId: number) => {
 
 export const getApprovalList = async () => {
     const response = await UserApi.get('/api/approval/list');
-    console.log("오쫄래미 조쫄래미");
     return response.data;
 };
 

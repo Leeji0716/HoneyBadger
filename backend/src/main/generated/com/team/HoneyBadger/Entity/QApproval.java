@@ -26,7 +26,11 @@ public class QApproval extends EntityPathBase<Approval> {
 
     public final StringPath content = createString("content");
 
+    public final DateTimePath<java.time.LocalDateTime> createDate = createDateTime("createDate", java.time.LocalDateTime.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    public final DateTimePath<java.time.LocalDateTime> modifyDate = createDateTime("modifyDate", java.time.LocalDateTime.class);
 
     public final ListPath<String, StringPath> readUsers = this.<String, StringPath>createList("readUsers", String.class, StringPath.class, PathInits.DIRECT2);
 

@@ -32,6 +32,13 @@ public class ApprovalService {
                 .build());
     }
 
+    public Approval updateStatus(Long approvalId, ApprovalStatus newStatus){
+        Approval approval = approvalRepository.findById (approvalId).get ();
+        approval.setStatus (newStatus);
+
+        return approval;
+    }
+
     public Approval get(Long approvalId){
         Approval approval = approvalRepository.findById (approvalId).orElseThrow (() -> new DataNotFoundException ("approval not found"));
         return approval;
@@ -50,6 +57,11 @@ public class ApprovalService {
 
     public void delete(Approval approval){
         approvalRepository.delete (approval);
+    }
+
+    public List<Approval> getList(String username){
+        return  approvalRepository.findByUsername (username);
+
     }
 
 

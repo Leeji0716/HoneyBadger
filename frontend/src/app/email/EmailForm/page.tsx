@@ -207,7 +207,7 @@ export default function EmailForm() {
                 <DropDown open={open} onClose={() => setOpen(false)} className="mt-8" defaultDriection={Direcion.DOWN} width={200} height={200} button="button1">
                     <input type="datetime-local" name="" id="" defaultValue={getDateTimeFormatInput(senderTime)} onChange={(e) => {
                         const inputDateTimeString = e.target.value; // "YYYY-MM-DDTHH:mm" 형식의 문자열
-                        const selectedDate = new Date(inputDateTimeString);
+                        const selectedDate = new Date(inputDateTimeString); 
                         setTime(selectedDate);
                         email == null ? setFlag(1) : setFlag(2);
                         console.log("플래그값 : " + flag);

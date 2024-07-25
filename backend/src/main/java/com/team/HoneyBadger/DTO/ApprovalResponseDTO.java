@@ -5,5 +5,5 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record ApprovalResponseDTO(Long id, String title, String content, UserResponseDTO sender,  List<ApproverResponseDTO> approvers, List<UserResponseDTO> viewers, boolean approval, List<String> readUsers  ) {
+public record ApprovalResponseDTO(Long id, String title, String content, UserResponseDTO sender,  List<ApproverResponseDTO> approvers, List<UserResponseDTO> viewers, int approvalStatus, List<String> readUsers, Long sendDate) {
 }
