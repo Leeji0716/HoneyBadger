@@ -1357,6 +1357,8 @@ public class MultiService {
 
             int approverStatus = approver.getApproverStatus ().ordinal ();
 
+
+
             Long approvalDate = dateTimeTransfer (approver.getCreateDate ());
 
             ApproverResponseDTO approverResponseDTO = ApproverResponseDTO.builder().approver (userResponseDTO).approverStatus (approverStatus).approvalDate (approvalDate).build();
@@ -1368,8 +1370,8 @@ public class MultiService {
         for(ApproverResponseDTO approverResponseDTO : users){
             if(approverResponseDTO.approverStatus () == 0){
                 approverService.updateApproverStatus (approval, approverResponseDTO.approver ().username () ,ApprovalStatus.RUNNING);
-                break;
             }
+            break;
         }
 
         return users;
