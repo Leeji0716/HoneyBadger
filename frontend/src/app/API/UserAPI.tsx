@@ -547,8 +547,17 @@ export const deleteApproval = async (approvalId: number) => {
     return response.data;
 };
 
-export const getApprovalList = async () => {
-    const response = await UserApi.get('/api/approval/list');
+// export const getApprovalList = async () => {
+//     const response = await UserApi.get('/api/approval/list');
+//     return response.data;
+// };
+
+export const getApprovalList = async (keyword: string) => {
+    const response = await UserApi.get('/api/approval/list', {
+        headers: {
+            keyword: encodeURIComponent(keyword)
+        }
+    });
     return response.data;
 };
 
