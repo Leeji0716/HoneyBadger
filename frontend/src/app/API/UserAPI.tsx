@@ -410,23 +410,17 @@ export const readUsersName = async (messageId: number, username: string) => {
     });
     return response.data;
 }
-interface ScheduleRequestDTO {
+
+interface cycleRequestDTO {
     title: string;
     content: string;
     startDate: Date | null;
     endDate: Date | null;
+    tagName: string;
+    tagColor: string;
 }
 
-interface PersonalCycleDTO {
-    id: number;
-    title: string;
-    content: string;
-    startDate: number;
-    endDate: number;
-    tag: string[];
-}
-
-export const createSchedule = async (data: ScheduleRequestDTO) => {
+export const createSchedule = async (data: cycleRequestDTO) => {
     const response = await UserApi.post('/api/personal', data);
     return response.data;
 };
@@ -436,21 +430,9 @@ const formatDateToISO = (date: Date): string => {
     return date.toISOString().split('T')[0] + 'T' + date.toTimeString().split(' ')[0].substring(0, 5);
 };
 
-export const getQues123tions = async (page: number, keyword: string) => {
-    const response = await UserApi.get('/api/question', {
-        headers: {
-            page: page,
-            keyword: keyword ? encodeURIComponent(keyword) : ''
-        }
-    });
-    return response.data;
-};
-
 export const fetchSchedules = async (startDate: Date, endDate: Date) => {
     const formattedStartDate = formatDateToISO(startDate);
     const formattedEndDate = formatDateToISO(endDate);
-
-    console.log('Fetching schedules from:', formattedStartDate, 'to:', formattedEndDate);
 
     const response = await UserApi.get('/api/personal', {
         headers: {
@@ -458,12 +440,10 @@ export const fetchSchedules = async (startDate: Date, endDate: Date) => {
             'endDate': formattedEndDate
         }
     });
-
-    console.log('Fetched schedules response:', response.data);
     return response.data;
 };
 
-export const updateSchedule = async (id: number, data: ScheduleRequestDTO) => {
+export const updateSchedule = async (id: number, data: cycleRequestDTO) => {
     console.log('Updating schedule:', id, data);
     const response = await UserApi.put(`/api/personal`, data, {
         headers: {
@@ -547,8 +527,17 @@ export const deleteApproval = async (approvalId: number) => {
     return response.data;
 };
 
-export const getApprovalList = async () => {
-    const response = await UserApi.get('/api/approval/list');
+// export const getApprovalList = async () => {
+//     const response = await UserApi.get('/api/approval/list');
+//     return response.data;
+// };
+
+export const getApprovalList = async (keyword: string) => {
+    const response = await UserApi.get('/api/approval/list', {
+        headers: {
+            keyword: encodeURIComponent(keyword)
+        }
+    });
     return response.data;
 };
 
