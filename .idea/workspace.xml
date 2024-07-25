@@ -4,44 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8c0f5d3b-5021-4fd6-9f76-16f1ae5e0d71" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QAlarm.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QApproval.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QApprover.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QAttendance.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QChatroom.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QDepartment.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QEmail.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QEmailReceiver.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QEmailReservation.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QEmailTag.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QFacility.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QFacilityReservation.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QFileSystem.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QGroupCycle.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QHoliday.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QLastReadMessage.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QMessage.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QMessageReservation.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QMultiKey.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QParticipant.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QPersonalCycle.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QQuestion.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QRecent.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QSiteUser.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QTeam.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QTeamPeople.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QViewer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QVote.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/generated/com/team/HoneyBadger/Entity/QVoteContent.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/team/HoneyBadger/Service/Module/ApprovalService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/team/HoneyBadger/Service/Module/ApprovalService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/API/AxiosAPI.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/API/AxiosAPI.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/API/SocketAPI.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/API/SocketAPI.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/API/UserAPI.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/API/UserAPI.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/Global/Method.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/Global/Method.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/approval/ApprovalForm/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/approval/ApprovalForm/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/approval/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/approval/page.tsx" afterDir="false" />
-    </list>
+    <list default="true" id="8c0f5d3b-5021-4fd6-9f76-16f1ae5e0d71" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -103,7 +66,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Application.HoneyBadgerApplication.executor": "Debug",
+    "Application.HoneyBadgerApplication.executor": "Run",
     "DefaultHtmlFileTemplate": "HTML File",
     "Gradle.backend [:HoneyBadgerApplication.main()].executor": "Run",
     "JUnit.HoneyBadgerApplicationTests.contextLoads.executor": "Run",

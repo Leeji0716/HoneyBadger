@@ -553,6 +553,7 @@ export const deleteApproval = async (approvalId: number) => {
 
 export const getApprovalList = async () => {
     const response = await UserApi.get('/api/approval/list');
+    console.log("오쫄래미 조쫄래미");
     return response.data;
 };
 

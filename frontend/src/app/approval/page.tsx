@@ -431,7 +431,7 @@ export default function Approval() {
             case 3:
                 return "반환";
             default:
-                return "ghfhffhffhf";
+                return "";
         }
     };
 
@@ -719,6 +719,7 @@ export default function Approval() {
                                         <a href="#" className="" onClick={() => {
                                             readApproval(approval?.id).then(
                                                 r => {setApproval(r);
+                                                    console.log(r);
                                                     const index = approvalList.findIndex(e => e.id === approval.id);
                                                     const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
                                                 })
@@ -749,6 +750,10 @@ export default function Approval() {
                             <><button className="btn btn-error mr-2" onClick={() => {
                                 if (window.confirm('삭제하시겠습니까?')) {
                                     deleteApproval(approval.id);
+                                    setApprovalList(prevApprovalList => prevApprovalList.filter(e => e.id !== approval.id));
+                                    if (approvalList.length > 0) {
+                                        setApproval(approvalList[0]);
+                                    }
                                 }
                             }}>삭제</button>
                                 <button className="btn btn-primary">수정</button></> :
