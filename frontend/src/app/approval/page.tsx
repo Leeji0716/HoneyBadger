@@ -718,8 +718,7 @@ export default function Approval() {
                                     <h4 className="flex items-center justify-center font-bold w-[80%]">
                                         <a href="#" className="" onClick={() => {
                                             readApproval(approval?.id).then(
-                                                r => {
-                                                    setApproval(r);
+                                                r => {setApproval(r);
                                                     console.log(r);
                                                     const index = approvalList.findIndex(e => e.id === approval.id);
                                                     const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
