@@ -1354,8 +1354,13 @@ public class MultiService {
 
             UserResponseDTO userResponseDTO = getUserResponseDTO(siteUser);
 
-            int approverStatus = approver.getApproverStatus ().ordinal ();
 
+            int approverStatus = 0;
+            if (approver.getApproverStatus() != null) {
+                approverStatus = approver.getApproverStatus().ordinal();
+            } else {
+                approverStatus = -1;
+            }
 
 
             Long approvalDate = dateTimeTransfer (approver.getCreateDate ());
@@ -1364,13 +1369,6 @@ public class MultiService {
 
             users.add (approverResponseDTO);
 
-        }
-
-        for(ApproverResponseDTO approverResponseDTO : users){
-            if(approverResponseDTO.approverStatus () == 0){
-                approverService.updateApproverStatus (approval, approverResponseDTO.approver ().username () ,ApprovalStatus.RUNNING);
-            }
-            break;
         }
 
         return users;
@@ -1401,6 +1399,10 @@ public class MultiService {
             SiteUser user = userService.get(username);
             approverService.save(user, approval);
         }
+
+        String firstApprover  = approvalRequestDTO.approversname ().getFirst ();
+        approverService.updateApproverStatus (approval,firstApprover,ApprovalStatus.RUNNING);
+
 
         for (String username : approvalRequestDTO.viewersname()) {
             SiteUser user = userService.get(username);
@@ -1435,24 +1437,38 @@ public class MultiService {
 
     public ApprovalResponseDTO acceptApprover(Long approvalId, String username, Boolean Binary) throws NotAllowedException{
         Approval approval = approvalService.get (approvalId);
+        List<Approver> approvers = approval.getApprovers();
+        int index = -1;
+        for (int i = 0; i < approvers.size(); i++) {
+            if (approvers.get(i).getUser ().getUsername ().equals(username)) {
+                index = i;
+                break;
+            }
+        }
 
-
-        if(Binary.equals (true)){
-            approverService.updateApproverStatus (approval,username,ApprovalStatus.ALLOW);
-            approvalService.updateStatus (approvalId,ApprovalStatus.RUNNING);
+        if (Binary.equals(true)) {
+            // approver 나는 허용으로 변경 > 만약 내 뒤가 있다면 걔가 running 으로 변경, 없을 경우 approval 자체가 허용
+            approverService.updateApproverStatus(approval, username, ApprovalStatus.ALLOW);
+            if (index < approvers.size() - 1) {
+                Approver nextApprover = approvers.get(index + 1);
+                approverService.updateApproverStatus(approval, nextApprover.getUser().getUsername(), ApprovalStatus.RUNNING);
+                if(!approval.getStatus ().equals (ApprovalStatus.RUNNING)){
+                approvalService.updateStatus (approvalId,ApprovalStatus.RUNNING);}
+            } else {
+                approvalService.updateStatus(approvalId, ApprovalStatus.ALLOW);
+            }
         } else{
+            // 내 뒤에는 이제 무조건 null 값으로 들어가야 한다
+            // approval 자체는 반려로 변경 되어야 한다
             approverService.updateApproverStatus (approval,username,ApprovalStatus.DENY);
+            for (int i = index + 1; i < approvers.size(); i++) {
+                Approver nextApprover = approvers.get(i);
+                approverService.updateApproverStatus(approval, nextApprover.getUser().getUsername(), null);
+            }
+
             approvalService.updateStatus (approvalId,ApprovalStatus.DENY);
         }
 
-        int approverNum=0;
-
-        for(Approver approver : approval.getApprovers ()){
-            approverNum += approver.getApproverStatus ().ordinal ();
-        }
-        if(approval.getApprovers ().size ()*2 == approverNum){
-            approvalService.updateStatus (approvalId,ApprovalStatus.ALLOW);
-        }
 
         return getApproval (approval);
     }

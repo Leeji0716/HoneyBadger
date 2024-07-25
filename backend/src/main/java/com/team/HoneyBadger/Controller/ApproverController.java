@@ -18,11 +18,12 @@ public class ApproverController {
     private final MultiService multiService;
 
 
-    @PostMapping // 승인 기능
-    public ResponseEntity<?> acceptApprover(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestHeader boolean Binary) {
+    @PostMapping // 유저가 기안서 허가/반환 하기
+    public ResponseEntity<?> acceptApprover(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestHeader String Binary) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if (tokenDTO.isOK ()) try {
-            ApprovalResponseDTO approvalResponseDTO = multiService.acceptApprover (approvalId, tokenDTO.username (), Binary);
+            boolean isBinary = Boolean.parseBoolean(Binary);
+            ApprovalResponseDTO approvalResponseDTO = multiService.acceptApprover (approvalId, tokenDTO.username (), isBinary);
             return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
         } catch (NotAllowedException ex) {
             return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());

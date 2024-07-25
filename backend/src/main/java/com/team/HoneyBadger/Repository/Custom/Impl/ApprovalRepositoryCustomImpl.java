@@ -22,6 +22,7 @@ public class ApprovalRepositoryCustomImpl implements ApprovalRepositoryCustom {
                 .where (qApproval.approvers.any ().user.username.eq (username)
                         .or (qApproval.viewers.any ().user.username.eq (username))
                         .or (qApproval.sender.username.eq (username)))
+                .orderBy (qApproval.createDate.desc ())
                 .fetch ();
 
     }
