@@ -719,6 +719,7 @@ export default function Approval() {
                                         <a href="#" className="" onClick={() => {
                                             readApproval(approval?.id).then(
                                                 r => {setApproval(r);
+                                                    console.log(r);
                                                     const index = approvalList.findIndex(e => e.id === approval.id);
                                                     const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
                                                 })

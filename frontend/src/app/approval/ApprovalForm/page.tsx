@@ -163,12 +163,13 @@ export default function Approval() {
     // 결재 만들기
     const handleCreateApproval = () => {
         if (selectedApprovar && title) {
-            const approver = selectedApprovar.map((user) => user.username);
+            const approver = selectedApprovar.map((user) => user?.username);
             const viewer = selectedViewer.map((user) => user.username);
 
             const approvalRequest: approvalRequestDTO = { title: title, content: content, sender: user.username, approversname: approver, viewersname: viewer };
             createApproval(approvalRequest)
                 .then(r => {
+                    console.log("이거는 생성"+r);
                     window.location.href = "/approval"
                 })
                 .catch(e => {
