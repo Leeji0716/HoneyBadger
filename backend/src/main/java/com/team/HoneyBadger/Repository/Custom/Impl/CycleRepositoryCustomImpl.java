@@ -2,6 +2,7 @@ package com.team.HoneyBadger.Repository.Custom.Impl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team.HoneyBadger.Entity.Cycle;
+import com.team.HoneyBadger.Entity.CycleTag;
 import com.team.HoneyBadger.Entity.QCycle;
 import com.team.HoneyBadger.Repository.Custom.CycleRepositoryCustom;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,11 @@ public class CycleRepositoryCustomImpl implements CycleRepositoryCustom {
                 .selectFrom(qCycle)
                 .where(qCycle.k.eq(k).and(qCycle.startDate.between(startDate,endDate).or(qCycle.endDate.between(startDate,endDate))))
                 .fetch();
+    }
+
+    public List<Cycle> findTagCycle( CycleTag cycleTag){
+
+        return jpaQueryFactory.selectFrom(qCycle).where(qCycle.tag.eq(cycleTag)).fetch();
     }
 
 

@@ -44,7 +44,7 @@ public class CycleService {
     }
 
     public Cycle findById(Long id) throws DataNotFoundException {
-        return cycleRepository.findById(id).orElseThrow(() -> new DataNotFoundException("PersonalCycle not found with id: " + id));
+        return cycleRepository.findById(id).orElseThrow(() -> new DataNotFoundException("Cycle not found with id: " + id));
     }
 
     public void delete(Cycle cycle) {
@@ -69,5 +69,9 @@ public class CycleService {
                 .k(k)
                 .tag(cycleTag)
                 .build());
+    }
+
+    public List<Cycle> findTagCycle(CycleTag cycleTag) {
+        return cycleRepository.findTagCycle(cycleTag);
     }
 }
