@@ -1,5 +1,5 @@
 "use client";
-import { createApproval, deleteApproval, getApprovalList, getUser, readApproval } from "@/app/API/UserAPI";
+import { acceptApproval, createApproval, deleteApproval, getApprovalList, getUser, readApproval } from "@/app/API/UserAPI";
 import Main from "@/app/Global/Layout/MainLayout";
 import { useEffect, useState } from "react";
 import { getjyDate, getRole } from "../Global/Method";
@@ -431,7 +431,7 @@ export default function Approval() {
             case 3:
                 return "반환";
             default:
-                return "ghfhffhffhf";
+                return "";
         }
     };
 
@@ -718,7 +718,9 @@ export default function Approval() {
                                     <h4 className="flex items-center justify-center font-bold w-[80%]">
                                         <a href="#" className="" onClick={() => {
                                             readApproval(approval?.id).then(
-                                                r => {setApproval(r);
+                                                r => {
+                                                    setApproval(r);
+                                                    console.log(r);
                                                     const index = approvalList.findIndex(e => e.id === approval.id);
                                                     const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
                                                 })
@@ -749,6 +751,10 @@ export default function Approval() {
                             <><button className="btn btn-error mr-2" onClick={() => {
                                 if (window.confirm('삭제하시겠습니까?')) {
                                     deleteApproval(approval.id);
+                                    setApprovalList(prevApprovalList => prevApprovalList.filter(e => e.id !== approval.id));
+                                    if (approvalList.length > 0) {
+                                        setApproval(approvalList[0]);
+                                    }
                                 }
                             }}>삭제</button>
                                 <button className="btn btn-primary">수정</button></> :
@@ -764,7 +770,18 @@ export default function Approval() {
                             .filter(e => e.approver.username === user.username && e.approverStatus === 1)
                             .map((e, index) => (
                                 <div key={index}>
-                                    <><button className="btn btn-success mr-2">허가</button><button className="btn btn-error">반환</button></>
+                                    <button className="btn btn-success mr-2" onClick={() => acceptApproval(approval.id, true).then(
+                                        r => {
+                                            setApproval(r);
+                                            const index = approvalList.findIndex(e => e.id === approval.id);
+                                            const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
+                                        })}>허가</button>
+                                    <button className="btn btn-error" onClick={() => acceptApproval(approval.id, false).then(
+                                        r => {
+                                            setApproval(r);
+                                            const index = approvalList.findIndex(e => e.id === approval.id);
+                                            const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
+                                        })}>반환</button>
                                 </div>
                             ))
                         }
