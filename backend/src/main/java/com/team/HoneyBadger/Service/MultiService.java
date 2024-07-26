@@ -1218,6 +1218,7 @@ public class MultiService {
                         cycleService.createByTag(KeyPreset.UC.getValue(user.getUsername()), cycleRequestDTO.title(), cycleRequestDTO.content(), cycleRequestDTO.startDate(), cycleRequestDTO.endDate(), cycleTag);
                     }
                 }
+                break;
 
             case 1:
                 if (cycleRequestDTO.tagName() == null) {
@@ -1231,7 +1232,7 @@ public class MultiService {
                         cycleService.createByTag(KeyPreset.DC.getValue(user.getDepartment().getName()), cycleRequestDTO.title(), cycleRequestDTO.content(), cycleRequestDTO.startDate(), cycleRequestDTO.endDate(), cycleTag);
                     }
                 }
-
+                break;
             default:
                 throw new NotAllowedException("필터를 선택해주세요.");
         }
