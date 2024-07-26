@@ -25,7 +25,7 @@ public class CycleRepositoryCustomImpl implements CycleRepositoryCustom {
                 .fetch();
     }
 
-    public List<Cycle> findTagCycle( CycleTag cycleTag){
+    public List<Cycle> findTagCycle(CycleTag cycleTag){
 
         return jpaQueryFactory.selectFrom(qCycle).where(qCycle.tag.eq(cycleTag)).fetch();
     }

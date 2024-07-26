@@ -1331,6 +1331,8 @@ public class MultiService {
                 return cycleResponseDTOList;
 
             case 1 :
+                if(user.getDepartment() ==  null)
+                    return new ArrayList<>();
                 List<Cycle> cycleList1 = cycleService.myMonthCycle(KeyPreset.DC.getValue(user.getDepartment().getName()), startDate, endDate);
                 do {
                     boolean holiday = false;
@@ -1423,6 +1425,12 @@ public class MultiService {
             throw new NotAllowedException("태그색상을 설정해주세요.");
         }
         return getTagDto(cycleTagService.updateTag(cycleTag, cycleTagRequestDTO));
+    }
+
+    public List<CycleDTO> getTagCycle(Long id) {
+        CycleTag cycleTag = cycleTagService.findById(id);
+        List<Cycle> cycleList = cycleService.findTagCycle(cycleTag);
+        return cycleList.stream().map(this::getCycleDTO).toList();
     }
 
     /*
@@ -1695,4 +1703,5 @@ public class MultiService {
     private FileResponseDTO transferFileToDTO(File file) throws IOException {
         return FileResponseDTO.builder().name(file.getName()).type(FileType.get(file).ordinal()).createDate(((FileTime) Files.getAttribute(file.toPath(), "creationTime")).toMillis()).modifyDate(file.lastModified()).size(FileOrder.getSize(file)).url(file.getPath().replaceAll("\\\\", "/").replaceAll(HoneyBadgerApplication.getOsType().getLoc(), "")).build();
     }
+
 }
