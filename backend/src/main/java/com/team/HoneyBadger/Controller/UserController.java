@@ -110,11 +110,11 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<?> getUsers(@RequestHeader("Authorization") String accessToken, @RequestHeader(value = "Keyword", defaultValue = "") String keyword, @RequestHeader(value = "Page", defaultValue = "0") int page,@RequestHeader(value = "Size",defaultValue = "10") int size) {
+    public ResponseEntity<?> getUsers(@RequestHeader("Authorization") String accessToken, @RequestHeader(value = "Keyword", defaultValue = "") String keyword, @RequestHeader(value = "Page", defaultValue = "0") int page, @RequestHeader(value = "Size", defaultValue = "10") int size) {
         TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) {
             try {
-                Page<UserResponseDTO> pageDTO = multiService.getUsers(keyword != null ? URLDecoder.decode(keyword, StandardCharsets.UTF_8) : "", page,size);
+                Page<UserResponseDTO> pageDTO = multiService.getUsers(keyword != null ? URLDecoder.decode(keyword, StandardCharsets.UTF_8) : "", page, size);
                 return ResponseEntity.status(HttpStatus.OK).body(pageDTO);
             } catch (DataDuplicateException ex) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
@@ -164,7 +164,9 @@ public class UserController {
     @DeleteMapping("/temp")
     public ResponseEntity<?> deleteTempFiles(@RequestHeader("Authorization") String accessToken) {
         TokenDTO tokenDTO = this.multiService.checkToken(accessToken);
+
         if (tokenDTO.isOK()) {
+
             multiService.deleteUserTemp(tokenDTO.username());
             return ResponseEntity.status(HttpStatus.OK).body("deleted");
         } else return tokenDTO.getResponseEntity();

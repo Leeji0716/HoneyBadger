@@ -15,6 +15,7 @@
     "axios": "^1.7.2",
     "daisyui": "^4.11.1",
     "html2canvas-pro": "^1.5.6",
+    "jszip": "^3.10.1",
     "korean-lunar-calendar": "^0.3.6",
     "next": "14.2.3",
     "react": "^18",

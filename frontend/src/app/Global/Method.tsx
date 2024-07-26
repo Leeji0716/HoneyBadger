@@ -195,7 +195,7 @@ export function CardFront({ user }: { user: any }) {
             <div className='mx-auto flex flex-col'>
                 <div className='flex flex-col mt-4'>
                     <label className='font-bold text-[#8fbee9] cursor-pointer'>HoneyBadger</label>
-                    <label className='text-xxs text-center text-gray-500 cursor-pointer'>Don't hold back. Be brave</label>
+                    <label className='text-xxs text-center text-gray-500 cursor-pointer'>{`Don't hold back. Be brave`}</label>
                 </div>
                 <div className='mt-auto flex flex-col h-[60px]'>
                     <div className='flex  items-center my-auto'>
@@ -247,7 +247,7 @@ export function CardBack() {
             <img src='/_logo.png' className='w-[75px] h-[50px] mr-2 bg-yellow-500 rounded-full p-2' />
             <div className='flex flex-col'>
                 <label className='font-bold text-white text-lg cursor-pointer'>HoneyBadger</label>
-                <label className='text-xxs text-center text-gray-300 cursor-pointer'>Don't hold back. Be brave</label>
+                <label className='text-xxs text-center text-gray-300 cursor-pointer'>{`Don't hold back. Be brave`}</label>
             </div>
         </div>
         <div className='bottom-[16px] absolute text-white text-xs'>SEO | Web Devlopement | App Development </div>
