@@ -607,7 +607,99 @@ export default function Home() {
                                     e.target.value = '';
                                 }} />
                                 <button className="text-sm" onClick={() => document.getElementById('folder_upload')?.click()}>폴더 올리기</button>
-                                <input id="folder_upload" type="file" hidden webkitdirectory="" />
+                                <input id="folder_upload" type="file" hidden webkitdirectory="" onChange={e=>{
+                                    if (!socket.connected) {
+                                        window.location.reload();
+                                        alert('오류 발생으로 페이지를 새로고칩니다.');
+                                        return;
+                                    }
+                                    function create(file: any, confirm?: Confirm) {
+                                        const reader = new FileReader();
+                                        const key = new Date().getTime().toString();
+                                        const upload = { key: key, name: file.name, status: 1, type: FileType(file.name), base: base, baseLocation: baseLocation, location: location.replaceAll(baseLocation, "") + "/", url: location, uploadType: 0 } as Upload;
+                                        // uploadsRef.current = [...uploads, upload];
+                                        if (!uploadsRef.current.includes(upload))
+                                            uploadsRef.current.push(upload);
+
+                                        setUploads(uploadsRef.current);
+                                        reader.onload = async function (event) {
+                                            let buffer = event.target?.result;
+                                            const bytes = new Uint8Array(buffer as ArrayBuffer);
+                                            const len = bytes.byteLength;
+
+                                            const totalIndex = Math.ceil(len / chunkSize);
+
+                                            // const upload = { key: key, index: 0, totalIndex: totalIndex, bytes: bytes, name: file.name, status: 1, type: FileType(file.name), base: base, location: location.replaceAll(baseLocation, "") + "/", url: location } as Upload;
+                                            upload.index = 0;
+                                            upload.totalIndex = totalIndex;
+                                            upload.bytes = bytes;
+                                            // uploadsRef.current = [...uploads, upload];
+                                            if (!uploadsRef.current.includes(upload))
+                                                uploadsRef.current.push(upload);
+                                            setUploads(uploadsRef.current);
+                                            if (confirm) {
+                                                confirm.upload = upload;
+                                                confirmRef.current = [...confirmRef.current];
+                                                setUploadConfirm(confirmRef.current);
+                                            }
+                                            else {
+                                                const start = upload.index * chunkSize;
+                                                let binary = "";
+                                                for (let i = 0; i < chunkStack; i++)
+                                                    binary += String.fromCharCode(...upload.bytes.slice(start + i * size, start + (i + 1) * size));
+                                                const chunk = window.btoa(binary); // base64
+                                                socket.publish({
+                                                    destination: "/api/pub/uploadFile/" + user?.username, body: JSON.stringify({
+                                                        key: upload.key,
+                                                        index: upload.index,
+                                                        totalIndex: upload.totalIndex,
+                                                        chunk: chunk,
+                                                        location: upload.url,
+                                                        name: upload.name,
+                                                        uploadType: upload.uploadType,
+                                                        baseLocation: upload.baseLocation
+                                                    })
+                                                });
+                                            }
+                                        };
+                                        reader.readAsArrayBuffer(file);
+                                    }
+                                    const files = e.target.files;
+
+                                    if (files && files?.length >= 1) {
+                                        let total_size = 0;
+                                        for (let i = 0; i < files.length; i++)
+                                            total_size += files[i]?.size;
+                                        if (total_size + used >= max) {
+                                            alert("최대 용량을 초과했습니다.")
+                                            return;
+                                        }
+
+                                        for (let i = 0; i < files.length; i++) {
+                                            const file = files[i];
+                                            if (file) {
+                                                if (file.size > 1024 * 1024 * 1024 * 4) {
+                                                    alert('4GB 이상 파일은 업로드 불가능합니다. - ' + file.name)
+                                                    return;
+                                                }
+                                                getStorageFile({ Location: location + "/" + file.name }).then(r => {
+                                                    const confirm = { file: r } as Confirm;
+                                                    create(file, confirm);
+                                                    confirmRef.current = [...confirmRef.current, confirm]
+                                                    setUploadConfirm(confirmRef.current)
+                                                }).catch(e => {
+                                                    if (e?.response?.status == 403 && e?.response.data == 'file not found')
+                                                        create(file);
+                                                    else {
+                                                        console.log(e);
+                                                        return;
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }
+                                    e.target.value = '';
+                                }}/>
                             </div>
                         </div>
                         <button className={"btn btn-xs mr-1 hover:underline" + (keyword || selects.length > 0 ? ' hidden' : '')} onClick={() => {
