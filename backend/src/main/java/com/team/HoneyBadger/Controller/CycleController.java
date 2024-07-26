@@ -65,7 +65,7 @@ public class CycleController {
 
     //개인일정 리스트
     @GetMapping
-    public ResponseEntity<?> myMonthCycle(@RequestHeader("Authorization") String accessToken,@RequestHeader("status") int status ,@RequestHeader("startDate") String startDate, @RequestHeader("endDate") String endDate) {
+    public ResponseEntity<?> myMonthCycle(@RequestHeader("Authorization") String accessToken,@RequestHeader("status") int status,@RequestHeader("startDate") String startDate, @RequestHeader("endDate") String endDate) {
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if (tokenDTO.isOK()) try{
             List<CycleResponseDTO> cycleResponseDTOList = multiService.getCycle(tokenDTO.username(),status, LocalDateTime.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")), LocalDateTime.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
