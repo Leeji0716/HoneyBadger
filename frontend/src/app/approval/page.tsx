@@ -1,7 +1,7 @@
 "use client";
 import { acceptApproval, createApproval, deleteApproval, getApprovalList, getUser, getUsers, readApproval, updateViewer } from "@/app/API/UserAPI";
 import Main from "@/app/Global/Layout/MainLayout";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getFileIcon, getjyDate, getRole, sliceText } from "../Global/Method";
 import Modal from "../Global/Modal";
 import { error } from "console";
@@ -19,7 +19,7 @@ export default function Approval() {
         id: number,
         title: string,
         content: string,
-        files: originFileResponseDTO,
+        files: originFileResponseDTO[],
         sender: userResponseDTO,
         approvers: approverResponseDTO[],
         viewers: userResponseDTO[],
@@ -65,9 +65,10 @@ export default function Approval() {
     const [keyword, setKeyword] = useState('');
     const [approval, setApproval] = useState<approvalResponseDTO>(null as any);
     const [approvalList, setApprovalList] = useState<approvalResponseDTO[]>([]);
-    const [fileList, setFileList] = useState<File[]>([]);
+    const [fileList, setFileList] = useState<originFileResponseDTO[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userList, setUserList] = useState([] as any[])
+    const appBoxRef = useRef<HTMLDivElement>(null);
 
     // 유저 토큰 확인하기
     useEffect(() => {
@@ -75,12 +76,39 @@ export default function Approval() {
             getUser().then(r => {
                 setUser(r);
                 const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
-                getApprovalList(keyword, 0).then(r => setApprovalList(r.content)).catch(e => console.log(e));
+                getApprovalList(keyword, 0).then(r => {setApprovalList(r.content); setMaxPage(r.totalPages)}).catch(e => console.log(e));
                 // getApprovalList(keyword, 0).then(r => setApprovalList(r)).catch(e => console.log(e));
             }).catch(e => { setClientLoading(false); console.log(e); });
         else
             location.href = '/';
     }, [ACCESS_TOKEN])
+
+    const loadPage = () => {
+        const appBox = appBoxRef.current;
+
+        if (appBox != null) {
+            const scrollLocation = appBox?.scrollTop;
+            const maxScroll = appBox.scrollHeight - appBox.clientHeight;
+            console.log("=======");
+            console.log(scrollLocation);
+            console.log("maxScroole");
+            console.log(maxScroll);
+            if (!isLoading && scrollLocation >= maxScroll-1 && page < maxPage - 1) {
+                setIsLoading(true);
+                getApprovalList(keyword,page +1).then(r => 
+                    {
+                        if (r.size > 0) {
+                        setPage(page+1);
+                        const List = [...approvalList,...r.content];
+                        setApprovalList(List);
+                        setMaxPage(r.totalPages);
+                        }
+                        setIsLoading(false);
+                    }).catch(e => {console.log(e);  setIsLoading(false);});
+            }
+        }
+    };
+
 
     //userList 가져오기
     useEffect(() => {
@@ -97,8 +125,7 @@ export default function Approval() {
 
     // 검색
     const handleSearch = () => {
-        setPage(0);
-        getApprovalList(keyword, page).then(r => {
+        getApprovalList(keyword, 0).then(r => {
             setApprovalList(r.content);
         }).catch(error => {
             console.error("Search error:", error);
@@ -209,7 +236,7 @@ export default function Approval() {
         </>
     }
 
-    function update (approvalId: number, approvalViewers: any[]){
+    function update(approvalId: number, approvalViewers: any[]) {
         const viewer = approvalViewers.map(user => user.username);
         console.log(viewer);
 
@@ -221,8 +248,8 @@ export default function Approval() {
             approversname: []
         };
         updateViewer(approvalId, approvalRequest)
-        .then(r => setApproval(r.content))
-        .catch(error => console.error(error));
+            .then(r => setApproval(r))
+            .catch(error => console.error(error));
     }
 
     // approval 상세보기
@@ -395,15 +422,18 @@ export default function Approval() {
                         <label className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">참조인</label>
                         <label className="w-[90%] flex items-center border-r-2 border-gray-300 pl-5">{approvalViewersText}</label>
                     </div>
-                    <div className="w-full h-[150px] border border-gary-500 overflow-y-scroll border-r-2 border-l-2 border-b-2 border-gray-300">
-                        {fileList.length !== 0 && fileList.map((f: File, index: number) => (
+                    <div className="w-full h-[170px] border border-gray-300 border-r-2 border-l-2 border-b-2 border-gray-300 flex flex-col flex-wrap overflow-x-scroll">
+                        {approval.files.length != 0 ? approval?.files.map((f: originFileResponseDTO, index: number) => (
                             <ul key={index}>
                                 <div className="flex items-center bg-white p-2 w-[500px]">
-                                    <img src={getFileIcon(f.name)} className="w-[26px] h-[31px] mr-2" alt="" />
-                                    <p>{sliceText(f.name)}</p>
+                                    <img src={getFileIcon(f.original_name)} className="w-[26px] h-[31px] mr-2" alt="" />
+                                    <p>{sliceText(f.original_name)}</p>
                                 </div>
                             </ul>
-                        ))}
+                        ))
+                            :
+                            <></>
+                        }
                     </div>
                 </>
             </div>
@@ -548,7 +578,7 @@ export default function Approval() {
 
                     {/* 필터링 된 리스트 -> 누르면 읽음 & 상세보기 */}
                     <div className="relative flex flex-col justify-center w-full h-full">
-                        <div className="w-full h-[705px] overflow-x-hidden overflow-y-scroll">
+                        <div ref={appBoxRef} onScroll={loadPage} className="w-full h-[705px] overflow-x-hidden overflow-y-scroll">
                             {approvalList.filter(approval => filter === -1 || approval.approvalStatus === filter).map((approval, index) => (
                                 <div key={index}
                                     className="w-[550px] h-[50px] border-2 border-gray-300 mb-1 ml-1 rounded-lg shadow-md flex justify-between">

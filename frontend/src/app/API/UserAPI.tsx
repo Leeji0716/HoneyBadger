@@ -561,21 +561,31 @@ export const acceptApproval = async (approvalId: number, binary: boolean) => {
     return response.data;
 };
 
-export const approvalFiles = async ({ approvalId, attachments }: { approvalId: number; attachments: FormData; }, form?: FormData) => {
+// export const approvalFiles = async ({ approvalId, attachments }: { approvalId: number; attachments: FormData; }) => {
+//     const response = await UserApi.post('/api/approval/files', attachments, {
+//         headers: {
+//             'Content-Type': 'multipart/form-data',
+//             approvalId: approvalId
+//         }
+//     });
+//     return response.data;
+// };
+
+export const approvalFiles = async ({ attachments, approvalId }: { attachments: FormData; approvalId: number }) => {
     const response = await UserApi.post('/api/approval/files', attachments, {
         headers: {
             'Content-Type': 'multipart/form-data',
             approvalId: approvalId
         }
-    }); 
+    });
     return response.data;
 };
 
 export const updateViewer = async (approvalId: number, approvalRequestDTO: approvalRequestDTO) => {
-    const response = await UserApi.post('/api/viewer', {
-        approvalId, // 요청 본문에 포함될 데이터
-        ...approvalRequestDTO // 나머지 데이터
+    const response = await UserApi.post('/api/viewer', approvalRequestDTO, {
+        headers: {
+            approvalId: approvalId
+        }
     });
     return response.data;
-
 };
