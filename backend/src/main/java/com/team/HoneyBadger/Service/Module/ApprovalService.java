@@ -3,11 +3,13 @@ package com.team.HoneyBadger.Service.Module;
 import com.team.HoneyBadger.DTO.ApprovalRequestDTO;
 import com.team.HoneyBadger.Entity.Approval;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Entity.Viewer;
 import com.team.HoneyBadger.Enum.ApprovalStatus;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.ApprovalRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.aop.framework.AopProxy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -69,6 +71,11 @@ public class ApprovalService {
         else{
             return  approvalRepository.findByUsernameAndKeyword (username,keyword);
         }
+    }
+
+    public Approval updateViewer(Approval approval, List<Viewer> newViewers){
+        approval.setViewers (newViewers);
+        return approvalRepository.save (approval);
     }
 
 

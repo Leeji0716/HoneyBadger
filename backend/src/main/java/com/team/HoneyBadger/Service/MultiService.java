@@ -1656,6 +1656,24 @@ public class MultiService {
         return approvalResponseDTOS;
     }
 
+    public ApprovalResponseDTO addViewer(Long approvalId, List<String> viewerUsername ){
+        Approval approval = approvalService.get (approvalId);
+
+        List<Viewer> viewers = approval.getViewers ();
+        List<Viewer> newViewers = new ArrayList<> ();
+
+        for(String username : viewerUsername){
+            for(Viewer viewer : viewers){
+                if(!viewer.getUser ().getUsername ().equals (username)){
+                    newViewers.add (viewer);
+                }
+                continue;
+            }
+        }
+        approval.setViewers (viewers);
+
+    }
+
 
 
     /*

@@ -26,4 +26,5 @@ public class ViewerService {
     public List<Viewer> getAll(Approval approval){
         return viewerRepository.findByApproval (approval);
     }
+
 }
