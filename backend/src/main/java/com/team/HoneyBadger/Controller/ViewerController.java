@@ -1,5 +1,6 @@
 package com.team.HoneyBadger.Controller;
 
+import com.team.HoneyBadger.DTO.ApprovalRequestDTO;
 import com.team.HoneyBadger.DTO.ApprovalResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
@@ -8,10 +9,7 @@ import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,18 +18,18 @@ import java.util.List;
 @RequestMapping("/api/viewer")
 public class ViewerController {
     private final MultiService multiService;
-//
-//    @PostMapping // 참조자 추가
-//    public ResponseEntity<?> acceptApprover(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestHeader("viewerUsername") List<String> viewerUsername) {
-//        TokenDTO tokenDTO = multiService.checkToken (accessToken);
-//        if (tokenDTO.isOK ()) try {
-//            ApprovalResponseDTO approvalResponseDTO = multiService.addViewer (approvalId, viewerUsername);
-//            return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
-//        } catch (NotAllowedException ex) {
-//            return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
-//        } catch (DataNotFoundException ex) {
-//            return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
-//        }
-//        else return tokenDTO.getResponseEntity ();
-//    }
+
+    @PostMapping // 기안서 참조자 변경 (전송)
+    public ResponseEntity<?> changeViewer(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestBody ApprovalRequestDTO approvalRequestDTO) {
+        TokenDTO tokenDTO = multiService.checkToken (accessToken);
+        if (tokenDTO.isOK ()) try {
+            ApprovalResponseDTO approvalResponseDTO = multiService.addViewer (approvalId, approvalRequestDTO, tokenDTO.username ());
+            return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
+        } catch (NotAllowedException ex) {
+            return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
+        }
+        else return tokenDTO.getResponseEntity ();
+    }
 }

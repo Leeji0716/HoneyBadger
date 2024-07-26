@@ -27,4 +27,9 @@ public class ViewerService {
         return viewerRepository.findByApproval (approval);
     }
 
+    public void delete(SiteUser user, Approval approval){
+        Viewer viewer = viewerRepository.findByUserAndApproval (user,approval);
+        viewerRepository.delete (viewer);
+    }
+
 }
