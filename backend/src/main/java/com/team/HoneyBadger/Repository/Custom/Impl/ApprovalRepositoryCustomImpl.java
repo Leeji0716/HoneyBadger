@@ -19,27 +19,51 @@ public class ApprovalRepositoryCustomImpl implements ApprovalRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
     QApproval qApproval = QApproval.approval;
 
-    public List<Approval> findByUsername(String username) {
-
-        return jpaQueryFactory
+    public Page<Approval> findByUsername(String username, Pageable pageable) {
+        List<Approval> approvals = jpaQueryFactory
                 .selectFrom (qApproval)
                 .where (qApproval.approvers.any ().user.username.eq (username)
                         .or (qApproval.viewers.any ().user.username.eq (username))
                         .or (qApproval.sender.username.eq (username)))
                 .orderBy (qApproval.createDate.desc ())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch ();
+
+        long total = jpaQueryFactory
+                .selectFrom (qApproval)
+                .where (qApproval.approvers.any ().user.username.eq (username)
+                        .or (qApproval.viewers.any ().user.username.eq (username))
+                        .or (qApproval.sender.username.eq (username)))
+                .orderBy (qApproval.createDate.desc ())
+                .fetchCount ();
+
+        return new PageImpl<> (approvals, pageable, total);
 
     }
 
-    public List<Approval> findByUsernameAndKeyword(String username, String keyword) {
-        return jpaQueryFactory
+    public Page<Approval> findByUsernameAndKeyword(String username, String keyword, Pageable pageable) {
+        List<Approval> approvals = jpaQueryFactory
                 .selectFrom (qApproval)
                 .where ((qApproval.approvers.any ().user.username.eq (username)
                         .or (qApproval.viewers.any ().user.username.eq (username))
                         .or (qApproval.sender.username.eq (username)))
                         .and (qApproval.title.containsIgnoreCase (keyword)))
                 .orderBy (qApproval.createDate.desc ())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch ();
+
+        long total = jpaQueryFactory
+                .selectFrom (qApproval)
+                .where ((qApproval.approvers.any ().user.username.eq (username)
+                        .or (qApproval.viewers.any ().user.username.eq (username))
+                        .or (qApproval.sender.username.eq (username)))
+                        .and (qApproval.title.containsIgnoreCase (keyword)))
+                .orderBy (qApproval.createDate.desc ())
+                .fetchCount ();
+
+        return new PageImpl<>(approvals, pageable, total);
     }
 
 }
