@@ -1,12 +1,20 @@
 "use client";
-import { acceptApproval, createApproval, deleteApproval, getApprovalList, getUser, getUsers, readApproval } from "@/app/API/UserAPI";
+import { acceptApproval, createApproval, deleteApproval, getApprovalList, getUser, getUsers, readApproval, updateViewer } from "@/app/API/UserAPI";
 import Main from "@/app/Global/Layout/MainLayout";
 import { useEffect, useState } from "react";
 import { getFileIcon, getjyDate, getRole, sliceText } from "../Global/Method";
 import Modal from "../Global/Modal";
-import DropDown, { Direcion } from "../Global/DropDown";
+import { error } from "console";
 
 export default function Approval() {
+    interface approvalRequestDTO {
+        title: string,
+        content: string,
+        sender: string,
+        approversname: string[],
+        viewersname: string[]
+    }
+
     interface approvalResponseDTO {
         id: number,
         title: string,
@@ -60,32 +68,6 @@ export default function Approval() {
     const [fileList, setFileList] = useState<File[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userList, setUserList] = useState([] as any[])
-    
-
-    const [approvalViewers, setApprovalViewers] = useState([] as any[]);
-    const [approvalViewersText, setApprovalViewersText] = useState('');
-
-    // 유저 추가 핸들러
-    const handleAddUser = (user: any) => {
-        setApprovalViewers((prevSelectedViewers) => {
-            const isUserSelected = prevSelectedViewers.find((u) => u.username === user.username);
-            if (isUserSelected) {
-                // 이미 선택된 유저가 있으면 배열에서 제거
-                return prevSelectedViewers.filter((u) => u.username !== user.username);
-            }
-            return [...prevSelectedViewers, user];
-        });
-    };
-
-    useEffect(() => {
-        console.log('approvalViewers changed:', approvalViewers); // 상태 변경 확인
-        setApprovalViewersText(approvalViewers.map((viewer) => viewer.name).join(', '));
-    }, [approvalViewers]);
-
-    const filteredUserList = userList.filter(user =>
-        !approval?.viewers.some(viewer => viewer.username === user.username) &&
-        !approval?.approvers.some(approver => approver.approver.username === user.username)
-    );
 
     // 유저 토큰 확인하기
     useEffect(() => {
@@ -93,7 +75,7 @@ export default function Approval() {
             getUser().then(r => {
                 setUser(r);
                 const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
-                getApprovalList(keyword).then(r => setApprovalList(r)).catch(e => console.log(e));
+                getApprovalList(keyword, 0).then(r => setApprovalList(r.content)).catch(e => console.log(e));
                 // getApprovalList(keyword, 0).then(r => setApprovalList(r)).catch(e => console.log(e));
             }).catch(e => { setClientLoading(false); console.log(e); });
         else
@@ -116,27 +98,11 @@ export default function Approval() {
     // 검색
     const handleSearch = () => {
         setPage(0);
-        getApprovalList(keyword).then(r => {
-            setApprovalList(r);
+        getApprovalList(keyword, page).then(r => {
+            setApprovalList(r.content);
         }).catch(error => {
             console.error("Search error:", error);
         });
-    };
-
-    // Approval 상태 매핑 함수
-    const filtering = (filter: number): string => {
-        switch (filter) {
-            case 0:
-                return "결재 대기중";
-            case 1:
-                return "결재 중";
-            case 2:
-                return "허가";
-            case 3:
-                return "반환";
-            default:
-                return "전체";
-        }
     };
 
     // Approval 상태 매핑 함수
@@ -242,9 +208,63 @@ export default function Approval() {
             </div>
         </>
     }
+
+    function update (approvalId: number, approvalViewers: any[]){
+        const viewer = approvalViewers.map(user => user.username);
+        console.log(viewer);
+
+        const approvalRequest: approvalRequestDTO = {
+            viewersname: viewer,
+            title: "",
+            content: "",
+            sender: "",
+            approversname: []
+        };
+        updateViewer(approvalId, approvalRequest)
+        .then(r => setApproval(r.content))
+        .catch(error => console.error(error));
+    }
+
     // approval 상세보기
     function ApprovalDetail() {
-        
+        const [approvalViewers, setApprovalViewers] = useState([] as any[]);
+        const [approvalViewersText, setApprovalViewersText] = useState('');
+
+        // 유저 추가 핸들러
+        const handleAddUser = (user: any) => {
+            setApprovalViewers((prevSelectedViewers) => {
+                const isUserSelected = prevSelectedViewers.find((u) => u.username === user.username);
+                if (isUserSelected) {
+                    // 이미 선택된 유저가 있으면 배열에서 제거
+                    return prevSelectedViewers.filter((u) => u.username !== user.username);
+                }
+                return [...prevSelectedViewers, user];
+            });
+        };
+
+        // 컴포넌트 로드 시 approval.viewers를 초기 상태로 설정
+        useEffect(() => {
+            setApprovalViewers(approval.viewers);
+        }, [approval.viewers]);
+
+        useEffect(() => {
+            setApprovalViewersText(approvalViewers.map((viewer) => viewer.name).join(', '));
+        }, [approvalViewers]);
+
+        const filteredUserList = userList.filter(user =>
+            !approval?.approvers.some(approver => approver.approver.username === user.username)
+        );
+
+        // 참조 유저 제거
+        const handleInputChange = (event: any) => {
+            const inputValue = event.target.value;
+            const selectedUserNames = inputValue.split(',').map((username: string) => username.trim());
+
+            setApprovalViewers((prevSelectedViewers) =>
+                prevSelectedViewers.filter(user => selectedUserNames.includes(user.name))
+            );
+        };
+
         return <div>
             <div className="w-full h-[90%]">
                 <div className="flex flex-wrap w-full">
@@ -411,36 +431,38 @@ export default function Approval() {
                         }
                         <button className="px-4 py-2 bg-blue-400 text-white rounded-md mr-2" onClick={() => setIsModalOpen(true)}>전달</button>
                         <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} escClose={true} outlineClose={true}>
-                            <div className="overflow-auto">
-                                <p className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</p>
-                                <label className="w-[90%] flex items-center border-2 border-gray-300 pl-5">{approvalViewersText}</label>
-                                <ul className="m-3 overflow-y-scroll w-[500px] h-[700px]">
+                            <div className="flex flex-col items-center w-[500px] h-[700px]">
+                                <p className="font-bold text-3xl m-3 mb-8 flex justify-center w-full">멤버 추가하기</p>
+                                <div className="w-full flex justify-end">
+                                    <button className="px-4 py-2 official-color text-white rounded-md mr-2 w-[80px] mb-2"
+                                        onClick={() => update(approval.id, approvalViewers)}>전달</button>
+                                </div>
+                                <input type="text" className="w-[90%] flex items-center border-2 border-gray-300 pl-5 mb-2"
+                                    onChange={(e) => handleInputChange(e)} value={approvalViewersText} />
+                                <ul className="overflow-y-scroll w-full">
                                     {filteredUserList.map((user, index) => (
                                         <li key={index} className="flex justify-between items-center mb-5 w-full">
                                             <span className="font-bold text-md m-3 w-[25%]">{user.name}</span>
                                             <span className="text-md m-3 w-[25%]">부서</span>
                                             <span className="text-md m-3 w-[25%]">역할</span>
-                                            <button
-                                                onClick={() => handleAddUser(user)}
-                                                className="font-bold text-3xl m-3 w-[25%]"
-                                            >
-                                                +
-                                            </button>
+                                            {approvalViewersText.includes(user.name) ?
+                                                <button
+                                                    onClick={() => handleAddUser(user)}
+                                                    className="font-bold text-3xl m-3 w-[25%] text-red-500"
+                                                >
+                                                    ✓
+                                                </button>
+                                                :
+                                                <button
+                                                    onClick={() => handleAddUser(user)}
+                                                    className="font-bold text-3xl m-3 w-[25%]"
+                                                >
+                                                    +
+                                                </button>
+                                            }
+
                                         </li>
                                     ))}
-                                    {/* {userList.filter(user => !approval.viewers.includes(user.name)).map((user, index) => (
-                                        <li key={index} className="flex justify-between items-center mb-5 w-full">
-                                            <span className="font-bold text-md m-3 w-[25%]">{user.name}</span>
-                                            <span className=" text-md m-3 w-[25%]">부서</span>
-                                            <span className="text-md m-3 w-[25%]">역할</span>
-                                            <button
-                                                onClick={() => handleAddUser(user)}
-                                                className="font-bold text-3xl m-3 w-[25%]"
-                                            >
-                                                +
-                                            </button>
-                                        </li>
-                                    ))} */}
                                 </ul>
                             </div>
                         </Modal>
@@ -560,7 +582,7 @@ export default function Approval() {
             <div className="w-11/12 bg-white h-full flex flex-col shadow">
                 {/* 결재 기안서 상세 보기 */}
                 {approval != null ? <ApprovalDetail /> : <></>}
-                
+
             </div>
         </div>
     </Main >
