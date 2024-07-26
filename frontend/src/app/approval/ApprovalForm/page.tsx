@@ -210,21 +210,23 @@ export default function Approval() {
                 const approvalRequest: approvalRequestDTO = { title: title, content: content, sender: user.username, approversname: finalApprover, viewersname: viewer };
                 const form = new FormData();
                 fileList.forEach(file => form.append('attachments', file));
-
-                createApproval(approvalRequest)
-                    .then(response => { 
-                        return approvalFiles(response.id, form)
+                if(fileList.length == 0){
+                    createApproval(approvalRequest).then(r => window.location.href="/approval").catch(e => console.log(e));
+                }else{  
+                    createApproval(approvalRequest)
+                    .then(response => {
+                        return approvalFiles({ attachments: form, approvalId: response.id })
                             .then((r) => {
                                 console.log(r);
                                 window.location.href = "/approval";
                             })
                             .catch(error => {
-                                console.error("Error in approvalFiles:", error);
+                                console.error("파일 에러", error);
                             });
                     })
                     .catch(error => {
                         console.error("An error occurred in createApproval:", error);
-                    });
+                    });}
             }
         } else {
             console.error("제목이나 승인자가 없습니다.");
