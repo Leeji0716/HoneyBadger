@@ -5,6 +5,7 @@ import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.NotAllowedException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -113,10 +114,13 @@ public class CycleController {
 
     //태그에 해당하는 일정리스트
     @GetMapping("/tagList")
-    public ResponseEntity<?> tagCycleList(@RequestHeader("Authorization") String accessToken,@RequestHeader("id") Long id){
+    public ResponseEntity<?> tagCycleList(@RequestHeader("Authorization") String accessToken,@RequestHeader("id") Long id,@RequestHeader("page")int page){
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
         if(tokenDTO.isOK()){
-            List<CycleDTO> cycleDTOList = multiService.getTagCycle(id);
+            if (page < 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("해당 페이지를 찾을 수 없습니다.");
+            }
+            Page<CycleDTO> cycleDTOList = multiService.getTagCycle(id,page);
             return ResponseEntity.status(HttpStatus.OK).body(cycleDTOList);
         }else return tokenDTO.getResponseEntity();
 
