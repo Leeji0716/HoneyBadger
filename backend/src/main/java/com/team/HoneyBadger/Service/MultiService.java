@@ -1218,8 +1218,12 @@ public class MultiService {
                         cycleService.createByTag(KeyPreset.UC.getValue(user.getUsername()), cycleRequestDTO.title(), cycleRequestDTO.content(), cycleRequestDTO.startDate(), cycleRequestDTO.endDate(), cycleTag);
                     }
                 }
+                break;
 
             case 1:
+                if(user.getDepartment() == null){
+                    throw new NotAllowedException("부서가 없습니다.");
+                }
                 if (cycleRequestDTO.tagName() == null) {
                     cycleService.create(KeyPreset.DC.getValue(user.getDepartment().getName()), cycleRequestDTO);
                 } else {
@@ -1231,7 +1235,7 @@ public class MultiService {
                         cycleService.createByTag(KeyPreset.DC.getValue(user.getDepartment().getName()), cycleRequestDTO.title(), cycleRequestDTO.content(), cycleRequestDTO.startDate(), cycleRequestDTO.endDate(), cycleTag);
                     }
                 }
-
+                break;
             default:
                 throw new NotAllowedException("필터를 선택해주세요.");
         }
@@ -1331,6 +1335,8 @@ public class MultiService {
                 return cycleResponseDTOList;
 
             case 1 :
+                if(user.getDepartment() ==  null)
+                    return new ArrayList<>();
                 List<Cycle> cycleList1 = cycleService.myMonthCycle(KeyPreset.DC.getValue(user.getDepartment().getName()), startDate, endDate);
                 do {
                     boolean holiday = false;
@@ -1425,12 +1431,53 @@ public class MultiService {
         return getTagDto(cycleTagService.updateTag(cycleTag, cycleTagRequestDTO));
     }
 
+    public Page<CycleDTO> getTagCycle(Long id,int page) {
+        Pageable pageable = PageRequest.of(page,5);
+        CycleTag cycleTag = cycleTagService.findById(id);
+        Page<Cycle> cycleList = cycleService.findTagCycleToPaging(cycleTag,pageable);
+        return new PageImpl<>(cycleList.stream().map(this::getCycleDTO).toList(),pageable,cycleList.getTotalElements());
+
+    }
+
     /*
-     * Approval
+     * `Approval`
      */
 
-    @Transactional
+    @Transactional //승인 파일 업로드
+    public void approvalFilesUpload(Long approvalId, List<MultipartFile> files) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        String keyValue = KeyPreset.APPROVAL_MULTI.getValue(approvalId.toString());
+        MultiKey key = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
+        List<String> list = new ArrayList<>();//
+        for (MultipartFile file : files) {
+            UUID uuid = UUID.randomUUID();
+            String fileName = "/api/approval/" + approvalId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+            String fileKey = KeyPreset.APPROVAL.getValue(approvalId.toString() + "_" + list.size());
+            fileSystemService.save(fileKey, fileName);
+            fileSystemService.save(KeyPreset.APPROVAL_ORIGIN.getValue(fileKey), file.getOriginalFilename());
+            list.add(fileKey);
+            File dest = new File(path + fileName);
+            if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+            file.transferTo(dest);
+        }
+        multiKeyService.updateAll(key, list);
+    }
+
+
+    @Transactional // 승인 DTO 생성
     private ApprovalResponseDTO getApproval(Approval approval) {
+
+        List<OriginFileResponseDTO> filePathList = new ArrayList<>();
+        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.APPROVAL_MULTI.getValue(approval.getId().toString()));
+        if (_multiKey.isPresent()) {
+            for (String key : _multiKey.get().getKeyValues()) {
+                OriginFileResponseDTO.OriginFileResponseDTOBuilder builder = OriginFileResponseDTO.builder();
+                fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
+                fileSystemService.get(KeyPreset.APPROVAL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
+                builder.key(key); // key
+                filePathList.add(builder.build());
+            }
+        }
 
         List<Approver> approvers = approverService.getAll(approval);
         List<String> approverusernames = approvers.stream().map(approver -> approver.getUser().getUsername()) // 사용자 이름 추출
@@ -1456,10 +1503,15 @@ public class MultiService {
         Long sendDate = dateTimeTransfer(approval.getCreateDate());
 
 
-        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvers(approversUser).viewers(viewerUser).approvalStatus(approvalStatus).readUsers(readUser).sendDate(sendDate).build();
+        return ApprovalResponseDTO.builder()
+                .id(approval.getId())
+                .title(approval.getTitle()).content(approval.getContent()).files(filePathList)
+                .sender(senderDTO).approvers(approversUser).viewers(viewerUser)
+                .approvalStatus(approvalStatus).readUsers(readUser)
+                .sendDate(sendDate).build();
     }
 
-    @Transactional
+    @Transactional // 승인자 디티오 생성
     private List<ApproverResponseDTO> approverUserFind(Approval approval, List<String> usernames) {
 
         List<ApproverResponseDTO> users = new ArrayList<>();
@@ -1513,6 +1565,7 @@ public class MultiService {
     }
 
 
+    //기안 생성
     public ApprovalResponseDTO createApproval(ApprovalRequestDTO approvalRequestDTO, String loginUser) throws NotAllowedException {
         SiteUser sender = userService.get(loginUser);
         Approval approval = approvalService.create(approvalRequestDTO, sender);
@@ -1537,6 +1590,7 @@ public class MultiService {
         return getApproval(approval);
     }
 
+    // 기안 삭제
     public void deleteApproval(Long approvalId) throws NotAllowedException {
 
         if (approvalId == null) throw new NotAllowedException("아이디는 하나 이상 필수입니다.");
@@ -1597,16 +1651,45 @@ public class MultiService {
     }
 
 
-    public List<ApprovalResponseDTO> getApprovalList(String username, String keyword){
-        List<Approval> approvalList = approvalService.getList (username,keyword);
+    public Page<ApprovalResponseDTO> getApprovalList(String username, String keyword, int page) {
+        Pageable pageable = PageRequest.of (page,10);
+        Page<Approval> approvalList = approvalService.getList (username,keyword,pageable);
+
         List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<> ();
         for (Approval approval : approvalList) {
             ApprovalResponseDTO approvalResponseDTO = getApproval(approval);
             approvalResponseDTOS.add(approvalResponseDTO);
         }
-        return approvalResponseDTOS;
+
+        return new PageImpl<> (approvalResponseDTOS, pageable, approvalList.getTotalElements ());
     }
 
+    public ApprovalResponseDTO addViewer(Long approvalId, ApprovalRequestDTO approvalRequestDTO, String username) throws NotAllowedException{
+
+        Approval approval = approvalService.get(approvalId);
+
+        if(!approval.getSender ().equals (username)) throw new NotAllowedException ("생성자만 수정 가능합니다.");
+
+        List<Viewer> currentViewers = approval.getViewers();
+        Set<String> currentViewerUsernames = currentViewers.stream()
+                .map(viewer -> viewer.getUser().getUsername())
+                .collect(Collectors.toSet());
+        Set<String> newViewerUsernames = new HashSet<>(approvalRequestDTO.viewersname());
+
+        // 새로운 사용자 추가
+        for (String newUsername : newViewerUsernames) {
+            if (!currentViewerUsernames.contains(newUsername)) {
+                SiteUser user = userService.get(newUsername);
+                viewerService.save(user, approval);
+            }
+        }
+
+        // 더 이상 목록에 없는 기존 사용자 삭제
+        currentViewers.removeIf(viewer -> !newViewerUsernames.contains(viewer.getUser().getUsername()));
+
+        approvalService.save(approval); // 변경사항 저장
+        return getApproval(approval); // 업데이트된 Approval 객체 반환
+    }
 
 
     /*
@@ -1695,4 +1778,5 @@ public class MultiService {
     private FileResponseDTO transferFileToDTO(File file) throws IOException {
         return FileResponseDTO.builder().name(file.getName()).type(FileType.get(file).ordinal()).createDate(((FileTime) Files.getAttribute(file.toPath(), "creationTime")).toMillis()).modifyDate(file.lastModified()).size(FileOrder.getSize(file)).url(file.getPath().replaceAll("\\\\", "/").replaceAll(HoneyBadgerApplication.getOsType().getLoc(), "")).build();
     }
+
 }

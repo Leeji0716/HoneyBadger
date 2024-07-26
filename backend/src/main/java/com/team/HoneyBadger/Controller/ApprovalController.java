@@ -11,7 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.List;
 @RequestMapping("/api/approval")
 public class ApprovalController {
     private final MultiService multiService;
+
 
     @PostMapping // 기안서 생성
     public ResponseEntity<?> approvalCreate(@RequestHeader("Authorization") String accessToken, @RequestBody ApprovalRequestDTO approvalRequestDTO){
@@ -83,10 +86,15 @@ public class ApprovalController {
     }
 
     @GetMapping("/list") // 기안서 리스트 가져오기
-    public ResponseEntity<?> approvalList(@RequestHeader("Authorization") String accessToken, @RequestHeader(value = "keyword", defaultValue = "") String keyword) {
+    public ResponseEntity<?> approvalList(@RequestHeader("Authorization") String accessToken,
+                                          @RequestHeader(value = "keyword", defaultValue = "") String keyword,
+                                          @RequestHeader(value = "Page", required = false) Integer page) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
+        if (page == null || page < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("해당 페이지를 찾을 수 없습니다.");
+        }
         if (tokenDTO.isOK ()) try {
-            List<ApprovalResponseDTO> approvalResponseDTOList = multiService.getApprovalList (tokenDTO.username (), URLDecoder.decode(keyword, StandardCharsets.UTF_8));
+            Page<ApprovalResponseDTO> approvalResponseDTOList = multiService.getApprovalList (tokenDTO.username (), URLDecoder.decode(keyword, StandardCharsets.UTF_8), page);
             return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTOList);
         } catch (NotAllowedException ex) {
             return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
@@ -94,5 +102,21 @@ public class ApprovalController {
             return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
         }
         else return tokenDTO.getResponseEntity ();
+    }
+
+    @PostMapping("/files") // 기안 첨부 파일 저장
+    public ResponseEntity<?> saveFiles(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, List<MultipartFile> attachments) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) {
+            try {
+                multiService.approvalFilesUpload(approvalId, attachments);
+                return ResponseEntity.status(HttpStatus.OK).body("파일 업로드 성공");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("파일 업로드 실패: " + ex.getMessage());
+            }
+        } else {
+            return tokenDTO.getResponseEntity();
+        }
     }
 }
