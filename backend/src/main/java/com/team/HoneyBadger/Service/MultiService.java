@@ -1652,7 +1652,7 @@ public class MultiService {
 
 
     public Page<ApprovalResponseDTO> getApprovalList(String username, String keyword, int page) {
-        Pageable pageable = PageRequest.of (page,10);
+        Pageable pageable = PageRequest.of (page,20);
         Page<Approval> approvalList = approvalService.getList (username,keyword,pageable);
 
         List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<> ();
