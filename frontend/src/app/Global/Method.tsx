@@ -55,9 +55,10 @@ export function getDateFormatInput(data: any) {
     const date = new Date(data);
     return date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
 }
-export function transferLocalTime(date: Date) {
-    return new Date(date.getTime() + 9 * 1000 * 60 * 60);
+export function transferLocalTime(date: Date): Date {
+    return new Date(date.getTime() + 9 * 1000 * 60 * 60); // UTC를 한국 시간(KST)으로 변환
 }
+
 export function getScheduleDate(data: any) {
     const date = new Date(data);
     return date.getFullYear() + '-' + (date.getMonth() < 9 ? '0' : '') + (date.getMonth() + 1) + '-' + (date.getDate() < 9 ? '0' : '') + date.getDate();
@@ -68,13 +69,13 @@ export function getjyDate(data: any) {
     return date.getFullYear() + '-' + (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-' + (date.getDate() < 10 ? '0' + date.getDate() : date.getDate());
 }
 
+
 export function eontransferLocalTime(date: Date | null) {
     if (date != null) {
         return new Date(date.getTime() + 9 * 1000 * 60 * 60);
     } else {
         return null;
     }
-
 }
 
 export function eongetDateTimeFormat(data: any) {
