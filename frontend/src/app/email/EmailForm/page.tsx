@@ -3,7 +3,7 @@
 import { emailFiles, getUser, mailImage, mailUpdate, reservationEmail, reservationFiles, sendEmail, tempDelete } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
-import {  eontransferLocalTime, getDateTimeFormatInput } from "@/app/Global/Method";
+import { eontransferLocalTime, getDateTimeFormatInput, getFileIcon, sliceText } from "@/app/Global/Method";
 import QuillNoSSRWrapper from "@/app/Global/QuillNoSSRWrapper";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
@@ -45,7 +45,7 @@ export default function EmailForm() {
             getUser().then(r => {
                 setUser(r);
                 const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
-            }).catch(e => {setClientLoading(false); console.log(e);});
+            }).catch(e => { setClientLoading(false); console.log(e); });
             if (localStorage.getItem('email')) {
                 // const email = JSON.parse(localStorage.getItem('email') as string);
                 const storedEmail = localStorage.getItem('email') || 'null';
@@ -172,13 +172,6 @@ export default function EmailForm() {
         }
     }
 
-    const sliceText = (text: string) => {
-        const slice: string[] = text.split(".");
-        const extension: string = slice[slice.length - 1];
-
-        return extension;
-    }
-
     const finderror = () => {
         if (receiverIds.length == 0) {
             setError("받는사람을 입력해 주세요.");
@@ -207,7 +200,7 @@ export default function EmailForm() {
                 <DropDown open={open} onClose={() => setOpen(false)} className="mt-8" defaultDriection={Direcion.DOWN} width={200} height={200} button="button1">
                     <input type="datetime-local" name="" id="" defaultValue={getDateTimeFormatInput(senderTime)} onChange={(e) => {
                         const inputDateTimeString = e.target.value; // "YYYY-MM-DDTHH:mm" 형식의 문자열
-                        const selectedDate = new Date(inputDateTimeString); 
+                        const selectedDate = new Date(inputDateTimeString);
                         setTime(selectedDate);
                         email == null ? setFlag(1) : setFlag(2);
                         console.log("플래그값 : " + flag);
@@ -245,22 +238,22 @@ export default function EmailForm() {
                 }} />
             </div>
             <div className="w-[1400px] h-[150px] border border-gary-500 overflow-y-scroll relative">
-                {/* <button className="btn btn-sm absolute top-[5px] right-[5px]" onClick={() => document.getElementById('file')?.click()}>파일 선택</button> */}
-                <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" onClick={() => document.getElementById('file')?.click()}></img>
-                {/* {files?.length != 0 ? files?.map((f: MailFile, index: number) => <ul key={index}>
-                    <div className="flex items-center bg-white p-2">
-                        <img src="/x.png" alt="" className="mr-2 w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...files]; removeFile.splice(index, 1); setFiles(removeFile); }}></img>
-                        <img src={"/" + sliceText(f.original_name) + ".PNG"} className="w-[26px] h-[31px] mr-2" alt="" />
-                        <p>{f.original_name}</p>
-                    </div>
-                </ul>) : <></>} */}
-                {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}>
-                    <div className="flex items-center bg-white p-2">
-                        <img src="/x.png" alt="" className="mr-2  w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...fileList]; removeFile.splice(index, 1); setFileList(removeFile); }}></img>
-                        <img src={"/" + sliceText(f.name) + ".PNG"} className="w-[26px] h-[31px] mr-2" alt="" />
-                        <p>{f.name}</p>
-                    </div>
-                </ul>) : <></>}
+                <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer"
+                    onClick={() => document.getElementById('file')?.click()}></img>
+                {fileList.length !== 0 && fileList.map((f: File, index: number) => (
+                    <ul key={index}>
+                        <div className="flex items-center bg-white p-2">
+                            <img src="/x.png" alt="" className="mr-2 w-[26px] h-[31px] cursor-pointer"
+                                onClick={() => {
+                                    const removeFile = [...fileList];
+                                    removeFile.splice(index, 1);
+                                    setFileList(removeFile);
+                                }}></img>
+                            <img src={getFileIcon(f.name)} className="w-[26px] h-[31px] mr-2" alt="" />
+                            <p>{sliceText(f.name)}</p>
+                        </div>
+                    </ul>
+                ))}
             </div>
             <div className="w-full flex justify-center">
                 <QuillNoSSRWrapper

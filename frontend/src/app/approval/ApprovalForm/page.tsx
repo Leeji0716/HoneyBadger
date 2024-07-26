@@ -1,9 +1,9 @@
 "use client";
-import { createApproval, getUser, getUsers } from "@/app/API/UserAPI";
+import { approvalFiles, createApproval, getUser, getUsers } from "@/app/API/UserAPI";
 import DropDown, { Direcion } from "@/app/Global/DropDown";
 import Main from "@/app/Global/Layout/MainLayout";
-import { getRole } from "@/app/Global/Method";
-import { use, useEffect, useState } from "react";
+import { getFileIcon, getRole, sliceText } from "@/app/Global/Method";
+import { useEffect, useState } from "react";
 
 export default function Approval() {
     interface approvalRequestDTO {
@@ -208,13 +208,22 @@ export default function Approval() {
                 const viewer = selectedViewer.map(user => user.username);
 
                 const approvalRequest: approvalRequestDTO = { title: title, content: content, sender: user.username, approversname: finalApprover, viewersname: viewer };
+                const form = new FormData();
+                fileList.forEach(file => form.append('attachments', file));
+
                 createApproval(approvalRequest)
-                    .then(r => {
-                        // console.log(r);
-                        window.location.href = "/approval"
+                    .then(response => { 
+                        return approvalFiles(response.id, form)
+                            .then((r) => {
+                                console.log(r);
+                                window.location.href = "/approval";
+                            })
+                            .catch(error => {
+                                console.error("Error in approvalFiles:", error);
+                            });
                     })
-                    .catch(e => {
-                        console.error(e);
+                    .catch(error => {
+                        console.error("An error occurred in createApproval:", error);
                     });
             }
         } else {
@@ -222,14 +231,6 @@ export default function Approval() {
             window.confirm('각 항목이 모두 입력되었는지 확인해주세요.')
         }
     };
-
-    // 파일 이름
-    const sliceText = (text: string) => {
-        const slice: string[] = text.split(".");
-        const extension: string = slice[slice.length - 1];
-
-        return extension;
-    }
 
     //페이지
     return <Main user={user} isClientLoading={isClientLoading}>
@@ -420,18 +421,32 @@ export default function Approval() {
 
                     {/* 파일 */}
                     <>
-                        <div className="relative w-full h-[150px] border border-gary-500 overflow-y-scroll border-r-2 border-l-2 border-b-2 border-gray-300">
-                            <button className="btn btn-sm absolute top-[5px] right-[5px]">파일 선택</button>
-                            {/* <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" ></img> */}
+                        <div className="flex w-[1400px] gap-5">
+                            <input id="file" hidden type="file" multiple className="border-b-2" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                if (event.target.files) {
+                                    const filesArray = Array.from(event.target.files);
+                                    setFileList((prevFiles) => [...prevFiles, ...filesArray]);
+                                }
+                            }} />
                         </div>
-
-                        {fileList.length != 0 ? fileList.map((f: File, index: number) => <ul key={index}>
-                            <div className="flex items-center bg-white p-2">
-                                <img src="/x.png" alt="" className="mr-2  w-[26px] h-[31px] cursor-pointer" onClick={() => { const removeFile = [...fileList]; removeFile.splice(index, 1); setFileList(removeFile); }}></img>
-                                <img src={"/" + sliceText(f.name) + ".PNG"} className="w-[26px] h-[31px] mr-2" alt="" />
-                                <p>{f.name}</p>
-                            </div>
-                        </ul>) : <></>}
+                        <div className="w-full h-[170px] border border-gray-300 border-r-2 border-l-2 border-b-2 border-gray-300 flex flex-col flex-wrap overflow-x-scroll relative">
+                            <img src="/plus.png" alt="" className="w-[30px] h-[30px] fixed bottom-12 right-40 cursor-pointer"
+                                onClick={() => document.getElementById('file')?.click()}></img>
+                            {fileList.length !== 0 && fileList.map((f: File, index: number) => (
+                                <ul key={index}>
+                                    <div className="flex items-center bg-white p-2 w-[500px]">
+                                        <img src="/x.png" alt="" className="mr-2 w-[26px] h-[31px] cursor-pointer"
+                                            onClick={() => {
+                                                const removeFile = [...fileList];
+                                                removeFile.splice(index, 1);
+                                                setFileList(removeFile);
+                                            }}></img>
+                                        <img src={getFileIcon(f.name)} className="w-[26px] h-[31px] mr-2" alt="" />
+                                        <p>{sliceText(f.name)}</p>
+                                    </div>
+                                </ul>
+                            ))}
+                        </div>
                     </>
                 </div>
             </div>

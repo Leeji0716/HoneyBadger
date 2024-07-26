@@ -316,3 +316,38 @@ export function isHoliday(date: Date) {
     return solarHoliday.includes(solar) || lunarHoliday.includes(lunar);
 }
 
+
+// 파일 아이콘
+export function getFileIcon(fileName: string) {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    switch (extension) {
+        case 'jpg':
+            return 'https://w7.pngwing.com/pngs/169/93/png-transparent-jpg-filetype-icon-thumbnail.png';
+        case 'png':
+            return 'https://w7.pngwing.com/pngs/141/895/png-transparent-png-filetype-icon-thumbnail.png';
+        case 'pdf':
+            return 'https://w7.pngwing.com/pngs/182/22/png-transparent-computer-icons-pdf-filename-extension-pdf-icon-angle-text-rectangle-thumbnail.png';
+        case 'doc':
+        case 'docx':
+            return 'https://w7.pngwing.com/pngs/801/479/png-transparent-microsoft-word-thumbnail-microsoft-word-microsoft-office-365-document-microsoft-blue-angle-text-thumbnail.png';
+        case 'xls':
+        case 'xlsx':
+            return 'https://w7.pngwing.com/pngs/670/803/png-transparent-excel-logo-logos-logos-and-brands-icon-thumbnail.png';
+        case 'ppt':
+        case 'pptm':
+            return 'https://w7.pngwing.com/pngs/742/145/png-transparent-powerpoint-logo-microsoft-powerpoint-computer-icons-ppt-presentation-microsoft-powerpoint-network-icon-angle-text-rectangle-thumbnail.png';
+        case 'zip':
+            return 'https://w7.pngwing.com/pngs/41/725/png-transparent-computer-icons-zip-file-zip-files-free-miscellaneous-text-rectangle-thumbnail.png';
+        default:
+            return 'https://w7.pngwing.com/pngs/665/246/png-transparent-blue-folder-illustration-blue-turquoise-angle-aqua-folder-blue-angle-rectangle-thumbnail.png';
+    }
+}
+
+// 파일 이름 자르기
+export function sliceText (text: string) {
+    const extensionIndex = text.lastIndexOf('.');
+    const name = extensionIndex !== -1 ? text.slice(0, extensionIndex) : text;
+    const extension = extensionIndex !== -1 ? text.slice(extensionIndex) : '';
+    return name.length > 8 ? name.slice(0, 15) + '...' + extension : text;
+}
+
