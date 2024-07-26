@@ -86,10 +86,15 @@ public class ApprovalController {
     }
 
     @GetMapping("/list") // 기안서 리스트 가져오기
-    public ResponseEntity<?> approvalList(@RequestHeader("Authorization") String accessToken, @RequestHeader(value = "keyword", defaultValue = "") String keyword) {
+    public ResponseEntity<?> approvalList(@RequestHeader("Authorization") String accessToken,
+                                          @RequestHeader(value = "keyword", defaultValue = "") String keyword,
+                                          @RequestHeader(value = "Page", required = false) Integer page) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
+        if (page == null || page < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("해당 페이지를 찾을 수 없습니다.");
+        }
         if (tokenDTO.isOK ()) try {
-            List<ApprovalResponseDTO> approvalResponseDTOList = multiService.getApprovalList (tokenDTO.username (), URLDecoder.decode(keyword, StandardCharsets.UTF_8));
+            Page<ApprovalResponseDTO> approvalResponseDTOList = multiService.getApprovalList (tokenDTO.username (), URLDecoder.decode(keyword, StandardCharsets.UTF_8), page);
             return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTOList);
         } catch (NotAllowedException ex) {
             return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());

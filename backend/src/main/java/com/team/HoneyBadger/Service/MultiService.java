@@ -1637,14 +1637,17 @@ public class MultiService {
     }
 
 
-    public List<ApprovalResponseDTO> getApprovalList(String username, String keyword){
-        List<Approval> approvalList = approvalService.getList (username,keyword);
+    public Page<ApprovalResponseDTO> getApprovalList(String username, String keyword, int page) {
+        Pageable pageable = PageRequest.of (page,10);
+        Page<Approval> approvalList = approvalService.getList (username,keyword,pageable);
+
         List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<> ();
         for (Approval approval : approvalList) {
             ApprovalResponseDTO approvalResponseDTO = getApproval(approval);
             approvalResponseDTOS.add(approvalResponseDTO);
         }
-        return approvalResponseDTOS;
+
+        return new PageImpl<> (approvalResponseDTOS, pageable, approvalList.getTotalElements ());
     }
 
     public ApprovalResponseDTO addViewer(Long approvalId, ApprovalRequestDTO approvalRequestDTO, String username) throws NotAllowedException{
