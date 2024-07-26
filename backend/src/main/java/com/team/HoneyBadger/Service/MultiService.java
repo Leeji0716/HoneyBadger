@@ -68,7 +68,9 @@ public class MultiService {
     private final ApproverService approverService;
     private final ViewerService viewerService;
     private final CycleTagService cycleTagService;
+    private final TeamPeopleService teamPeopleService;
     private final HashMap<String, HashMap<String, List<byte[]>>> dataStack = new HashMap<>();
+
 
     /**
      * Auth
@@ -1231,7 +1233,7 @@ public class MultiService {
                 break;
 
             case 1:
-                if(user.getDepartment() == null){
+                if (user.getDepartment() == null) {
                     throw new NotAllowedException("부서가 없습니다.");
                 }
                 if (cycleRequestDTO.tagName() == null) {
@@ -1243,6 +1245,23 @@ public class MultiService {
                         cycleService.createByTag(KeyPreset.DC.getValue(user.getDepartment().getName()), cycleRequestDTO.title(), cycleRequestDTO.content(), cycleRequestDTO.startDate(), cycleRequestDTO.endDate(), cycleTag1);
                     } else {
                         cycleService.createByTag(KeyPreset.DC.getValue(user.getDepartment().getName()), cycleRequestDTO.title(), cycleRequestDTO.content(), cycleRequestDTO.startDate(), cycleRequestDTO.endDate(), cycleTag);
+                    }
+                }
+                break;
+
+            case 2:
+                if (cycleRequestDTO.teamName() == null) {
+                    throw new NotAllowedException("팀을 선택해주세요.");
+                }
+                if (cycleRequestDTO.tagName() == null) {
+                    cycleService.create(KeyPreset.TC.getValue(cycleRequestDTO.teamName()), cycleRequestDTO);
+                } else {
+                    CycleTag cycleTag = cycleTagService.findByName(KeyPreset.TC.getValue(cycleRequestDTO.teamName()), cycleRequestDTO.tagName());
+                    if (cycleTag == null) {
+                        CycleTag cycleTag1 = cycleTagService.create(KeyPreset.TC.getValue(cycleRequestDTO.teamName()), cycleRequestDTO.tagName(), cycleRequestDTO.tagColor());
+                        cycleService.createByTag(KeyPreset.TC.getValue(cycleRequestDTO.teamName()), cycleRequestDTO.title(), cycleRequestDTO.content(), cycleRequestDTO.startDate(), cycleRequestDTO.endDate(), cycleTag1);
+                    } else {
+                        cycleService.createByTag(KeyPreset.TC.getValue(cycleRequestDTO.teamName()), cycleRequestDTO.title(), cycleRequestDTO.content(), cycleRequestDTO.startDate(), cycleRequestDTO.endDate(), cycleTag);
                     }
                 }
                 break;
@@ -1274,6 +1293,9 @@ public class MultiService {
                     throw new NotAllowedException("접근 권한이 없습니다.");
                 }
                 if (cycleRequestDTO.tagName() == null) {
+                    if (cycle.getTag() != null) {
+                        return getCycleDTO(cycleService.upDateAndDeleteTag(cycle, cycleRequestDTO));
+                    }
                     return getCycleDTO(cycleService.upDate(cycle, cycleRequestDTO));
                 } else {
                     CycleTag cycleTag = cycleTagService.findByName(KeyPreset.UC.getValue(user.getUsername()), cycleRequestDTO.tagName());
@@ -1290,6 +1312,9 @@ public class MultiService {
                     throw new NotAllowedException("접근 권한이 없습니다.");
                 }
                 if (cycleRequestDTO.tagName() == null) {
+                    if (cycle.getTag() != null) {
+                        return getCycleDTO(cycleService.upDateAndDeleteTag(cycle, cycleRequestDTO));
+                    }
                     return getCycleDTO(cycleService.upDate(cycle, cycleRequestDTO));
                 } else {
                     CycleTag cycleTag = cycleTagService.findByName(KeyPreset.DC.getValue(user.getDepartment().getName()), cycleRequestDTO.tagName());
@@ -1297,6 +1322,25 @@ public class MultiService {
                         return getCycleDTO(cycleService.upDateToTag(cycle, cycleRequestDTO, cycleTag));
                     } else {
                         CycleTag cycleTag1 = cycleTagService.create(KeyPreset.DC.getValue(user.getDepartment().getName()), cycleRequestDTO.tagName(), cycleRequestDTO.tagColor());
+                        return getCycleDTO(cycleService.upDateToTag(cycle, cycleRequestDTO, cycleTag1));
+                    }
+                }
+
+            case 2:
+                if (!cycle.getK().equals(KeyPreset.TC.getValue(cycleRequestDTO.teamName()))) {
+                    throw new NotAllowedException("접근 권한이 없습니다.");
+                }
+                if (cycleRequestDTO.tagName() == null) {
+                    if (cycle.getTag() != null) {
+                        return getCycleDTO(cycleService.upDateAndDeleteTag(cycle, cycleRequestDTO));
+                    }
+                    return getCycleDTO(cycleService.upDate(cycle, cycleRequestDTO));
+                } else {
+                    CycleTag cycleTag = cycleTagService.findByName(KeyPreset.TC.getValue(cycleRequestDTO.teamName()), cycleRequestDTO.tagName());
+                    if (cycleTag != null) {
+                        return getCycleDTO(cycleService.upDateToTag(cycle, cycleRequestDTO, cycleTag));
+                    } else {
+                        CycleTag cycleTag1 = cycleTagService.create(KeyPreset.TC.getValue(cycleRequestDTO.teamName()), cycleRequestDTO.tagName(), cycleRequestDTO.tagColor());
                         return getCycleDTO(cycleService.upDateToTag(cycle, cycleRequestDTO, cycleTag1));
                     }
                 }
@@ -1316,9 +1360,8 @@ public class MultiService {
         SiteUser user = userService.get(username);
         List<CycleResponseDTO> cycleResponseDTOList = new ArrayList<>();
         List<CycleDTO> cycleDTOList = new ArrayList<>();
-
-        switch (status){
-            case 0 :
+        switch (status) {
+            case 0:
                 List<Cycle> cycleList = cycleService.myMonthCycle(KeyPreset.UC.getValue(user.getUsername()), startDate, endDate);
                 do {
                     boolean holiday = false;
@@ -1345,8 +1388,8 @@ public class MultiService {
                 } while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
                 return cycleResponseDTOList;
 
-            case 1 :
-                if(user.getDepartment() ==  null)
+            case 1:
+                if (user.getDepartment() == null)
                     return new ArrayList<>();
                 List<Cycle> cycleList1 = cycleService.myMonthCycle(KeyPreset.DC.getValue(user.getDepartment().getName()), startDate, endDate);
                 do {
@@ -1373,7 +1416,39 @@ public class MultiService {
                     cycleDTOList.clear();
                 } while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
                 return cycleResponseDTOList;
-
+            case 2:
+                if (teamPeopleService.findMyTeam(user).isEmpty())
+                    return new ArrayList<>();
+                List<String> myTeamName = teamPeopleService.findMyTeamNameList(user);
+                List<Cycle> cycleList2 = new ArrayList<>();
+                for (String name : myTeamName) {
+                    List<Cycle> temaCycleList = cycleService.myMonthCycle(KeyPreset.TC.getValue(name), startDate, endDate);
+                    cycleList2.addAll(temaCycleList);
+                }
+                do {
+                    boolean holiday = false;
+                    String holidayTitle = "";
+                    for (Cycle cycle : cycleList2) {
+                        if (startDate.getDayOfMonth() == cycle.getStartDate().getDayOfMonth() || cycle.getEndDate().getDayOfMonth() == startDate.getDayOfMonth()) {
+                            if (cycle.getTag() != null) {
+                                CycleDTO cycleDTO = CycleDTO.builder().id(cycle.getId()).title(cycle.getTitle()).content(cycle.getContent()).startDate(dateTimeTransfer(cycle.getStartDate())).endDate(dateTimeTransfer(cycle.getEndDate())).tag(CycleTagDTO.builder().id(cycle.getTag().getId()).name(cycle.getTag().getName()).color(cycle.getTag().getColor()).build()).build();
+                                cycleDTOList.add(cycleDTO);
+                            } else {
+                                CycleDTO cycleDTO = CycleDTO.builder().id(cycle.getId()).title(cycle.getTitle()).content(cycle.getContent()).startDate(dateTimeTransfer(cycle.getStartDate())).endDate(dateTimeTransfer(cycle.getEndDate())).tag(CycleTagDTO.builder().id(null).name(null).color(null).build()).build();
+                                cycleDTOList.add(cycleDTO);
+                            }
+                        }
+                    }
+                    if (holidayService.getHoliday(startDate.toLocalDate()) != null) {
+                        Holiday holiday1 = holidayService.getHoliday(startDate.toLocalDate());
+                        holiday = true;
+                        holidayTitle = holiday1.getTitle();
+                    }
+                    CycleResponseDTO cycleResponseDTO = CycleResponseDTO.builder().cycleDTOList(new ArrayList<>(cycleDTOList)).holiday(holiday).holidayTitle(holidayTitle).build();
+                    cycleResponseDTOList.add(cycleResponseDTO);
+                    cycleDTOList.clear();
+                } while (!(startDate = startDate.plusDays(1)).isAfter(endDate));
+                return cycleResponseDTOList;
             default:
                 throw new NotAllowedException("필터를 선택해주세요.");
         }
@@ -1389,6 +1464,7 @@ public class MultiService {
 
     }
 
+    @Transactional
     public void deleteTag(Long id) {
         CycleTag cycleTag = cycleTagService.findById(id);
         List<Cycle> cycleList = cycleService.findTagCycle(cycleTag);
@@ -1403,23 +1479,36 @@ public class MultiService {
         }
     }
 
-    public List<CycleTagDTO> getTagList(String username,int status) {
+    @Transactional
+    public List<CycleTagDTO> getTagList(String username, int status) {
         SiteUser user = userService.get(username);
-        switch (status){
-            case 0 :
+        switch (status) {
+            case 0:
                 List<CycleTag> cycleTagList = cycleTagService.myTag(KeyPreset.UC.getValue(user.getUsername()));
                 if (!cycleTagList.isEmpty()) {
                     return cycleTagList.stream().map(this::getTagDto).toList();
                 } else {
                     return new ArrayList<>();
                 }
-            case 1 :
+            case 1:
                 List<CycleTag> cycleTagListDC = cycleTagService.myTag(KeyPreset.DC.getValue(user.getDepartment().getName()));
                 if (!cycleTagListDC.isEmpty()) {
                     return cycleTagListDC.stream().map(this::getTagDto).toList();
                 } else {
                     return new ArrayList<>();
                 }
+            case 2:
+                List<String> teamName = teamPeopleService.findMyTeamNameList(user);
+                List<CycleTag> cycleTagListTC = new ArrayList<>();
+                if(teamName.isEmpty())
+                    return new ArrayList<>();
+                for(String name : teamName){
+                    List<CycleTag> teamCycle = cycleTagService.myTag(KeyPreset.TC.getValue(name));
+                    cycleTagListTC.addAll(teamCycle);
+                }
+                if(cycleTagListTC.isEmpty())
+                    return new ArrayList<>();
+                return cycleTagListTC.stream().map(this::getTagDto).toList();
             default:
                 throw new NotAllowedException("필터를 선택해주세요.");
         }
@@ -1427,12 +1516,13 @@ public class MultiService {
 
     }
 
+    @Transactional
     public CycleTagDTO getTagDto(CycleTag cycleTag) {
         return CycleTagDTO.builder().id(cycleTag.getId()).name(cycleTag.getName()).color(cycleTag.getColor()).build();
     }
 
-
-    public CycleTagDTO updateTag(Long id , CycleTagRequestDTO cycleTagRequestDTO) {
+    @Transactional
+    public CycleTagDTO updateTag(Long id, CycleTagRequestDTO cycleTagRequestDTO) {
         CycleTag cycleTag = cycleTagService.findById(id);
         if (cycleTagRequestDTO.name() == null) {
             throw new NotAllowedException("태그이름을 입력해주세요.");
@@ -1442,13 +1532,29 @@ public class MultiService {
         return getTagDto(cycleTagService.updateTag(cycleTag, cycleTagRequestDTO));
     }
 
-    public Page<CycleDTO> getTagCycle(Long id,int page) {
-        Pageable pageable = PageRequest.of(page,5);
+    @Transactional
+    public Page<CycleDTO> getTagCycle(Long id, int page) {
+        Pageable pageable = PageRequest.of(page, 5);
         CycleTag cycleTag = cycleTagService.findById(id);
-        Page<Cycle> cycleList = cycleService.findTagCycleToPaging(cycleTag,pageable);
-        return new PageImpl<>(cycleList.stream().map(this::getCycleDTO).toList(),pageable,cycleList.getTotalElements());
+        Page<Cycle> cycleList = cycleService.findTagCycleToPaging(cycleTag, pageable);
+        return new PageImpl<>(cycleList.stream().map(this::getCycleDTO).toList(), pageable, cycleList.getTotalElements());
 
     }
+
+    /*
+       teamCycle
+     */
+// 내 팀들찾기
+    public List<String> findMyTeams(String username) {
+        SiteUser user = userService.get(username);
+        List<String> teamName = teamPeopleService.findMyTeamNameList(user);
+        if (teamName.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return teamName;
+
+    }
+
 
     /*
      * `Approval`
@@ -1542,7 +1648,6 @@ public class MultiService {
             }
 
 
-
             Long approvalDate = dateTimeTransfer(approver.getCreateDate());
 
             ApproverResponseDTO approverResponseDTO = ApproverResponseDTO.builder().approver(userResponseDTO).approverStatus(approverStatus).approvalDate(approvalDate).build();
@@ -1551,7 +1656,7 @@ public class MultiService {
             users.add(approverResponseDTO);
 
         }
-      
+
         for (ApproverResponseDTO approverResponseDTO : users) {
             if (approverResponseDTO.approverStatus() == 0) {
                 approverService.updateApproverStatus(approval, approverResponseDTO.approver().username(), ApprovalStatus.RUNNING);
@@ -1589,8 +1694,8 @@ public class MultiService {
             approverService.save(user, approval);
         }
 
-        String firstApprover  = approvalRequestDTO.approversname ().getFirst ();
-        approverService.updateApproverStatus (approval,firstApprover,ApprovalStatus.RUNNING);
+        String firstApprover = approvalRequestDTO.approversname().getFirst();
+        approverService.updateApproverStatus(approval, firstApprover, ApprovalStatus.RUNNING);
 
 
         for (String username : approvalRequestDTO.viewersname()) {
@@ -1631,7 +1736,7 @@ public class MultiService {
         List<Approver> approvers = approval.getApprovers();
         int index = -1;
         for (int i = 0; i < approvers.size(); i++) {
-            if (approvers.get(i).getUser ().getUsername ().equals(username)) {
+            if (approvers.get(i).getUser().getUsername().equals(username)) {
                 index = i;
                 break;
             }
@@ -1643,26 +1748,26 @@ public class MultiService {
             if (index < approvers.size() - 1) {
                 Approver nextApprover = approvers.get(index + 1);
                 approverService.updateApproverStatus(approval, nextApprover.getUser().getUsername(), ApprovalStatus.RUNNING);
-                if(!approval.getStatus ().equals (ApprovalStatus.RUNNING)){
-                approvalService.updateStatus (approvalId,ApprovalStatus.RUNNING);}
+                if (!approval.getStatus().equals(ApprovalStatus.RUNNING)) {
+                    approvalService.updateStatus(approvalId, ApprovalStatus.RUNNING);
+                }
             } else {
                 approvalService.updateStatus(approvalId, ApprovalStatus.ALLOW);
             }
-        } else{
+        } else {
             // 내 뒤에는 이제 무조건 null 값으로 들어가야 한다
             // approval 자체는 반려로 변경 되어야 한다
-            approverService.updateApproverStatus (approval,username,ApprovalStatus.DENY);
+            approverService.updateApproverStatus(approval, username, ApprovalStatus.DENY);
             for (int i = index + 1; i < approvers.size(); i++) {
                 Approver nextApprover = approvers.get(i);
                 approverService.updateApproverStatus(approval, nextApprover.getUser().getUsername(), null);
             }
 
-            approvalService.updateStatus (approvalId,ApprovalStatus.DENY);
+            approvalService.updateStatus(approvalId, ApprovalStatus.DENY);
         }
-      
+
         return getApproval(approval);
     }
-
 
 
     public Page<ApprovalResponseDTO> getApprovalList(String username, String keyword, int page) {
@@ -1704,7 +1809,6 @@ public class MultiService {
         approvalService.save(approval); // 변경사항 저장
         return getApproval(approval); // 업데이트된 Approval 객체 반환
     }
-
 
     /*
      * Storage
@@ -1960,4 +2064,5 @@ public class MultiService {
     private FileResponseDTO transferFileToDTO(File file) throws IOException {
         return FileResponseDTO.builder().name(file.getName()).type(FileType.get(file).ordinal()).createDate(((FileTime) Files.getAttribute(file.toPath(), "creationTime")).toMillis()).modifyDate(file.lastModified()).size(FileOrder.getSize(file)).url(file.getPath().replaceAll("\\\\", "/").replaceAll(HoneyBadgerApplication.getOsType().getLoc(), "")).build();
     }
+
 }
