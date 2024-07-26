@@ -20,18 +20,18 @@ import java.util.List;
 @RequestMapping("/api/viewer")
 public class ViewerController {
     private final MultiService multiService;
-
-    @PostMapping // 참조자 추가
-    public ResponseEntity<?> acceptApprover(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestHeader("viewerUsername") List<String> viewerUsername) {
-        TokenDTO tokenDTO = multiService.checkToken (accessToken);
-        if (tokenDTO.isOK ()) try {
-            ApprovalResponseDTO approvalResponseDTO = multiService.addViewer (approvalId, viewerUsername);
-            return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
-        } catch (NotAllowedException ex) {
-            return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
-        }
-        else return tokenDTO.getResponseEntity ();
-    }
+//
+//    @PostMapping // 참조자 추가
+//    public ResponseEntity<?> acceptApprover(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestHeader("viewerUsername") List<String> viewerUsername) {
+//        TokenDTO tokenDTO = multiService.checkToken (accessToken);
+//        if (tokenDTO.isOK ()) try {
+//            ApprovalResponseDTO approvalResponseDTO = multiService.addViewer (approvalId, viewerUsername);
+//            return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
+//        } catch (NotAllowedException ex) {
+//            return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
+//        } catch (DataNotFoundException ex) {
+//            return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
+//        }
+//        else return tokenDTO.getResponseEntity ();
+//    }
 }
