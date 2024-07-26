@@ -462,6 +462,9 @@ export const deleteSchedule = async (id: number) => {
     });
     return response.data;
 };
+/*
+ * Storage
+ */
 
 export const getStorageFiles = async (data: { Location: string, Page?: number, Type?: number, Order: number, Keyword: string }) => {
     const response = await UserApi.get('/api/file/list', {
@@ -503,6 +506,31 @@ export const getStorageFile = async (data: { Location: string }) => {
     });
     return response.data;
 };
+export const cancelUpload = async (data: { Key: string, Location: string, Name: string }) => {
+    const response = await UserApi.delete('/api/file/cancel', {
+        headers: {
+            Key: data.Key,
+            Location: data.Location ? encodeURIComponent(data.Location) : '',
+            Name: data.Name ? encodeURIComponent(data.Name) : ''
+        }
+    });
+    return response.data;
+};
+export const deleteFile = async (data: { Url: string }) => {
+    const response = await UserApi.delete('/api/file', {
+        headers: {
+            Url: data.Url ? encodeURIComponent(data.Url) : ''
+        }
+    });
+    return response.data;
+};
+export const downloadFiles = async (data: { urls: string, name: string }) => {
+    const response = await UserApi.get('/api/file/download', { responseType: "blob", headers: { Urls: data.urls, Name: data.name } });
+    return response.data;
+};
+/*
+ * Approval
+ */
 
 export const createApproval = async (approvalRequestDTO: approvalRequestDTO) => {
     const response = await UserApi.post('/api/approval', approvalRequestDTO);
