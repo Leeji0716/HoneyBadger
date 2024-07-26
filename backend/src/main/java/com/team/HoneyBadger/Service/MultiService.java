@@ -1668,7 +1668,7 @@ public class MultiService {
 
         Approval approval = approvalService.get(approvalId);
 
-        if(!approval.getSender ().equals (username)) throw new NotAllowedException ("생성자만 수정 가능합니다.");
+        if(!approval.getSender ().getUsername().equals (username)) throw new NotAllowedException ("생성자만 수정 가능합니다.");
 
         List<Viewer> currentViewers = approval.getViewers();
         Set<String> currentViewerUsernames = currentViewers.stream()

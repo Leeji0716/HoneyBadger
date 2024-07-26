@@ -4,7 +4,7 @@ import Main from "../Global/Layout/MainLayout";
 import DropDown, { Direcion } from "../Global/DropDown";
 import { getEmail, getUser, mailCancel, mailDelete, readEmail } from "../API/UserAPI";
 import { useRouter } from "next/navigation";
-import { getDateEmailTime } from "../Global/Method";
+import { getDateEmailTime, getFileIcon, sliceText } from "../Global/Method";
 
 export default function Email() {
 
@@ -102,14 +102,6 @@ export default function Email() {
         return trimText?.substring(0, maxLength) + '...';
     };
 
-
-    const sliceText = (text: string) => {
-        const slice: string[] = text.split(".");
-        const extension: string = slice[slice.length - 1];
-        const a = [];
-        return extension;
-    }
-
     const storageItems = (email: EmailResponseDTO, index: number) => {
         const items = {
             email: email,
@@ -172,23 +164,22 @@ export default function Email() {
                 </div>
                 <p className="text-sm">{getDateEmailTime(email.senderTime)}</p>
             </div>
-            <div className="w-full h-[60%] border-t-2 flex flex-col justify-center mt-2 p-4">
-                <ul>
-                    {email.files.length != 0 ?
-                        email.files.map((f: MailFile, index: number) => <li key={index}>
+            <div className="w-full h-[60%] border-t-2 flex flex-col justify-center mt-2 p-4 overflow-y-scroll">
+                <ul className="h-[200px]">
+                    {email.files.length !== 0 ? email.files.map((f: MailFile, index: number) =>
+                        <li key={index}>
                             <div className="flex mb-4 border-solid border-2 border-gray-200 p-4 gap-6">
-                                <img src={"/" + sliceText(f.original_name) + ".PNG"} className="w-[26px] h-[31px]" alt="" />
-                                <a href={f.value}>{f.original_name}</a>
+                                <img src={getFileIcon(f.original_name)} className="w-[26px] h-[31px] mr-2" alt="" />
+                                {/* <p></p> */}
+                                <a href={f.value}>{sliceText(f.original_name)}</a>
                             </div>
-                        </li>)
+                        </li>
+                    )
                         :
-                        <></>
-                    }
+                        <></>}
                 </ul>
-                <p className="w-[80%] font-bold" dangerouslySetInnerHTML={{ __html: email.content }}>
-
-                </p>
             </div>
+            <p className="w-[80%] font-bold" dangerouslySetInnerHTML={{ __html: email.content }}></p>
         </div>
     }
 
@@ -214,7 +205,7 @@ export default function Email() {
                             <button>태그</button>
                         </DropDown>
                     </div>
-                    {sort == 2 ? <button className="official-color text-white" >예약 메일</button> : <button className="" onClick={() => {setEmail(null); setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button>}
+                    {sort == 2 ? <button className="official-color text-white" >예약 메일</button> : <button className="" onClick={() => { setEmail(null); setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button>}
                     <a href="/email/EmailForm" className="ml-auto mr-2" onClick={() => localStorage.removeItem('email')}>메일쓰기</a>
                 </div>
                 <div ref={mailBoxRef} onScroll={loadPage} id="mailBox" className="h-[800px] overflow-y-scroll">
