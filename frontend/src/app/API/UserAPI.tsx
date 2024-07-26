@@ -532,25 +532,24 @@ export const deleteApproval = async (approvalId: number) => {
 //     return response.data;
 // };
 
-export const getApprovalList = async (keyword: string) => {
-    const response = await UserApi.get('/api/approval/list', {
-        headers: {
-            keyword: encodeURIComponent(keyword)
-        }
-    });
-    return response.data;
-};
-
-
-// export const getApprovalList = async (keyword: string, page: number) => {
+// export const getApprovalList = async (keyword: string) => {
 //     const response = await UserApi.get('/api/approval/list', {
 //         headers: {
-//             keyword: encodeURIComponent(keyword),
-//             Page: page
+//             keyword: encodeURIComponent(keyword)
 //         }
 //     });
 //     return response.data;
 // };
+
+export const getApprovalList = async (keyword: string, page: number) => {
+    const response = await UserApi.get('/api/approval/list', {
+        headers: {
+            keyword: encodeURIComponent(keyword),
+            Page: page
+        }
+    });
+    return response.data;
+};
 
 export const acceptApproval = async (approvalId: number, binary: boolean) => {
     const response = await UserApi.post('/api/approver', null, {
@@ -561,3 +560,25 @@ export const acceptApproval = async (approvalId: number, binary: boolean) => {
     });
     return response.data;
 };
+
+
+export const approvalFiles = async ({ approvalId, attachments }: { approvalId: number; attachments: FormData; }, form?: FormData) => {
+    const response = await UserApi.post('/api/approval/files', attachments, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            approvalId: approvalId
+        }
+    });
+    return response.data;
+};
+
+
+// export const emailFiles = async ({ attachments, emailId }: { attachments: FormData; emailId: number }) => {
+//     const response = await UserApi.post('/api/email/files', attachments, {
+//         headers: {
+//             'Content-Type': 'multipart/form-data',
+//             email_id: emailId
+//         }
+//     });
+//     return response.data;
+// };

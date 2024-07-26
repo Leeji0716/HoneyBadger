@@ -1,14 +1,17 @@
 "use client";
-import { acceptApproval, createApproval, deleteApproval, getApprovalList, getUser, readApproval } from "@/app/API/UserAPI";
+import { acceptApproval, createApproval, deleteApproval, getApprovalList, getUser, getUsers, readApproval } from "@/app/API/UserAPI";
 import Main from "@/app/Global/Layout/MainLayout";
 import { useEffect, useState } from "react";
-import { getjyDate, getRole } from "../Global/Method";
+import { getFileIcon, getjyDate, getRole, sliceText } from "../Global/Method";
+import Modal from "../Global/Modal";
+import DropDown, { Direcion } from "../Global/DropDown";
 
 export default function Approval() {
     interface approvalResponseDTO {
         id: number,
         title: string,
         content: string,
+        files: originFileResponseDTO,
         sender: userResponseDTO,
         approvers: approverResponseDTO[],
         viewers: userResponseDTO[],
@@ -38,14 +41,51 @@ export default function Approval() {
         name: string
     }
 
+    interface originFileResponseDTO {
+        key: string
+        original_name: string,
+        value: string
+    }
+
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
+    const [page, setPage] = useState(0);
+    const [maxPage, setMaxPage] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
     const [filter, setFilter] = useState(-1); // Approval 필터
     const [user, setUser] = useState(null as any);
     const [isClientLoading, setClientLoading] = useState(true);
     const [keyword, setKeyword] = useState('');
     const [approval, setApproval] = useState<approvalResponseDTO>(null as any);
     const [approvalList, setApprovalList] = useState<approvalResponseDTO[]>([]);
-    const selectedViewersText = approval?.viewers.map(viewer => viewer.name).join(', ');
+    const [fileList, setFileList] = useState<File[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [userList, setUserList] = useState([] as any[])
+    
+
+    const [approvalViewers, setApprovalViewers] = useState([] as any[]);
+    const [approvalViewersText, setApprovalViewersText] = useState('');
+
+    // 유저 추가 핸들러
+    const handleAddUser = (user: any) => {
+        setApprovalViewers((prevSelectedViewers) => {
+            const isUserSelected = prevSelectedViewers.find((u) => u.username === user.username);
+            if (isUserSelected) {
+                // 이미 선택된 유저가 있으면 배열에서 제거
+                return prevSelectedViewers.filter((u) => u.username !== user.username);
+            }
+            return [...prevSelectedViewers, user];
+        });
+    };
+
+    useEffect(() => {
+        console.log('approvalViewers changed:', approvalViewers); // 상태 변경 확인
+        setApprovalViewersText(approvalViewers.map((viewer) => viewer.name).join(', '));
+    }, [approvalViewers]);
+
+    const filteredUserList = userList.filter(user =>
+        !approval?.viewers.some(viewer => viewer.username === user.username) &&
+        !approval?.approvers.some(approver => approver.approver.username === user.username)
+    );
 
     // 유저 토큰 확인하기
     useEffect(() => {
@@ -60,8 +100,22 @@ export default function Approval() {
             location.href = '/';
     }, [ACCESS_TOKEN])
 
+    //userList 가져오기
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const usersData = await getUsers();
+                setUserList(usersData);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchData();
+    }, []);
+
     // 검색
     const handleSearch = () => {
+        setPage(0);
         getApprovalList(keyword).then(r => {
             setApprovalList(r);
         }).catch(error => {
@@ -188,9 +242,9 @@ export default function Approval() {
             </div>
         </>
     }
-
     // approval 상세보기
     function ApprovalDetail() {
+        
         return <div>
             <div className="w-full h-[90%]">
                 <div className="flex flex-wrap w-full">
@@ -319,15 +373,21 @@ export default function Approval() {
                     </div>
                     <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
                         <label className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">참조인</label>
-                        <label className="w-[90%] flex items-center border-r-2 border-gray-300 pl-5">{selectedViewersText}</label>
+                        <label className="w-[90%] flex items-center border-r-2 border-gray-300 pl-5">{approvalViewersText}</label>
                     </div>
-                    <div className="relative w-full h-[150px] border border-gary-500 overflow-y-scroll border-r-2 border-l-2 border-b-2 border-gray-300">
-                        <button className="btn btn-sm absolute top-[5px] right-[5px]">파일 선택</button>
-                        {/* <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" ></img> */}
+                    <div className="w-full h-[150px] border border-gary-500 overflow-y-scroll border-r-2 border-l-2 border-b-2 border-gray-300">
+                        {fileList.length !== 0 && fileList.map((f: File, index: number) => (
+                            <ul key={index}>
+                                <div className="flex items-center bg-white p-2 w-[500px]">
+                                    <img src={getFileIcon(f.name)} className="w-[26px] h-[31px] mr-2" alt="" />
+                                    <p>{sliceText(f.name)}</p>
+                                </div>
+                            </ul>
+                        ))}
                     </div>
                 </>
             </div>
-            {/* 수정 & 삭제 & 허가 & 반환 버튼 */}
+            {/* 전달 & 삭제 & 허가 & 반환 버튼 */}
             <>
                 {approval && approval.sender.username === user.username ?
                     <div className="w-full h-[40px] mt-5 flex justify-end">
@@ -342,14 +402,48 @@ export default function Approval() {
                                         }
                                     }
                                 }}>삭제</button>
-                                <button className="px-4 py-2 bg-blue-500 text-white rounded-md mr-2">수정</button>
                             </>
                             :
                             <>
                                 <button className="px-4 py-2 bg-gray-400 text-white rounded-md mr-2" disabled>삭제</button>
-                                <button className="px-4 py-2 bg-gray-400 text-white rounded-md mr-2" disabled>수정</button>
+
                             </>
                         }
+                        <button className="px-4 py-2 bg-blue-400 text-white rounded-md mr-2" onClick={() => setIsModalOpen(true)}>전달</button>
+                        <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} escClose={true} outlineClose={true}>
+                            <div className="overflow-auto">
+                                <p className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</p>
+                                <label className="w-[90%] flex items-center border-2 border-gray-300 pl-5">{approvalViewersText}</label>
+                                <ul className="m-3 overflow-y-scroll w-[500px] h-[700px]">
+                                    {filteredUserList.map((user, index) => (
+                                        <li key={index} className="flex justify-between items-center mb-5 w-full">
+                                            <span className="font-bold text-md m-3 w-[25%]">{user.name}</span>
+                                            <span className="text-md m-3 w-[25%]">부서</span>
+                                            <span className="text-md m-3 w-[25%]">역할</span>
+                                            <button
+                                                onClick={() => handleAddUser(user)}
+                                                className="font-bold text-3xl m-3 w-[25%]"
+                                            >
+                                                +
+                                            </button>
+                                        </li>
+                                    ))}
+                                    {/* {userList.filter(user => !approval.viewers.includes(user.name)).map((user, index) => (
+                                        <li key={index} className="flex justify-between items-center mb-5 w-full">
+                                            <span className="font-bold text-md m-3 w-[25%]">{user.name}</span>
+                                            <span className=" text-md m-3 w-[25%]">부서</span>
+                                            <span className="text-md m-3 w-[25%]">역할</span>
+                                            <button
+                                                onClick={() => handleAddUser(user)}
+                                                className="font-bold text-3xl m-3 w-[25%]"
+                                            >
+                                                +
+                                            </button>
+                                        </li>
+                                    ))} */}
+                                </ul>
+                            </div>
+                        </Modal>
                     </div>
                     :
                     <></>
@@ -466,6 +560,7 @@ export default function Approval() {
             <div className="w-11/12 bg-white h-full flex flex-col shadow">
                 {/* 결재 기안서 상세 보기 */}
                 {approval != null ? <ApprovalDetail /> : <></>}
+                
             </div>
         </div>
     </Main >
