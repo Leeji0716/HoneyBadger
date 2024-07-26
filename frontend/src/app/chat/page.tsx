@@ -117,8 +117,7 @@ export default function Chat() {
                 setUser(r);
                 getUsers().then(r => {
                     setUserList(r);
-                    console.log("rerqwerewzzzzzzzzzzzz")
-                    console.log(r);
+            
                 }).catch(e => console.log(e))
                 getChat(keyword, page).then(r => {
                     setChatrooms(r.content);
@@ -149,7 +148,7 @@ export default function Chat() {
 
         if (updateMessageList) {
             const updatedMessageList = [...messageList];
-            console.log('meeeeeee');
+    
             // console.log(messageList);
             // console.log(updateMessageList);
 
@@ -175,22 +174,13 @@ export default function Chat() {
         if (temp) {
             const test: messageResponseDTO[] = [...messageList];
 
-            console.log("message, temsteer2121221212");
-            console.log(messageList);
-
             test.push(temp);
-
-            console.log("tempt, temsteer2121221212");
-            console.log(temp);
-            console.log(test);
 
             setMessageList(test);
 
             setTemp(null);
         }
 
-        console.log("tempt, temsteer");
-        console.log(messageList);
         // setChatDetail(temp);
     }, [temp])
 
@@ -303,8 +293,6 @@ export default function Chat() {
 
     function ChatList({ Chatroom, ChatDetail, innerRef }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO, innerRef: RefObject<HTMLDivElement> }) {
 
-        console.log("adsedwedqwqwedzzzzzzzzzzzzzzzzzz")
-        console.log(Chatroom);
 
         const joinMembers = Chatroom.users;
 
@@ -358,15 +346,17 @@ export default function Chat() {
                     nowPage = 0;
                     console.log('unsub');
                     if (messageSub) {
+                        socket.unsubscribe(messageSub.id)
                         console.log(messageSub.id);
-                        socket.unsubscribe(messageSub.id);
                     }
                     if (readSub) {
                         socket.unsubscribe(readSub.id);
+                        console.log(readSub.id);
                     }
 
                     if (updateSub) {
                         socket.unsubscribe(updateSub.id);
+                        console.log(updateSub.id);
                     }
 
                     // socket.unsubscribe("/api/sub/message/" + preChatroomId);
@@ -375,41 +365,36 @@ export default function Chat() {
                 }
                 setChatroom(Chatroom);
                 setPreChatroomId(Chatroom.id);
+                
+                // socket.publish({
+                //     destination: "/api/pub/read/" + Chatroom?.id,
+                //     body: JSON.stringify({ username: user?.username, flag:0 })
+                // });
 
-                console.log(Chatroom.id);
-
-                console.log("-----------------------> onclick")
+                
                 getChatDetail(Chatroom?.id, nowPage).then(r => {
                     setMessageList([...r.content].reverse());
-                    setMaxPage(r.totalPages);
-                    console.log("-----------------------> getChatDetail")
-
-                    socket.publish({
-                        destination: "/api/pub/read/" + Chatroom?.id,
-                        body: JSON.stringify({ username: user?.username })
-                    });
+                    setMaxPage(r.totalPages);  
 
                     // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
                     const messageSub = socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
                         const message = JSON.parse(e.body).body;
                         const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name: message?.name, username: message?.username, messageType: message?.messageType, readUsers: message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
-                        console.log('fffffffffffffffff');
+                    
 
                         getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                            console.log("----------------------------------------------------------------ssssssss");
-                            console.log(updateMessageList);
-                            // console.log(readUsersName(chatroom.id,updateMessageList[]))
+                        
                             setUpdateMessageList(updateMessageList);
 
                         }));
+                        console.log("---------------->123");
+                        socket.publish({
 
-                        // socket.publish({
+                            destination: "/api/pub/read/" + Chatroom?.id,
+                            body: JSON.stringify({ username: user?.username})
 
-                        //     destination: "/api/pub/read/" + Chatroom?.id,
-                        //     body: JSON.stringify({ username: user?.username })
-
-                        // });
+                        });
 
 
                         // console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!server!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -435,17 +420,14 @@ export default function Chat() {
 
 
                     });
-                    console.log('dddff');
-                    console.log(messageSub);
+                
                     setMessageSub(messageSub);
 
                     const readSub = socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
                         const data = JSON.parse(e.body);
 
                         getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                            console.log("----------------------------------------------------------------ssssssss");
-                            console.log(updateMessageList);
-                            // console.log(readUsersName(chatroom.id,updateMessageList[]))
+                    
                             setUpdateMessageList(updateMessageList);
 
                         }));
@@ -559,26 +541,28 @@ export default function Chat() {
                     </div>
                 </div>
                 <Modal open={isModalOpen} onClose={handleCloseModal} escClose={true} outlineClose={true}>
-                    <div className="overflow-auto">
+                    <div>
                         <p className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</p>
-                        <ul className="m-3">
-                            {userList.filter(user => !chatroom.users.includes(user.username)).map((user, index) => (
-                                <li key={index} className="flex justify-between items-center mb-5">
-                                    <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
-                                    <span className="font-bold text-md m-3">{user.name}</span>
-                                    <span className=" text-md m-3">부서</span>
-                                    <span className="text-md m-3">역할</span>
-                                    <button onClick={() => {
-                                        addUser({ chatroomId: chatroom.id, username: user.username }).then(r => {
-                                            console.log("유저 추가 완료")
+                        <div className="overflow-auto h-[500px]">
+                            <ul className="m-3">
+                                {userList.filter(user => !chatroom.users.includes(user.username)).map((user, index) => (
+                                    <li key={index} className="flex justify-between items-center mb-5">
+                                        <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
+                                        <span className="font-bold text-md m-3">{user.name}</span>
+                                        <span className=" text-md m-3">부서</span>
+                                        <span className="text-md m-3">역할</span>
+                                        <button onClick={() => {
+                                            addUser({ chatroomId: chatroom.id, username: user.username }).then(r => {
+                                        
 
-                                        }).catch(e => {
-                                            console.log(e)
-                                        })
-                                    }} className="font-bold text-3xl m-3">+</button>
-                                </li>
-                            ))}
-                        </ul>
+                                            }).catch(e => {
+                                                console.log(e)
+                                            })
+                                        }} className="font-bold text-3xl m-3">+</button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     </div>
                 </Modal>
                 <Modal open={isModalOpen1} onClose={handleClose1Modal} escClose={true} outlineClose={true}>
@@ -832,7 +816,7 @@ export default function Chat() {
                     +
                 </button>
                 <Modal open={isModalOpen2} onClose={handleClose2Modal} escClose={true} outlineClose={true}>
-                    <div className="overflow-auto w-full">
+                    <div >
                         <p className="font-bold text-3xl m-3 mb-8 flex justify-center">채팅방 만들기</p>
                         <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] m-2">
                             <input
@@ -842,23 +826,28 @@ export default function Chat() {
                                 value={chatroomName}
                                 onChange={e => setChatroomName(e.target.value)}
                             />
+
                         </div>
-                        <ul className="m-3">
-                            {userList.map((user, index) => (
-                                <li key={index} className="flex justify-between items-center mb-5">
-                                    <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
-                                    <span className="font-bold text-md m-3">{user.name}</span>
-                                    <span className=" text-md m-3">부서</span>
-                                    <span className="text-md m-3">역할</span>
-                                    {/* 체크박스 */}
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedUsers.has(user.username)}
-                                        onChange={() => handleCheckboxChange(user.username)}
-                                    />
-                                </li>
-                            ))}
-                        </ul>
+                        <p className="font-bold ml-2">추가 인원 선택</p>
+                        <div className="overflow-auto w-full h-[500px]">
+                            <ul className="m-3">
+
+                                {userList.map((user, index) => (
+                                    <li key={index} className="flex justify-between items-center mb-5">
+                                        <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
+                                        <span className="font-bold text-md m-3">{user.name}</span>
+                                        <span className=" text-md m-3">부서</span>
+                                        <span className="text-md m-3">역할</span>
+                                        {/* 체크박스 */}
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedUsers.has(user.username)}
+                                            onChange={() => handleCheckboxChange(user.username)}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                         <div className="w-full flex justify-center">
                             <button onClick={handleCreateChatroom} className="login-button flex items-center m-2">
                                 채팅방 생성

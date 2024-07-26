@@ -1,15 +1,13 @@
 package com.team.HoneyBadger.Controller;
 
-import com.team.HoneyBadger.DTO.FileResponseDTO;
-import com.team.HoneyBadger.DTO.FileUploadDTO;
-import com.team.HoneyBadger.DTO.FolderResponseDTO;
-import com.team.HoneyBadger.DTO.TokenDTO;
+import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Enum.FileOrder;
 import com.team.HoneyBadger.Enum.FileType;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.NotAllowedException;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -83,10 +82,59 @@ public class FileSystemController {
         else return tokenDTO.getResponseEntity();
     }
 
+    @GetMapping("/download")
+    public Resource downloadFiles(@RequestHeader("Authorization") String accessToken,@RequestHeader(value = "Name",defaultValue = "") String name, @RequestHeader("Urls") String urls) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            return multiService.getFiles(tokenDTO.username(),URLDecoder.decode(name, StandardCharsets.UTF_8), Arrays.stream(URLDecoder.decode(urls, StandardCharsets.UTF_8).split("\\?")).toList());
+        } catch (IOException ignored) {
+        }
+        return null;
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteFile(@RequestHeader("Authorization") String accessToken, @RequestHeader("Url") String url) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            this.multiService.deleteFile(URLDecoder.decode(url, StandardCharsets.UTF_8));
+            return ResponseEntity.status(HttpStatus.OK).body("deleted");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("file error");
+        } catch (NotAllowedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
+    @DeleteMapping("/cancel")
+    public ResponseEntity<?> cancelFile(@RequestHeader("Authorization") String accessToken, @RequestHeader("Key") String key, @RequestHeader("Location") String location, @RequestHeader("Name") String name) {
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if (tokenDTO.isOK()) try {
+            this.multiService.cancelSaveFile(tokenDTO.username(), key, URLDecoder.decode(location, StandardCharsets.UTF_8), URLDecoder.decode(name, StandardCharsets.UTF_8));
+            return ResponseEntity.status(HttpStatus.OK).body("deleted");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("file error");
+        } catch (NotAllowedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
+        else return tokenDTO.getResponseEntity();
+    }
+
     @MessageMapping("/uploadFile/{username}")
     @SendTo("/api/sub/uploadFile/{username}")
-    public ResponseEntity<?> uploadFile(@DestinationVariable String username, FileUploadDTO uploadDTO) {
-        System.out.println(username);
-        return ResponseEntity.status(HttpStatus.OK).body(uploadDTO);
+    public ResponseEntity<?> uploadFile(@DestinationVariable String username, FileUploadRequestDTO uploadDTO) {
+        try {
+            FileUploadResponseDTO responseDTO = this.multiService.saveFile(username, uploadDTO);
+            return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
+        } catch (NotAllowedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(FileUploadResponseDTO.builder().key(uploadDTO.key()).index(uploadDTO.index()).name(ex.getMessage()).build());
+        } catch (Exception ex) {
+            try {
+                this.multiService.cancelSaveFile(username, uploadDTO.key(), uploadDTO.location(), uploadDTO.name());
+            } catch (IOException ignored) {
+
+            }
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(FileUploadResponseDTO.builder().key(uploadDTO.key()).index(uploadDTO.index()).build());
+        }
     }
 }

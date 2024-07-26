@@ -195,7 +195,7 @@ export function CardFront({ user }: { user: any }) {
             <div className='mx-auto flex flex-col'>
                 <div className='flex flex-col mt-4'>
                     <label className='font-bold text-[#8fbee9] cursor-pointer'>HoneyBadger</label>
-                    <label className='text-xxs text-center text-gray-500 cursor-pointer'>Don't hold back. Be brave</label>
+                    <label className='text-xxs text-center text-gray-500 cursor-pointer'>{`Don't hold back. Be brave`}</label>
                 </div>
                 <div className='mt-auto flex flex-col h-[60px]'>
                     <div className='flex  items-center my-auto'>
@@ -247,7 +247,7 @@ export function CardBack() {
             <img src='/_logo.png' className='w-[75px] h-[50px] mr-2 bg-yellow-500 rounded-full p-2' />
             <div className='flex flex-col'>
                 <label className='font-bold text-white text-lg cursor-pointer'>HoneyBadger</label>
-                <label className='text-xxs text-center text-gray-300 cursor-pointer'>Don't hold back. Be brave</label>
+                <label className='text-xxs text-center text-gray-300 cursor-pointer'>{`Don't hold back. Be brave`}</label>
             </div>
         </div>
         <div className='bottom-[16px] absolute text-white text-xs'>SEO | Web Devlopement | App Development </div>
@@ -314,5 +314,40 @@ export function isHoliday(date: Date) {
         '0814', '0815', '0816' // 추석
     ];
     return solarHoliday.includes(solar) || lunarHoliday.includes(lunar);
+}
+
+
+// 파일 아이콘
+export function getFileIcon(fileName: string) {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    switch (extension) {
+        case 'jpg':
+            return 'https://w7.pngwing.com/pngs/169/93/png-transparent-jpg-filetype-icon-thumbnail.png';
+        case 'png':
+            return 'https://w7.pngwing.com/pngs/141/895/png-transparent-png-filetype-icon-thumbnail.png';
+        case 'pdf':
+            return 'https://w7.pngwing.com/pngs/182/22/png-transparent-computer-icons-pdf-filename-extension-pdf-icon-angle-text-rectangle-thumbnail.png';
+        case 'doc':
+        case 'docx':
+            return 'https://w7.pngwing.com/pngs/801/479/png-transparent-microsoft-word-thumbnail-microsoft-word-microsoft-office-365-document-microsoft-blue-angle-text-thumbnail.png';
+        case 'xls':
+        case 'xlsx':
+            return 'https://w7.pngwing.com/pngs/670/803/png-transparent-excel-logo-logos-logos-and-brands-icon-thumbnail.png';
+        case 'ppt':
+        case 'pptm':
+            return 'https://w7.pngwing.com/pngs/742/145/png-transparent-powerpoint-logo-microsoft-powerpoint-computer-icons-ppt-presentation-microsoft-powerpoint-network-icon-angle-text-rectangle-thumbnail.png';
+        case 'zip':
+            return 'https://w7.pngwing.com/pngs/41/725/png-transparent-computer-icons-zip-file-zip-files-free-miscellaneous-text-rectangle-thumbnail.png';
+        default:
+            return 'https://w7.pngwing.com/pngs/665/246/png-transparent-blue-folder-illustration-blue-turquoise-angle-aqua-folder-blue-angle-rectangle-thumbnail.png';
+    }
+}
+
+// 파일 이름 자르기
+export function sliceText (text: string) {
+    const extensionIndex = text.lastIndexOf('.');
+    const name = extensionIndex !== -1 ? text.slice(0, extensionIndex) : text;
+    const extension = extensionIndex !== -1 ? text.slice(extensionIndex) : '';
+    return name.length > 8 ? name.slice(0, 15) + '...' + extension : text;
 }
 

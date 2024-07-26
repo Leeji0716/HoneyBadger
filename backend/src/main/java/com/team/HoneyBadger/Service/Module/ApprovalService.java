@@ -10,9 +10,12 @@ import com.team.HoneyBadger.Repository.ApprovalRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.aop.framework.AopProxy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -64,18 +67,13 @@ public class ApprovalService {
         approvalRepository.delete (approval);
     }
 
-    public List<Approval> getList(String username,String keyword){
+    public Page<Approval> getList(String username, String keyword, Pageable pageable){
         if (keyword == null || keyword.isEmpty()) {
-        return  approvalRepository.findByUsername (username);
+        return  approvalRepository.findByUsername (username, pageable);
         }
         else{
-            return  approvalRepository.findByUsernameAndKeyword (username,keyword);
+            return  approvalRepository.findByUsernameAndKeyword (username,keyword,pageable);
         }
-    }
-
-    public Approval updateViewer(Approval approval, List<Viewer> newViewers){
-        approval.setViewers (newViewers);
-        return approvalRepository.save (approval);
     }
 
 

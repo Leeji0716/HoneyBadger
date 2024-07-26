@@ -462,6 +462,9 @@ export const deleteSchedule = async (id: number) => {
     });
     return response.data;
 };
+/*
+ * Storage
+ */
 
 export const getStorageFiles = async (data: { Location: string, Page?: number, Type?: number, Order: number, Keyword: string }) => {
     const response = await UserApi.get('/api/file/list', {
@@ -503,6 +506,31 @@ export const getStorageFile = async (data: { Location: string }) => {
     });
     return response.data;
 };
+export const cancelUpload = async (data: { Key: string, Location: string, Name: string }) => {
+    const response = await UserApi.delete('/api/file/cancel', {
+        headers: {
+            Key: data.Key,
+            Location: data.Location ? encodeURIComponent(data.Location) : '',
+            Name: data.Name ? encodeURIComponent(data.Name) : ''
+        }
+    });
+    return response.data;
+};
+export const deleteFile = async (data: { Url: string }) => {
+    const response = await UserApi.delete('/api/file', {
+        headers: {
+            Url: data.Url ? encodeURIComponent(data.Url) : ''
+        }
+    });
+    return response.data;
+};
+export const downloadFiles = async (data: { urls: string, name: string }) => {
+    const response = await UserApi.get('/api/file/download', { responseType: "blob", headers: { Urls: data.urls, Name: data.name } });
+    return response.data;
+};
+/*
+ * Approval
+ */
 
 export const createApproval = async (approvalRequestDTO: approvalRequestDTO) => {
     const response = await UserApi.post('/api/approval', approvalRequestDTO);
@@ -532,31 +560,59 @@ export const deleteApproval = async (approvalId: number) => {
 //     return response.data;
 // };
 
-export const getApprovalList = async (keyword: string) => {
-    const response = await UserApi.get('/api/approval/list', {
-        headers: {
-            keyword: encodeURIComponent(keyword)
-        }
-    });
-    return response.data;
-};
-
-
-// export const getApprovalList = async (keyword: string, page: number) => {
+// export const getApprovalList = async (keyword: string) => {
 //     const response = await UserApi.get('/api/approval/list', {
 //         headers: {
-//             keyword: encodeURIComponent(keyword),
-//             Page: page
+//             keyword: encodeURIComponent(keyword)
 //         }
 //     });
 //     return response.data;
 // };
+
+export const getApprovalList = async (keyword: string, page: number) => {
+    const response = await UserApi.get('/api/approval/list', {
+        headers: {
+            keyword: encodeURIComponent(keyword),
+            Page: page
+        }
+    });
+    return response.data;
+};
 
 export const acceptApproval = async (approvalId: number, binary: boolean) => {
     const response = await UserApi.post('/api/approver', null, {
         headers: {
             approvalId: approvalId,
             Binary: binary.toString()
+        }
+    });
+    return response.data;
+};
+
+// export const approvalFiles = async ({ approvalId, attachments }: { approvalId: number; attachments: FormData; }) => {
+//     const response = await UserApi.post('/api/approval/files', attachments, {
+//         headers: {
+//             'Content-Type': 'multipart/form-data',
+//             approvalId: approvalId
+//         }
+//     });
+//     return response.data;
+// };
+
+export const approvalFiles = async ({ attachments, approvalId }: { attachments: FormData; approvalId: number }) => {
+    const response = await UserApi.post('/api/approval/files', attachments, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            approvalId: approvalId
+        }
+    });
+    return response.data;
+};
+
+export const updateViewer = async (approvalId: number, approvalRequestDTO: approvalRequestDTO) => {
+    const response = await UserApi.post('/api/viewer', approvalRequestDTO, {
+        headers: {
+            approvalId: approvalId
         }
     });
     return response.data;

@@ -2,6 +2,7 @@ package com.team.HoneyBadger.Service;
 
 
 import com.team.HoneyBadger.DTO.*;
+import com.team.HoneyBadger.Entity.FileSystem;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.*;
 import com.team.HoneyBadger.Exception.*;
@@ -11,18 +12,21 @@ import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
 import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.codec.binary.Base64;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,6 +41,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 
 @Service
@@ -63,6 +69,8 @@ public class MultiService {
     private final ViewerService viewerService;
     private final CycleTagService cycleTagService;
     private final TeamPeopleService teamPeopleService;
+    private final HashMap<String, HashMap<String, List<byte[]>>> dataStack = new HashMap<>();
+
 
     /**
      * Auth
@@ -106,6 +114,8 @@ public class MultiService {
         if (!this.userService.isMatch(requestDto.password(), user.getPassword()))
             throw new IllegalArgumentException("password");
         if (!user.isActive()) throw new IllegalArgumentException("disabled");
+        deleteFileWithFolder(new File(HoneyBadgerApplication.getOsType().getLoc() + "/api/user/" + requestDto.username() + "/download_temp"));
+
         String accessToken = this.jwtTokenProvider.generateAccessToken(new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), user.getPassword()));
         String refreshToken = this.jwtTokenProvider.generateRefreshToken(new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), user.getPassword()));
         return AuthResponseDTO.builder().tokenType("Bearer").accessToken(accessToken).refreshToken(refreshToken).build();
@@ -297,7 +307,7 @@ public class MultiService {
     @Transactional
     public Page<ChatroomResponseDTO> getChatRoomListByUser(String username, String keyword, int page) throws DataNotFoundException {
         SiteUser siteUser = userService.get(username);
-        Pageable pageable = PageRequest.of(page, 10);
+        Pageable pageable = PageRequest.of(page, 20);
         Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
 
         List<ChatroomResponseDTO> chatroomResponseDTOList = chatroomPage.stream().map(chatroom -> getChatRoom(chatroom, username)).collect(Collectors.toList());
@@ -1189,6 +1199,7 @@ public class MultiService {
      * Cycle
      */
     @Transactional
+
     public void createPersonalCycle(int status, String username, CycleRequestDTO cycleRequestDTO) throws NotAllowedException {
         if (cycleRequestDTO.title() == null || cycleRequestDTO.title().isEmpty()) {
             throw new NotAllowedException("제목을 입력해주세요.");
@@ -1641,6 +1652,7 @@ public class MultiService {
 
             ApproverResponseDTO approverResponseDTO = ApproverResponseDTO.builder().approver(userResponseDTO).approverStatus(approverStatus).approvalDate(approvalDate).build();
 
+
             users.add(approverResponseDTO);
 
         }
@@ -1718,8 +1730,9 @@ public class MultiService {
         return getApproval(updateApproval);
     }
 
-    public ApprovalResponseDTO acceptApprover(Long approvalId, String username, Boolean Binary) throws NotAllowedException {
-        Approval approval = approvalService.get(approvalId);
+
+    public ApprovalResponseDTO acceptApprover(Long approvalId, String username, Boolean Binary) throws NotAllowedException{
+        Approval approval = approvalService.get (approvalId);
         List<Approver> approvers = approval.getApprovers();
         int index = -1;
         for (int i = 0; i < approvers.size(); i++) {
@@ -1757,34 +1770,45 @@ public class MultiService {
     }
 
 
-    public List<ApprovalResponseDTO> getApprovalList(String username, String keyword) {
-        List<Approval> approvalList = approvalService.getList(username, keyword);
-        List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<>();
+    public Page<ApprovalResponseDTO> getApprovalList(String username, String keyword, int page) {
+        Pageable pageable = PageRequest.of (page,20);
+        Page<Approval> approvalList = approvalService.getList (username,keyword,pageable);
+
+        List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<> ();
         for (Approval approval : approvalList) {
             ApprovalResponseDTO approvalResponseDTO = getApproval(approval);
             approvalResponseDTOS.add(approvalResponseDTO);
         }
-        return approvalResponseDTOS;
+
+        return new PageImpl<> (approvalResponseDTOS, pageable, approvalList.getTotalElements ());
     }
 
-//    public ApprovalResponseDTO addViewer(Long approvalId, List<String> viewerUsername ){
-//        Approval approval = approvalService.get (approvalId);
-//
-//        List<Viewer> viewers = approval.getViewers ();
-//        List<Viewer> newViewers = new ArrayList<> ();
-//
-//        for(String username : viewerUsername){
-//            for(Viewer viewer : viewers){
-//                if(!viewer.getUser ().getUsername ().equals (username)){
-//                    newViewers.add (viewer);
-//                }
-//                continue;
-//            }
-//        }
-//        approval.setViewers (viewers);
-//
-//    }
+    public ApprovalResponseDTO addViewer(Long approvalId, ApprovalRequestDTO approvalRequestDTO, String username) throws NotAllowedException{
 
+        Approval approval = approvalService.get(approvalId);
+
+        if(!approval.getSender ().getUsername().equals (username)) throw new NotAllowedException ("생성자만 수정 가능합니다.");
+
+        List<Viewer> currentViewers = approval.getViewers();
+        Set<String> currentViewerUsernames = currentViewers.stream()
+                .map(viewer -> viewer.getUser().getUsername())
+                .collect(Collectors.toSet());
+        Set<String> newViewerUsernames = new HashSet<>(approvalRequestDTO.viewersname());
+
+        // 새로운 사용자 추가
+        for (String newUsername : newViewerUsernames) {
+            if (!currentViewerUsernames.contains(newUsername)) {
+                SiteUser user = userService.get(newUsername);
+                viewerService.save(user, approval);
+            }
+        }
+
+        // 더 이상 목록에 없는 기존 사용자 삭제
+        currentViewers.removeIf(viewer -> !newViewerUsernames.contains(viewer.getUser().getUsername()));
+
+        approvalService.save(approval); // 변경사항 저장
+        return getApproval(approval); // 업데이트된 Approval 객체 반환
+    }
 
     /*
      * Storage
@@ -1854,12 +1878,180 @@ public class MultiService {
         return list;
     }
 
+    public Resource getFiles(String username, String name, List<String> urls) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        if (urls.size() == 1 && !new File(path + urls.getFirst()).isDirectory())
+            return new UrlResource(Paths.get(path + urls.getFirst()).toUri());
+        else {
+            String zipUrl = path + "/api/user/" + username + "/download_temp/" + name + ".zip";
+            File zipFile = new File(zipUrl);
+            if (!zipFile.getParentFile().exists())
+                zipFile.getParentFile().mkdirs();
+            byte[] buf = new byte[4096];
+            try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile))) {
+                for (String url : urls) {
+                    File file = new File(path + url);
+                    if (file.isDirectory()) {
+                        String zipEntryName = file.getName() + "/";
+                        ZipEntry zipEntry = new ZipEntry(zipEntryName);
+                        zipEntry.setTime(file.lastModified());
+                        out.putNextEntry(zipEntry);
+                        out.closeEntry();
+                        zipDirectory(file, urls.size() == 1 ? "" : file.getName() + "/", out);
+                    } else
+                        try (FileInputStream in = new FileInputStream(file)) {
+                            ZipEntry zf = new ZipEntry(file.getName());
+
+                            out.putNextEntry(zf);
+                            int len = 0;
+                            while ((len = in.read(buf)) > 0) {
+                                out.write(buf, 0, len);
+                            }
+                            out.closeEntry();
+                        }
+                }
+            }
+            return new UrlResource(Paths.get(zipUrl).toUri());
+        }
+    }
+
+    public static void zipDirectory(File directory, String parent, ZipOutputStream out) throws IOException {
+        // 디렉토리 목록 가져오기
+        File[] files = directory.listFiles();
+        if (files == null) {
+            return;
+        }
+
+        for (File file : files) {
+            // 파일인 경우
+            if (file.isFile()) {
+                ZipEntry zipEntry = new ZipEntry(parent + file.getName());
+                out.putNextEntry(zipEntry);
+                try (FileInputStream in = new FileInputStream(file)) {
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = in.read(buffer)) > 0) {
+                        out.write(buffer, 0, len);
+                    }
+                }
+            } else if (file.isDirectory()) { // 디렉토리인 경우
+                // 하위 디렉토리에 대한 ZipEntry 생성 (경로 포함)
+                String zipEntryName = file.getName() + "/";
+                ZipEntry zipEntry = new ZipEntry(zipEntryName);
+                zipEntry.setTime(file.lastModified());
+                out.putNextEntry(zipEntry);
+                out.closeEntry(); // 디렉토리 엔트리 닫기
+
+                // 하위 디렉토리 재귀 호출
+                zipDirectory(file, file.getName() + "/", out);
+            }
+        }
+    }
+
+    public FileUploadResponseDTO saveFile(String username, FileUploadRequestDTO uploadDTO) throws IOException, NotAllowedException {
+        SiteUser user = userService.get(username);
+        String base = uploadDTO.baseLocation();
+        if (!base.equals("/api/user/admin/storage") && (user.getDepartment() == null || (!base.equals("/api/department/" + user.getDepartment().getName() + "/storage") && (user.getRole() == null || !base.equals("/api/department/" + user.getDepartment().getName() + "/role/" + user.getRole().getName() + "/storage")))) && (user.getRole() == null || !base.equals("/api/role/" + user.getRole().getName() + "/storage")))
+            throw new NotAllowedException("not allowed location");
+
+        if (!dataStack.containsKey(username)) dataStack.put(username, new HashMap<>());
+        HashMap<String, List<byte[]>> data = dataStack.get(username);
+        String key = uploadDTO.key();
+        if (!data.containsKey(key)) data.put(key, new ArrayList<>());
+        List<byte[]> stored = data.get(key);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byte[] bytes = Base64.decodeBase64(uploadDTO.chunk());
+
+        byteArrayOutputStream.write(bytes);
+
+        byte[] originBytes = byteArrayOutputStream.toByteArray();
+        stored.add(originBytes);
+        if (uploadDTO.index() == 0) {
+            String path = HoneyBadgerApplication.getOsType().getLoc();
+            File baseFolder = new File(path + uploadDTO.baseLocation());
+            long size = FileOrder.getSize(baseFolder);
+            if (size > 10737418240L) throw new NotAllowedException("storage");
+            File file = new File(path + uploadDTO.location() + "/" + uploadDTO.name());
+            if (!file.getParentFile().exists()) file.getParentFile().mkdirs();
+            if (file.exists()) {
+                if (uploadDTO.uploadType() == 0) {
+                    file = new File(path + uploadDTO.location() + "/" + uploadDTO.name() + ".temp");
+                    FileOutputStream fos = new FileOutputStream(file);
+                    fos.write(new byte[0]);
+                    fos.close();
+                } else {
+                    String name;
+                    String pre = "";
+                    String suf = "";
+                    if (uploadDTO.name().contains(".")) {
+                        int index = uploadDTO.name().lastIndexOf(".");
+                        pre = uploadDTO.name().substring(0, index);
+                        suf = uploadDTO.name().substring(index);
+                    } else pre = uploadDTO.name();
+
+                    int i = 1;
+                    for (; ; i++) {
+                        name = pre + " (" + i + ")" + suf;
+                        File check = new File(path + uploadDTO.location() + "/" + name);
+                        if (!check.exists()) break;
+                    }
+                    if (uploadDTO.totalIndex() == 1) {
+                        file = new File(path + uploadDTO.location() + "/" + name);
+                        FileOutputStream fos = new FileOutputStream(file, true);
+                        for (byte[] writeBytes : stored)
+                            fos.write(writeBytes);
+                        fos.close();
+                        stored.clear();
+                        data.remove(key);
+                        if (data.isEmpty()) dataStack.remove(username);
+                    } else new File(path + uploadDTO.location() + "/" + name + ".temp").createNewFile();
+                    return FileUploadResponseDTO.builder().key(uploadDTO.key()).name(name).index(1).build();
+                }
+            } else new File(path + uploadDTO.location() + "/" + uploadDTO.name() + ".temp").createNewFile();
+        }
+        if (stored.size() == 10 || uploadDTO.index() == uploadDTO.totalIndex() - 1) {
+            String path = HoneyBadgerApplication.getOsType().getLoc();
+            File baseFolder = new File(path + uploadDTO.baseLocation());
+            long size = FileOrder.getSize(baseFolder);
+            if (size > 10737418240L) throw new NotAllowedException("storage");
+            File file = new File(path + uploadDTO.location() + "/" + uploadDTO.name() + ".temp");
+            FileOutputStream fos = new FileOutputStream(file, true);
+            for (byte[] writeBytes : stored)
+                fos.write(writeBytes);
+            fos.close();
+            stored.clear();
+            if (uploadDTO.index() == uploadDTO.totalIndex() - 1) {
+                Files.move(file.toPath(), Paths.get(path + uploadDTO.location() + "/" + uploadDTO.name()), StandardCopyOption.REPLACE_EXISTING);
+                data.remove(key);
+                if (data.isEmpty()) dataStack.remove(username);
+            }
+        }
+        return FileUploadResponseDTO.builder().key(uploadDTO.key()).index(uploadDTO.index() + 1).build();
+    }
+
+    public void cancelSaveFile(String username, String key, String location, String name) throws IOException {
+        if (dataStack.containsKey(username)) {
+            HashMap<String, List<byte[]>> data = dataStack.get(username);
+            data.remove(key);
+            if (data.isEmpty()) dataStack.remove(username);
+        }
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        File file = new File(path + location + "/" + name + ".temp");
+        if (file.exists()) file.delete();
+    }
+
+    @Async
+    public void deleteFile(String url) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        File file = new File(path + url);
+
+        deleteFileWithFolder(file);
+    }
+
     private void addAllFiles(List<File> list, File file, String keyword) {
-        if (file.getName().toLowerCase().contains(keyword.toLowerCase()))
-            list.add(file);
-        if (file.listFiles() != null)
-            for (File child : file.listFiles())
-                addAllFiles(list, child, keyword);
+        if (file.getName().toLowerCase().contains(keyword.toLowerCase())) list.add(file);
+        if (file.listFiles() != null) for (File child : file.listFiles())
+            addAllFiles(list, child, keyword);
     }
 
     private FolderResponseDTO transferFolderToDTO(File file) {
@@ -1872,6 +2064,5 @@ public class MultiService {
     private FileResponseDTO transferFileToDTO(File file) throws IOException {
         return FileResponseDTO.builder().name(file.getName()).type(FileType.get(file).ordinal()).createDate(((FileTime) Files.getAttribute(file.toPath(), "creationTime")).toMillis()).modifyDate(file.lastModified()).size(FileOrder.getSize(file)).url(file.getPath().replaceAll("\\\\", "/").replaceAll(HoneyBadgerApplication.getOsType().getLoc(), "")).build();
     }
-
 
 }

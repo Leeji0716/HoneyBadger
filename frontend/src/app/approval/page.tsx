@@ -1,14 +1,25 @@
 "use client";
-import { acceptApproval, createApproval, deleteApproval, getApprovalList, getUser, readApproval } from "@/app/API/UserAPI";
+import { acceptApproval, createApproval, deleteApproval, getApprovalList, getUser, getUsers, readApproval, updateViewer } from "@/app/API/UserAPI";
 import Main from "@/app/Global/Layout/MainLayout";
-import { useEffect, useState } from "react";
-import { getjyDate, getRole } from "../Global/Method";
+import { useEffect, useRef, useState } from "react";
+import { getFileIcon, getjyDate, getRole, sliceText } from "../Global/Method";
+import Modal from "../Global/Modal";
+import { error } from "console";
 
 export default function Approval() {
+    interface approvalRequestDTO {
+        title: string,
+        content: string,
+        sender: string,
+        approversname: string[],
+        viewersname: string[]
+    }
+
     interface approvalResponseDTO {
         id: number,
         title: string,
         content: string,
+        files: originFileResponseDTO[],
         sender: userResponseDTO,
         approvers: approverResponseDTO[],
         viewers: userResponseDTO[],
@@ -38,14 +49,26 @@ export default function Approval() {
         name: string
     }
 
+    interface originFileResponseDTO {
+        key: string
+        original_name: string,
+        value: string
+    }
+
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
+    const [page, setPage] = useState(0);
+    const [maxPage, setMaxPage] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
     const [filter, setFilter] = useState(-1); // Approval 필터
     const [user, setUser] = useState(null as any);
     const [isClientLoading, setClientLoading] = useState(true);
     const [keyword, setKeyword] = useState('');
     const [approval, setApproval] = useState<approvalResponseDTO>(null as any);
     const [approvalList, setApprovalList] = useState<approvalResponseDTO[]>([]);
-    const selectedViewersText = approval?.viewers.map(viewer => viewer.name).join(', ');
+    const [fileList, setFileList] = useState<originFileResponseDTO[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [userList, setUserList] = useState([] as any[])
+    const appBoxRef = useRef<HTMLDivElement>(null);
 
     // 유저 토큰 확인하기
     useEffect(() => {
@@ -53,36 +76,60 @@ export default function Approval() {
             getUser().then(r => {
                 setUser(r);
                 const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
-                getApprovalList(keyword).then(r => setApprovalList(r)).catch(e => console.log(e));
+                getApprovalList(keyword, 0).then(r => {setApprovalList(r.content); setMaxPage(r.totalPages)}).catch(e => console.log(e));
                 // getApprovalList(keyword, 0).then(r => setApprovalList(r)).catch(e => console.log(e));
             }).catch(e => { setClientLoading(false); console.log(e); });
         else
             location.href = '/';
     }, [ACCESS_TOKEN])
 
+    const loadPage = () => {
+        const appBox = appBoxRef.current;
+
+        if (appBox != null) {
+            const scrollLocation = appBox?.scrollTop;
+            const maxScroll = appBox.scrollHeight - appBox.clientHeight;
+            console.log("=======");
+            console.log(scrollLocation);
+            console.log("maxScroole");
+            console.log(maxScroll);
+            if (!isLoading && scrollLocation >= maxScroll-1 && page < maxPage - 1) {
+                setIsLoading(true);
+                getApprovalList(keyword,page +1).then(r => 
+                    {
+                        if (r.size > 0) {
+                        setPage(page+1);
+                        const List = [...approvalList,...r.content];
+                        setApprovalList(List);
+                        setMaxPage(r.totalPages);
+                        }
+                        setIsLoading(false);
+                    }).catch(e => {console.log(e);  setIsLoading(false);});
+            }
+        }
+    };
+
+
+    //userList 가져오기
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const usersData = await getUsers();
+                setUserList(usersData);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchData();
+    }, []);
+
     // 검색
     const handleSearch = () => {
-        getApprovalList(keyword).then(r => {
-            setApprovalList(r);
+        getApprovalList(keyword, 0).then(r => {
+            setApprovalList(r.content);
         }).catch(error => {
             console.error("Search error:", error);
         });
-    };
-
-    // Approval 상태 매핑 함수
-    const filtering = (filter: number): string => {
-        switch (filter) {
-            case 0:
-                return "결재 대기중";
-            case 1:
-                return "결재 중";
-            case 2:
-                return "허가";
-            case 3:
-                return "반환";
-            default:
-                return "전체";
-        }
     };
 
     // Approval 상태 매핑 함수
@@ -189,8 +236,62 @@ export default function Approval() {
         </>
     }
 
+    function update(approvalId: number, approvalViewers: any[]) {
+        const viewer = approvalViewers.map(user => user.username);
+        console.log(viewer);
+
+        const approvalRequest: approvalRequestDTO = {
+            viewersname: viewer,
+            title: "",
+            content: "",
+            sender: "",
+            approversname: []
+        };
+        updateViewer(approvalId, approvalRequest)
+            .then(r => setApproval(r))
+            .catch(error => console.error(error));
+    }
+
     // approval 상세보기
     function ApprovalDetail() {
+        const [approvalViewers, setApprovalViewers] = useState([] as any[]);
+        const [approvalViewersText, setApprovalViewersText] = useState('');
+
+        // 유저 추가 핸들러
+        const handleAddUser = (user: any) => {
+            setApprovalViewers((prevSelectedViewers) => {
+                const isUserSelected = prevSelectedViewers.find((u) => u.username === user.username);
+                if (isUserSelected) {
+                    // 이미 선택된 유저가 있으면 배열에서 제거
+                    return prevSelectedViewers.filter((u) => u.username !== user.username);
+                }
+                return [...prevSelectedViewers, user];
+            });
+        };
+
+        // 컴포넌트 로드 시 approval.viewers를 초기 상태로 설정
+        useEffect(() => {
+            setApprovalViewers(approval.viewers);
+        }, [approval.viewers]);
+
+        useEffect(() => {
+            setApprovalViewersText(approvalViewers.map((viewer) => viewer.name).join(', '));
+        }, [approvalViewers]);
+
+        const filteredUserList = userList.filter(user =>
+            !approval?.approvers.some(approver => approver.approver.username === user.username)
+        );
+
+        // 참조 유저 제거
+        const handleInputChange = (event: any) => {
+            const inputValue = event.target.value;
+            const selectedUserNames = inputValue.split(',').map((username: string) => username.trim());
+
+            setApprovalViewers((prevSelectedViewers) =>
+                prevSelectedViewers.filter(user => selectedUserNames.includes(user.name))
+            );
+        };
+
         return <div>
             <div className="w-full h-[90%]">
                 <div className="flex flex-wrap w-full">
@@ -319,15 +420,24 @@ export default function Approval() {
                     </div>
                     <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
                         <label className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">참조인</label>
-                        <label className="w-[90%] flex items-center border-r-2 border-gray-300 pl-5">{selectedViewersText}</label>
+                        <label className="w-[90%] flex items-center border-r-2 border-gray-300 pl-5">{approvalViewersText}</label>
                     </div>
-                    <div className="relative w-full h-[150px] border border-gary-500 overflow-y-scroll border-r-2 border-l-2 border-b-2 border-gray-300">
-                        <button className="btn btn-sm absolute top-[5px] right-[5px]">파일 선택</button>
-                        {/* <img src="/plus.png" alt="" className="w-[30px] h-[30px] absolute top-[5px] right-[5px] cursor-pointer" ></img> */}
+                    <div className="w-full h-[170px] border border-gray-300 border-r-2 border-l-2 border-b-2 border-gray-300 flex flex-col flex-wrap overflow-x-scroll">
+                        {approval.files.length != 0 ? approval?.files.map((f: originFileResponseDTO, index: number) => (
+                            <ul key={index}>
+                                <div className="flex items-center bg-white p-2 w-[500px]">
+                                    <img src={getFileIcon(f.original_name)} className="w-[26px] h-[31px] mr-2" alt="" />
+                                    <p>{sliceText(f.original_name)}</p>
+                                </div>
+                            </ul>
+                        ))
+                            :
+                            <></>
+                        }
                     </div>
                 </>
             </div>
-            {/* 수정 & 삭제 & 허가 & 반환 버튼 */}
+            {/* 전달 & 삭제 & 허가 & 반환 버튼 */}
             <>
                 {approval && approval.sender.username === user.username ?
                     <div className="w-full h-[40px] mt-5 flex justify-end">
@@ -342,14 +452,50 @@ export default function Approval() {
                                         }
                                     }
                                 }}>삭제</button>
-                                <button className="px-4 py-2 bg-blue-500 text-white rounded-md mr-2">수정</button>
                             </>
                             :
                             <>
                                 <button className="px-4 py-2 bg-gray-400 text-white rounded-md mr-2" disabled>삭제</button>
-                                <button className="px-4 py-2 bg-gray-400 text-white rounded-md mr-2" disabled>수정</button>
+
                             </>
                         }
+                        <button className="px-4 py-2 bg-blue-400 text-white rounded-md mr-2" onClick={() => setIsModalOpen(true)}>전달</button>
+                        <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} escClose={true} outlineClose={true}>
+                            <div className="flex flex-col items-center w-[500px] h-[700px]">
+                                <p className="font-bold text-3xl m-3 mb-8 flex justify-center w-full">멤버 추가하기</p>
+                                <div className="w-full flex justify-end">
+                                    <button className="px-4 py-2 official-color text-white rounded-md mr-2 w-[80px] mb-2"
+                                        onClick={() => update(approval.id, approvalViewers)}>전달</button>
+                                </div>
+                                <input type="text" className="w-[90%] flex items-center border-2 border-gray-300 pl-5 mb-2"
+                                    onChange={(e) => handleInputChange(e)} value={approvalViewersText} />
+                                <ul className="overflow-y-scroll w-full">
+                                    {filteredUserList.map((user, index) => (
+                                        <li key={index} className="flex justify-between items-center mb-5 w-full">
+                                            <span className="font-bold text-md m-3 w-[25%]">{user.name}</span>
+                                            <span className="text-md m-3 w-[25%]">부서</span>
+                                            <span className="text-md m-3 w-[25%]">역할</span>
+                                            {approvalViewersText.includes(user.name) ?
+                                                <button
+                                                    onClick={() => handleAddUser(user)}
+                                                    className="font-bold text-3xl m-3 w-[25%] text-red-500"
+                                                >
+                                                    ✓
+                                                </button>
+                                                :
+                                                <button
+                                                    onClick={() => handleAddUser(user)}
+                                                    className="font-bold text-3xl m-3 w-[25%]"
+                                                >
+                                                    +
+                                                </button>
+                                            }
+
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </Modal>
                     </div>
                     :
                     <></>
@@ -432,7 +578,7 @@ export default function Approval() {
 
                     {/* 필터링 된 리스트 -> 누르면 읽음 & 상세보기 */}
                     <div className="relative flex flex-col justify-center w-full h-full">
-                        <div className="w-full h-[705px] overflow-x-hidden overflow-y-scroll">
+                        <div ref={appBoxRef} onScroll={loadPage} className="w-full h-[705px] overflow-x-hidden overflow-y-scroll">
                             {approvalList.filter(approval => filter === -1 || approval.approvalStatus === filter).map((approval, index) => (
                                 <div key={index}
                                     className="w-[550px] h-[50px] border-2 border-gray-300 mb-1 ml-1 rounded-lg shadow-md flex justify-between">
@@ -466,6 +612,7 @@ export default function Approval() {
             <div className="w-11/12 bg-white h-full flex flex-col shadow">
                 {/* 결재 기안서 상세 보기 */}
                 {approval != null ? <ApprovalDetail /> : <></>}
+
             </div>
         </div>
     </Main >
