@@ -1647,24 +1647,32 @@ public class MultiService {
         return approvalResponseDTOS;
     }
 
-//    public ApprovalResponseDTO addViewer(Long approvalId, List<String> viewerUsername ){
-//        Approval approval = approvalService.get (approvalId);
-//
-//        List<Viewer> viewers = approval.getViewers ();
-//        List<Viewer> newViewers = new ArrayList<> ();
-//
-//        for(String username : viewerUsername){
-//            for(Viewer viewer : viewers){
-//                if(!viewer.getUser ().getUsername ().equals (username)){
-//                    newViewers.add (viewer);
-//                }
-//                continue;
-//            }
-//        }
-//        approval.setViewers (viewers);
-//
-//    }
+    public ApprovalResponseDTO addViewer(Long approvalId, ApprovalRequestDTO approvalRequestDTO, String username) throws NotAllowedException{
 
+        Approval approval = approvalService.get(approvalId);
+
+        if(!approval.getSender ().equals (username)) throw new NotAllowedException ("생성자만 수정 가능합니다.");
+
+        List<Viewer> currentViewers = approval.getViewers();
+        Set<String> currentViewerUsernames = currentViewers.stream()
+                .map(viewer -> viewer.getUser().getUsername())
+                .collect(Collectors.toSet());
+        Set<String> newViewerUsernames = new HashSet<>(approvalRequestDTO.viewersname());
+
+        // 새로운 사용자 추가
+        for (String newUsername : newViewerUsernames) {
+            if (!currentViewerUsernames.contains(newUsername)) {
+                SiteUser user = userService.get(newUsername);
+                viewerService.save(user, approval);
+            }
+        }
+
+        // 더 이상 목록에 없는 기존 사용자 삭제
+        currentViewers.removeIf(viewer -> !newViewerUsernames.contains(viewer.getUser().getUsername()));
+
+        approvalService.save(approval); // 변경사항 저장
+        return getApproval(approval); // 업데이트된 Approval 객체 반환
+    }
 
 
     /*

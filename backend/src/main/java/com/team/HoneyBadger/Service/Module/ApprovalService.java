@@ -13,6 +13,7 @@ import org.springframework.aop.framework.AopProxy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -73,10 +74,19 @@ public class ApprovalService {
         }
     }
 
-    public Approval updateViewer(Approval approval, List<Viewer> newViewers){
-        approval.setViewers (newViewers);
-        return approvalRepository.save (approval);
-    }
+//    public Approval updateViewer(Approval approval, List<String> newViewernames){
+//        List<Viewer> currentViewers = approval.getViewers ();
+//
+//        if(currentViewers == null){
+//            currentViewers = new ArrayList<> ();
+//        }
+//
+//
+//
+//        currentViewers.addAll (newViewers);
+//        approval.setViewers (currentViewers);
+//        return approvalRepository.save (approval);
+//    }
 
 
 }
