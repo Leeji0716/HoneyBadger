@@ -1434,11 +1434,44 @@ public class MultiService {
     }
 
     /*
-     * Approval
+     * `Approval`
      */
 
-    @Transactional
+    @Transactional //승인 파일 업로드
+    public void approvalFilesUpload(Long approvalId, List<MultipartFile> files) throws IOException {
+        String path = HoneyBadgerApplication.getOsType().getLoc();
+        String keyValue = KeyPreset.APPROVAL_MULTI.getValue(approvalId.toString());
+        MultiKey key = multiKeyService.get(keyValue).orElseGet(() -> multiKeyService.save(keyValue));
+        List<String> list = new ArrayList<>();//
+        for (MultipartFile file : files) {
+            UUID uuid = UUID.randomUUID();
+            String fileName = "/api/approval/" + approvalId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+            String fileKey = KeyPreset.APPROVAL.getValue(approvalId.toString() + "_" + list.size());
+            fileSystemService.save(fileKey, fileName);
+            fileSystemService.save(KeyPreset.APPROVAL_ORIGIN.getValue(fileKey), file.getOriginalFilename());
+            list.add(fileKey);
+            File dest = new File(path + fileName);
+            if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+            file.transferTo(dest);
+        }
+        multiKeyService.updateAll(key, list);
+    }
+
+
+    @Transactional // 승인 DTO 생성
     private ApprovalResponseDTO getApproval(Approval approval) {
+
+        List<OriginFileResponseDTO> filePathList = new ArrayList<>();
+        Optional<MultiKey> _multiKey = multiKeyService.get(KeyPreset.APPROVAL_MULTI.getValue(approval.getId().toString()));
+        if (_multiKey.isPresent()) {
+            for (String key : _multiKey.get().getKeyValues()) {
+                OriginFileResponseDTO.OriginFileResponseDTOBuilder builder = OriginFileResponseDTO.builder();
+                fileSystemService.get(key).ifPresent(fileSystem -> builder.value(fileSystem.getV())); // url
+                fileSystemService.get(KeyPreset.APPROVAL_ORIGIN.getValue(key)).ifPresent(fileSystem -> builder.original_name(fileSystem.getV())); // original Name
+                builder.key(key); // key
+                filePathList.add(builder.build());
+            }
+        }
 
         List<Approver> approvers = approverService.getAll(approval);
         List<String> approverusernames = approvers.stream().map(approver -> approver.getUser().getUsername()) // 사용자 이름 추출
@@ -1464,10 +1497,15 @@ public class MultiService {
         Long sendDate = dateTimeTransfer(approval.getCreateDate());
 
 
-        return ApprovalResponseDTO.builder().id(approval.getId()).title(approval.getTitle()).content(approval.getContent()).sender(senderDTO).approvers(approversUser).viewers(viewerUser).approvalStatus(approvalStatus).readUsers(readUser).sendDate(sendDate).build();
+        return ApprovalResponseDTO.builder()
+                .id(approval.getId())
+                .title(approval.getTitle()).content(approval.getContent()).files(filePathList)
+                .sender(senderDTO).approvers(approversUser).viewers(viewerUser)
+                .approvalStatus(approvalStatus).readUsers(readUser)
+                .sendDate(sendDate).build();
     }
 
-    @Transactional
+    @Transactional // 승인자 디티오 생성
     private List<ApproverResponseDTO> approverUserFind(Approval approval, List<String> usernames) {
 
         List<ApproverResponseDTO> users = new ArrayList<>();
@@ -1521,6 +1559,7 @@ public class MultiService {
     }
 
 
+    //기안 생성
     public ApprovalResponseDTO createApproval(ApprovalRequestDTO approvalRequestDTO, String loginUser) throws NotAllowedException {
         SiteUser sender = userService.get(loginUser);
         Approval approval = approvalService.create(approvalRequestDTO, sender);
@@ -1545,6 +1584,7 @@ public class MultiService {
         return getApproval(approval);
     }
 
+    // 기안 삭제
     public void deleteApproval(Long approvalId) throws NotAllowedException {
 
         if (approvalId == null) throw new NotAllowedException("아이디는 하나 이상 필수입니다.");
