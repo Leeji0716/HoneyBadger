@@ -232,10 +232,6 @@ export default function Approval() {
         }
     };
 
-    function handleOpenModal() {
-        setIsModalOpen(true);
-    }
-
     //페이지
     return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-full flex items-center justify-center h-full pt-10 pb-4">
