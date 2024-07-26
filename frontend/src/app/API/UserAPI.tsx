@@ -420,8 +420,12 @@ interface cycleRequestDTO {
     tagColor: string;
 }
 
-export const createSchedule = async (data: cycleRequestDTO) => {
-    const response = await UserApi.post('/api/personal', data);
+export const createSchedule = async (data: cycleRequestDTO, statusid: number) => {
+    const response = await UserApi.post('/api/cycle', data, {
+        headers: {
+            status: statusid
+        }
+    });
     return response.data;
 };
 
@@ -430,24 +434,26 @@ const formatDateToISO = (date: Date): string => {
     return date.toISOString().split('T')[0] + 'T' + date.toTimeString().split(' ')[0].substring(0, 5);
 };
 
-export const fetchSchedules = async (startDate: Date, endDate: Date) => {
+export const fetchSchedules = async (startDate: Date, endDate: Date, statusid: number) => {
     const formattedStartDate = formatDateToISO(startDate);
     const formattedEndDate = formatDateToISO(endDate);
 
-    const response = await UserApi.get('/api/personal', {
+    const response = await UserApi.get('/api/cycle', {
         headers: {
-            'startDate': formattedStartDate,
-            'endDate': formattedEndDate
+            status: statusid,
+            startDate: formattedStartDate,
+            endDate: formattedEndDate
         }
     });
     return response.data;
 };
 
-export const updateSchedule = async (id: number, data: cycleRequestDTO) => {
+export const updateSchedule = async (id: number, data: cycleRequestDTO, statusid: number) => {
     console.log('Updating schedule:', id, data);
-    const response = await UserApi.put(`/api/personal`, data, {
+    const response = await UserApi.put(`/api/cycle`, data, {
         headers: {
-            id: id
+            id: id,
+            status: statusid
         }
     });
     return response.data;
@@ -455,7 +461,50 @@ export const updateSchedule = async (id: number, data: cycleRequestDTO) => {
 
 export const deleteSchedule = async (id: number) => {
     console.log('Deleting schedule:', id);
-    const response = await UserApi.delete(`/api/personal`, {
+    const response = await UserApi.delete(`/api/cycle`, {
+        headers: {
+            id: id
+        }
+    });
+    return response.data;
+};
+
+interface cycleTagRequestDTO {
+    name: string,
+    color: string
+}
+
+export const getTagList = async (statusid: number) => {
+    const response = await UserApi.get('/api/cycle/tag', {
+        headers: {
+            status: statusid,
+        }
+    });
+    return response.data;
+};
+
+export const updateTag = async (id: number, data: cycleTagRequestDTO) => {
+    console.log('Updating schedule:', id, data);
+    const response = await UserApi.put(`/api/cycle/tag`, data, {
+        headers: {
+            id: id
+        }
+    });
+    return response.data;
+};
+
+export const deleteTag = async (id: number) => {
+    console.log('Deleting schedule:', id);
+    const response = await UserApi.delete(`/api/cycle/tag`, {
+        headers: {
+            id: id
+        }
+    });
+    return response.data;
+};
+
+export const getTagtoCycle = async (id: number) => {
+    const response = await UserApi.get(`/api/cycle/tagList`, {
         headers: {
             id: id
         }
