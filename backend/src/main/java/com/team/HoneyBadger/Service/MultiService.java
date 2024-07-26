@@ -1221,6 +1221,9 @@ public class MultiService {
                 break;
 
             case 1:
+                if(user.getDepartment() == null){
+                    throw new NotAllowedException("부서가 없습니다.");
+                }
                 if (cycleRequestDTO.tagName() == null) {
                     cycleService.create(KeyPreset.DC.getValue(user.getDepartment().getName()), cycleRequestDTO);
                 } else {
@@ -1428,10 +1431,12 @@ public class MultiService {
         return getTagDto(cycleTagService.updateTag(cycleTag, cycleTagRequestDTO));
     }
 
-    public List<CycleDTO> getTagCycle(Long id) {
+    public Page<CycleDTO> getTagCycle(Long id,int page) {
+        Pageable pageable = PageRequest.of(page,5);
         CycleTag cycleTag = cycleTagService.findById(id);
-        List<Cycle> cycleList = cycleService.findTagCycle(cycleTag);
-        return cycleList.stream().map(this::getCycleDTO).toList();
+        Page<Cycle> cycleList = cycleService.findTagCycleToPaging(cycleTag,pageable);
+        return new PageImpl<>(cycleList.stream().map(this::getCycleDTO).toList(),pageable,cycleList.getTotalElements());
+
     }
 
     /*
