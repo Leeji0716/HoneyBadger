@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -17,6 +18,7 @@ public class ApproverService {
     public Approver save(SiteUser siteUser, Approval approval){
         return approverRepository.save (Approver.builder ().user (siteUser).approval (approval).approverStatus (ApprovalStatus.READY).build ());
     }
+
 
     public Approver get(String username,Approval approval) {
         return approverRepository.findByUsernameAndApproval (username, approval);
@@ -31,6 +33,7 @@ public class ApproverService {
         Approver approver = approverRepository.findByUsernameAndApproval (username,approval);
         if (approver != null) {
             approver.setApproverStatus (newStatus);
+            approver.setCreateDate (LocalDateTime.now ());
             approverRepository.save (approver);
         }
     }

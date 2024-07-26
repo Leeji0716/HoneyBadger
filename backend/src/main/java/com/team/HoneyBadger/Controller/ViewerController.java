@@ -1,8 +1,8 @@
 package com.team.HoneyBadger.Controller;
 
+import com.team.HoneyBadger.DTO.ApprovalRequestDTO;
 import com.team.HoneyBadger.DTO.ApprovalResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.Entity.Approver;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.NotAllowedException;
 import com.team.HoneyBadger.Service.MultiService;
@@ -11,19 +11,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/approver")
-public class ApproverController {
+@RequestMapping("/api/viewer")
+public class ViewerController {
     private final MultiService multiService;
 
-
-    @PostMapping // 유저가 기안서 허가/반환 하기
-    public ResponseEntity<?> acceptApprover(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestHeader String Binary) {
+    @PostMapping // 기안서 참조자 변경 (전송)
+    public ResponseEntity<?> changeViewer(@RequestHeader("Authorization") String accessToken, @RequestHeader("approvalId") Long approvalId, @RequestBody ApprovalRequestDTO approvalRequestDTO) {
         TokenDTO tokenDTO = multiService.checkToken (accessToken);
         if (tokenDTO.isOK ()) try {
-            boolean isBinary = Boolean.parseBoolean(Binary);
-            ApprovalResponseDTO approvalResponseDTO = multiService.acceptApprover (approvalId, tokenDTO.username (), isBinary);
+            ApprovalResponseDTO approvalResponseDTO = multiService.addViewer (approvalId, approvalRequestDTO, tokenDTO.username ());
             return ResponseEntity.status (HttpStatus.OK).body (approvalResponseDTO);
         } catch (NotAllowedException ex) {
             return ResponseEntity.status (HttpStatus.FORBIDDEN).body (ex.getMessage ());
@@ -32,7 +32,4 @@ public class ApproverController {
         }
         else return tokenDTO.getResponseEntity ();
     }
-
-
-
 }

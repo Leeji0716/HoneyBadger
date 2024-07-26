@@ -6,6 +6,8 @@ import com.team.HoneyBadger.Entity.CycleTag;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Repository.CycleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -44,7 +46,7 @@ public class CycleService {
     }
 
     public Cycle findById(Long id) throws DataNotFoundException {
-        return cycleRepository.findById(id).orElseThrow(() -> new DataNotFoundException("PersonalCycle not found with id: " + id));
+        return cycleRepository.findById(id).orElseThrow(() -> new DataNotFoundException("Cycle not found with id: " + id));
     }
 
     public void delete(Cycle cycle) {
@@ -69,5 +71,14 @@ public class CycleService {
                 .k(k)
                 .tag(cycleTag)
                 .build());
+    }
+
+    public List<Cycle> findTagCycle(CycleTag cycleTag) {
+        return cycleRepository.findTagCycle(cycleTag);
+    }
+
+    public Page<Cycle> findTagCycleToPaging(CycleTag cycleTag, Pageable pageable) {
+
+        return cycleRepository.findTagCycleToPaging(cycleTag,pageable);
     }
 }
