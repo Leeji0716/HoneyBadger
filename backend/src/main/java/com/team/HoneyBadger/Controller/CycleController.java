@@ -110,4 +110,15 @@ public class CycleController {
         }
         else return tokenDTO.getResponseEntity();
     }
+
+    //태그에 해당하는 일정리스트
+    @GetMapping("/tagList")
+    public ResponseEntity<?> tagCycleList(@RequestHeader("Authorization") String accessToken,@RequestHeader("id") Long id){
+        TokenDTO tokenDTO = multiService.checkToken(accessToken);
+        if(tokenDTO.isOK()){
+            List<CycleDTO> cycleDTOList = multiService.getTagCycle(id);
+            return ResponseEntity.status(HttpStatus.OK).body(cycleDTOList);
+        }else return tokenDTO.getResponseEntity();
+
+    }
 }
