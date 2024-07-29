@@ -40,7 +40,7 @@ public class MessageReservationService {
 
     public void update(MessageReservation messageReservation, MessageReservationRequestDTO messageReservationRequestDTO) {
         messageReservation.setMessage(messageReservationRequestDTO.message());
-        messageReservation.setSendDate(messageReservationRequestDTO.sendDate());
+        messageReservation.setSendDate(messageReservationRequestDTO.reservationDate());
         messageReservation.setMessageType(messageReservation.getMessageType());
         messageReservation.setModifyDate(LocalDateTime.now());
 

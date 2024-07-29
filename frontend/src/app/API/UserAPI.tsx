@@ -106,7 +106,7 @@ interface messageReservationRequestDTO {
     chatroomId: number
     message: string
     messageType: number
-    sendDate: Date | null
+    reservationDate: Date | null
 }
 
 export const getEmail = async (status: number, page: number) => {

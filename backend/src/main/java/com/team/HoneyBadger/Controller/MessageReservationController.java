@@ -75,11 +75,9 @@ public class MessageReservationController {
     @GetMapping("/list")
     public ResponseEntity<?> getMessageReservationList(@RequestHeader("Authorization") String accessToken,  @RequestHeader(value = "Page", required = false) Integer page){
         TokenDTO tokenDTO = multiService.checkToken(accessToken);
-
         if (page == null || page < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("해당 페이지를 찾을 수 없습니다.");
         }
-
         if (tokenDTO.isOK()) try {
             Page<MessageReservationResponseDTO> messageReservationResponseDTO = multiService.getMessageReservationByUser(tokenDTO.username(), page);
             return ResponseEntity.status(HttpStatus.OK).body(messageReservationResponseDTO);

@@ -1008,11 +1008,17 @@ public class MultiService {
             throw new NotAllowedException("메세지를 입력해주세요.");
         }
 
-        if (messageReservationRequestDTO.sendDate().isBefore(LocalDateTime.now())) {
+        if (messageReservationRequestDTO.reservationDate().isBefore(LocalDateTime.now())) {
             throw new NotAllowedException("지난 시간으로 예약할 수 없습니다.");
         }
 
-        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendDate()).messageType(messageReservationRequestDTO.messageType()).build();
+        MessageReservation messageReservation = MessageReservation.builder()
+                .chatroom(chatroom)
+                .message(messageReservationRequestDTO.message())
+                .sender(sender)
+                .sendDate(messageReservationRequestDTO.reservationDate())
+                .messageType(messageReservationRequestDTO.messageType())
+                .build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
@@ -1020,8 +1026,16 @@ public class MultiService {
 
     @Transactional
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
-        Long sendTime = this.dateTimeTransfer(messageReservation.getSendDate());
-        return MessageReservationResponseDTO.builder().id(messageReservation.getId()).chatroomId(messageReservation.getChatroom().getId()).message(messageReservation.getMessage()).username(messageReservation.getSender().getUsername()).name(messageReservation.getSender().getName()).sendDate(sendTime).messageType(messageReservation.getMessageType()).build();
+        Long reservationDate = this.dateTimeTransfer(messageReservation.getSendDate());
+        return MessageReservationResponseDTO.builder()
+                .id(messageReservation.getId())
+                .chatroomId(messageReservation.getChatroom().getId())
+                .message(messageReservation.getMessage())
+                .username(messageReservation.getSender().getUsername())
+                .name(messageReservation.getSender().getName())
+                .reservationDate(reservationDate)
+                .messageType(messageReservation.getMessageType())
+                .build();
     }
 
 
