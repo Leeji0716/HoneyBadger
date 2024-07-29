@@ -433,10 +433,10 @@ export default function Home() {
         </div>
     }
 
-    return <Main user={user} isClientLoading={isClientLoading}>
+    return <Main user={user} isClientLoading={isClientLoading} classname="HD">
         <div className="w-2/12 flex items-center justify-center pt-10 pb-4">
-            <div className="h-full w-11/12 bg-white shadow p-2 flex flex-col relative ml-12 h-[847px] max-h-[847px]">
-                <div className="overflow-y-auto h-[680px] flex flex-col">
+            <div className="h-full w-11/12 bg-white shadow p-2 flex flex-col relative ml-12">
+                <div className="overflow-y-auto flex flex-col">
                     <FolderTree name="개인" location={'/api/user/' + user?.username + '/storage'} folderList={baseFolders["개인"]} />
                     {user?.department ?
                         <>
@@ -798,7 +798,7 @@ export default function Home() {
                     </div>
                 </div>
                 <div className="divider"></div>
-                <div className="flex h-[690px]" onContextMenu={e => e.preventDefault()}>
+                <div className="flex SD:h-[120px] HD:h-[310px] FHD:h-[670px]" onContextMenu={e => e.preventDefault()}>
                     {style ? // Icon 형태
                         <div className="overflow-y-auto flex flex-wrap w-full h-full ">
                             {files?.map((file, index) => <div key={index} className="w-[150px] h-[196px] group cursor-pointer mr-2 mb-2" onMouseDown={e => { if (e.button == 2) e.preventDefault() }} onClick={e => {
