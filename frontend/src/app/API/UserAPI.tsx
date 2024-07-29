@@ -692,3 +692,12 @@ export const updateViewer = async (approvalId: number, approvalRequestDTO: appro
     });
     return response.data;
 };
+
+export const unsubscribeChatroom = async (name:string) => {
+    const response = await UserApi.put('/api/message/unsubscribe',null,{
+        headers:{
+            name:name
+        }
+    });
+    return response.data;
+};

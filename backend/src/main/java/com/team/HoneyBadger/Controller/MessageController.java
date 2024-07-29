@@ -83,13 +83,14 @@ public class MessageController {
             return ResponseEntity.status(HttpStatus.OK).body(messageResponseDTO);
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-        } catch (NotAllowedException ex){
+        } catch (NotAllowedException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
     }
+
     public void processMessages(Long id) {
         BlockingQueue<String> users = chatRoomManager.getUsers(id);
-        for (String reader : users){
+        for (String reader : users) {
             multiService.readMessage(id, reader);
         }
     }
@@ -121,5 +122,11 @@ public class MessageController {
         } catch (DataNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
+    }
+
+    @PutMapping("/unsubscribe") //테스트용
+    public ResponseEntity<?> unsubscribe(@RequestHeader("Authorization") String accessToken, @RequestHeader("name") String name) {
+        chatRoomManager.removeUserFromAllRooms(name);
+        return ResponseEntity.status(HttpStatus.OK).body("OK");
     }
 }
