@@ -61,10 +61,16 @@ export default function Chat() {
         message: string
         username: string
         name: string
+        reservationDate: Date | null
         messageType: number
-        // todo : 명칭 변경 필요
-        sendDate: Date | null
 
+    }
+
+    interface messageReservationRequestDTO {
+        chatroomId: number
+        message: string
+        messageType: number
+        reservationDate: Date | null
     }
 
     const [open, setOpen] = useState(false);
@@ -108,6 +114,9 @@ export default function Chat() {
     const [messageSub, setMessageSub] = useState<any>(null);
     const [readSub, setReadSub] = useState<any>(null);
     const [updateSub, setUpdateSub] = useState<any>(null);
+    const [editingReservations, setEditingReservations] = useState({});
+    const [editingContents, setEditingContents] = useState({});
+
 
     function handleOpenModal() {
         setIsModalOpen(true);
@@ -156,7 +165,6 @@ export default function Chat() {
     function handleClose5Modal() {
         setIsModalOpen5(false);
     }
-
 
     useEffect(() => {
         if (ACCESS_TOKEN)
@@ -257,7 +265,15 @@ export default function Chat() {
         if (isModalOpen5) {
             getMessageReservationList(page)
                 .then(r => {
-                    setReservationMessageList(r.content);
+                    console.log("asdsss");
+                    console.log(r);
+                    console.log(getChatDateTimeFormat(1722235002641));
+                    if (Array.isArray(r.content)) {
+                        setReservationMessageList(r.content);
+                    } else {
+                        console.error('API 응답이 배열이 아닙니다:', r.content);
+                        setReservationMessageList([]); // 비어있는 배열로 초기화
+                    }
                     setMaxPage(r.totalPages);
                 })
                 .catch(e => console.error(e));
@@ -339,8 +355,16 @@ export default function Chat() {
                 users.push(user.username);
             }
 
+            let roomName = chatroomName;
+            if (!roomName) {
+                // userList에서 사용자 이름을 찾아 결합
+                roomName = userList.filter(u => users.includes(u.username))
+                    .map(u => u.name)
+                    .join(', '); // 이름들을 쉼표로 구분
+            }
+
             // 채팅방 요청 객체 생성
-            const chatroomRequest: chatroomRequestDTO = { name: chatroomName, users };
+            const chatroomRequest: chatroomRequestDTO = { name: roomName, users };
 
             // 채팅방 생성 API 호출
             makeChatroom(chatroomRequest)
@@ -885,7 +909,7 @@ export default function Chat() {
                                     <div className="m-2">예약 시간 입력 : </div>
                                     <input type="datetime-local" onChange={e => setSendDate(e.target.value ? new Date(e.target.value) : null)} />
                                 </div>
-                                <input className="h-[400px] " type="text" placeholder="내용을 입력하세요" onChange={e => setMessage(e.target.value)}
+                                <textarea className="h-[400px] " placeholder="내용을 입력하세요" onChange={e => setMessage(e.target.value)}
                                     value={message}
 
                                     onKeyDown={e => {
@@ -901,7 +925,9 @@ export default function Chat() {
                                     const messageReservationRequestDTO = { chatroomId: chatroom?.id, message: message, messageType: 0, reservationDate: sendDate };
 
                                     createMessageReservation(messageReservationRequestDTO).then(r => {
-                                        setReservationMessageList(r);
+                                        console.log(r);
+                                        setReservationMessageList(r.content);
+
                                         handleClose4Modal();
                                     }).catch(e => {
                                         console.error(e);
@@ -911,26 +937,26 @@ export default function Chat() {
                         </Modal>
                         <Modal open={isModalOpen5} onClose={handleClose5Modal} escClose={true} outlineClose={true}>
                             <div className="flex flex-col items-center m-3">
-                                <p className="flex items-center justify-center font-bold text-xl mb-3">예약 메시지 리스트</p>
+                                <p className="flex items-center justify-center font-bold text-xl mb-3 w-[1000px]">예약 메시지 리스트</p>
                                 <div className="overflow-auto h-[500px] w-full border border-gray-300 rounded-lg">
                                     <div className="flex justify-between items-center font-bold text-lg m-2">
-                                        <p className="w-1/5 text-center whitespace-nowrap"> 채팅방 이름</p>
-                                        <p className="w-1/5 text-center whitespace-nowrap"> 보낸 시간</p>
-                                        <p className="w-2/5 text-center whitespace-nowrap"> 보낸 메시지</p>
+                                        <p className="w-1/5 text-center whitespace-nowrap">채팅방 이름</p>
+                                        <p className="w-1/5 text-center whitespace-nowrap">예약 시간</p>
+                                        <p className="w-2/5 text-center whitespace-nowrap">보낸 메시지</p>
                                         <p className="w-1/5">편집</p>
                                     </div>
                                     <ul className="m-3">
-                                        {reservationMessageList.map((message, index) => (
+                                        {reservationMessageList && reservationMessageList.map((reservationMessage, index) => (
                                             <li key={index} className="flex justify-between items-center mb-5 border-b pb-2">
-                                                <span className="text-md w-1/5 text-center">{getChatroomNameById(message.chatroomId)}</span>
-                                                <span className="text-md w-1/5 text-center">{getChatShowDateTimeFormat(message.sendDate)}</span>
-                                                <span className="text-md w-2/5 text-center">{message.message}</span>
+                                                <span className="text-md w-1/5 text-center">{getChatroomNameById(reservationMessage.chatroomId)}</span>
+                                                <span className="text-md w-1/5 text-center">{getChatDateTimeFormat(reservationMessage.reservationDate)}</span>
+                                                <span className="text-md w-2/5 text-center">{reservationMessage.message}</span>
                                                 <div className="flex w-1/5">
                                                     <button className="btn w-1/2 whitespace-nowrap">수정</button>
                                                     <button className="btn w-1/2 whitespace-nowrap"
                                                         onClick={() => {
-                                                            deleteMessageReservation(message.id).then(r => {
-                                                                setReservationMessageList(r);
+                                                            deleteMessageReservation(reservationMessage.id).then(r => {
+                                                                setReservationMessageList(r.content);
                                                             })
                                                         }}>삭제</button>
                                                 </div>
@@ -940,7 +966,6 @@ export default function Chat() {
                                 </div>
                             </div>
                         </Modal>
-
 
                         <button id="file" onClick={() => { file.current?.click() }}>
                             <img src="/file.png" data-tip="파일" className="file w-[25px] h-[25px] items-center justify-center m-1" />
@@ -1012,7 +1037,19 @@ export default function Chat() {
                                     }}
 
                                 />
-                                <button className="btn">전송</button>
+                                <button className="btn"
+
+                                    onClick={() => {
+                                        if (isReady) {
+
+                                            socket.publish({
+                                                destination: "/api/pub/message/" + Chatroom?.id,
+                                                body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
+                                            });
+                                        }
+                                    }}
+
+                                >전송</button>
                             </div>
                         </Modal>
                     </div>

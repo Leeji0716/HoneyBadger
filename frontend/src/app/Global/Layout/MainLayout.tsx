@@ -45,10 +45,10 @@ export default function Main(props: Readonly<pageInterface>) {
           <span></span>
         </button>
         <a href="/main" className="text-white m-3 cursor-pointer">HoneyBadger</a>
-        <div className="flex flex-row border-2 border-white rounded-md ml-60">
+        {/* <div className="flex flex-row border-2 border-white rounded-md ml-60">
           <img src="/search.png" className="w-[30px] h-[30px] m-1 cursor-pointer" alt="검색 사진" />
           <input type="text" placeholder="search" className="bolder-0 px-2 outline-none bg-white text-black" />
-        </div>
+        </div> */}
         <div className="m-1 ml-auto flex items-center">
           <div className="relative">
             <img id="setting" src="/setting.png" alt="세팅" className="w-[20px] h-[20px] cursor-pointer" onClick={() => setSettingOpen(!isSettingOpen)} />

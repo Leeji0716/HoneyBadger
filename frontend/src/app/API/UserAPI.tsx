@@ -157,9 +157,19 @@ export const createMessageReservation = async (data: messageReservationRequestDT
 }
 
 export const deleteMessageReservation = async (reservationMessageId: number) => {
-    const response = await UserApi.delete('/api/messageReservation',  {headers :{reservationMessageId}});
+    const response = await UserApi.delete('/api/messageReservation', { headers: { reservationMessageId } });
     return response.data;
 }
+
+export const editMessageReservation = async (reservationMessageId: number, messageReservationRequestDTO: messageReservationRequestDTO) => {
+    const response = await UserApi.put('/api/messageReservation', messageReservationRequestDTO,
+        {
+            headers: { reservationMessageId: reservationMessageId }
+        }
+    );
+    return response.data;
+}
+
 
 export const getMessageReservationList = async (page: number) => {
     const response = await UserApi.get('/api/messageReservation/list',
