@@ -76,7 +76,7 @@ export default function Approval() {
             getUser().then(r => {
                 setUser(r);
                 const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
-                getApprovalList(keyword, 0).then(r => {setApprovalList(r.content); setMaxPage(r.totalPages)}).catch(e => console.log(e));
+                getApprovalList(keyword, 0).then(r => { setApprovalList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e));
                 // getApprovalList(keyword, 0).then(r => setApprovalList(r)).catch(e => console.log(e));
             }).catch(e => { setClientLoading(false); console.log(e); });
         else
@@ -93,18 +93,17 @@ export default function Approval() {
             console.log(scrollLocation);
             console.log("maxScroole");
             console.log(maxScroll);
-            if (!isLoading && scrollLocation >= maxScroll-1 && page < maxPage - 1) {
+            if (!isLoading && scrollLocation >= maxScroll - 1 && page < maxPage - 1) {
                 setIsLoading(true);
-                getApprovalList(keyword,page +1).then(r => 
-                    {
-                        if (r.size > 0) {
-                        setPage(page+1);
-                        const List = [...approvalList,...r.content];
+                getApprovalList(keyword, page + 1).then(r => {
+                    if (r.size > 0) {
+                        setPage(page + 1);
+                        const List = [...approvalList, ...r.content];
                         setApprovalList(List);
                         setMaxPage(r.totalPages);
-                        }
-                        setIsLoading(false);
-                    }).catch(e => {console.log(e);  setIsLoading(false);});
+                    }
+                    setIsLoading(false);
+                }).catch(e => { console.log(e); setIsLoading(false); });
             }
         }
     };
@@ -248,7 +247,12 @@ export default function Approval() {
             approversname: []
         };
         updateViewer(approvalId, approvalRequest)
-            .then(r => setApproval(r))
+            .then(r => {
+                setApproval(r); console.log(r);
+                const index = approvalList.findIndex(e => e.id === approval.id);
+                const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
+                setIsModalOpen(false);
+            })
             .catch(error => console.error(error));
     }
 
@@ -427,7 +431,7 @@ export default function Approval() {
                             <ul key={index}>
                                 <div className="flex items-center bg-white p-2 w-[500px]">
                                     <img src={getFileIcon(f.original_name)} className="w-[26px] h-[31px] mr-2" alt="" />
-                                    <p>{sliceText(f.original_name)}</p>
+                                    <a href={f.value}>{sliceText(f.original_name)}</a>
                                 </div>
                             </ul>
                         ))
@@ -593,7 +597,8 @@ export default function Approval() {
                                                 })
                                         }}>{approval.title}</a>
                                     </h4>
-                                    <p className={`flex items-center justify-center text-sm w-[20%] ${getStatusColor(approval.approvalStatus)}`}>{getStatusText(approval.approvalStatus)}</p>
+                                    <p className={`flex items-center justify-center text-sm w-[20%] ${getStatusColor(approval.approvalStatus)}`}>
+                                        {getStatusText(approval.approvalStatus)}</p>
                                 </div>
                             ))}
 

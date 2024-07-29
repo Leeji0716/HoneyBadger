@@ -394,12 +394,10 @@ public class MultiService {
         SiteUser user = userService.get(username);
         LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
 
-        int alarmCnt; //
+        int alarmCnt;
 
         if (lastReadMessage == null) {
             if (!chatroom.getMessageList().isEmpty()) {
-//                lastReadMessage = lastReadMessageService.create(user, chatroom, chatroom.getMessageList().get(0).getId());
-//                alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage()) + 1;
                 alarmCnt = chatroom.getMessageList().size();
             } else {
                 alarmCnt = 0;
@@ -408,7 +406,15 @@ public class MultiService {
             alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
         }
 
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).alarmCount(alarmCnt).build();
+        return ChatroomResponseDTO.builder()
+                .id(chatroom.getId())
+                .name(chatroom.getName())
+                .users(users)
+                .latestMessage(latestMessageDTO)
+                .notification(notificationDTO)
+                .alarmCount(alarmCnt)
+                .createDate(dateTimeTransfer(chatroom.getCreateDate()))
+                .build();
     }
 
     @Transactional
