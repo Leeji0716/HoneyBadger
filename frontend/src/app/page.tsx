@@ -42,7 +42,7 @@ export default function Home() {
           console.log(e)
     })
   }
-  return <main className="flex justify-center items-center flex-col h-[953px] w-[1920px]">
+  return <main className="flex justify-center items-center flex-col layout-fix">
     <div className={"absolute text-8xl font-bold flex flex-col items-center justify-center h-[953px] w-[1920px] bg-white z-[1000]" + (isClientLoading ? '' : ' hidden')}>
       <img src="/logo.png" />
     </div>
@@ -72,7 +72,6 @@ export default function Home() {
             document.getElementById('login')?.click();
         }} />
     </div>
-
     {/* 버튼 */}
     <button id="login" className="login-button w-[400px] h-[40px] mb-5 font-semibold" type="submit" onClick={() => Sumbit()}
     >L O G I N</button>
