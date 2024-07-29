@@ -28,7 +28,6 @@ export default function EmailForm() {
     const [image, setImage] = useState("");
     const [files, setFiles] = useState<MailFile[]>([]);
     const [id, setId] = useState(0);
-
     const [isClientLoading, setClientLoading] = useState(true);
 
     interface MailFile {
@@ -124,9 +123,17 @@ export default function EmailForm() {
         [],
     );
 
+
     function ShowReciver(index: number, name: string) {
-        return <div key={index}>
-            <button className="btn">{name}</button>
+        return <div key={index} className="flex flex-wrap mr-1">
+            <button className="btn">{name}
+                <img className="w-[15px] h-[15px] mb-6 cursor-pointer " src="/x.PNG" alt="삭제" onClick={() => {
+                    const out = [...receiverIds];
+                    const index = out.findIndex((e) => e == name);
+                    out.splice(index, 1);
+                    setReceiverIds(out);
+                }} />
+            </button>
         </div>
     }
 
@@ -211,7 +218,7 @@ export default function EmailForm() {
             {error ? <p className="font-bold text-red-600">{error}</p> : <></>}
             <div className="flex w-[1400px] gap-5">
                 <label htmlFor="" className="w-[5%]  whitespace-nowrap">받는 사람</label>
-                <div className="w-full flex border-solid border-b-2">
+                <div className="w-full flex flex-wrap border-solid border-b-2">
                     {receiverIds?.length == 0 ? <></> : receiverIds?.map((recever, index) => (ShowReciver(index, recever)))}
                     <input type="text" className="w-full whitespace-nowrap" onKeyDown={(e) => {
                         if (e.key === 'Enter') {
