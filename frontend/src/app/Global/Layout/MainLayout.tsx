@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Side from "../Side";
 import DropDown, { Direcion } from "../DropDown";
+import { unsubscribeChatroom } from "@/app/API/UserAPI";
 
 interface pageInterface {
   children: React.ReactNode,
@@ -52,7 +53,7 @@ export default function Main(props: Readonly<pageInterface>) {
           <div className="relative">
             <img id="setting" src="/setting.png" alt="세팅" className="w-[20px] h-[20px] cursor-pointer" onClick={() => setSettingOpen(!isSettingOpen)} />
             <div className={"absolute w-[100px] h-[40px] top-7 -left-4 bg-white flex flex-col p-2" + (isSettingOpen ? '' : ' hidden')} >
-              <label className="font-bold hover:underline text-red-500 cursor-pointer" onClick={() => { localStorage.clear(); location.href = "/" }}>로그아웃</label>
+              <label className="font-bold hover:underline text-red-500 cursor-pointer" onClick={() => {unsubscribeChatroom(user.username); localStorage.clear(); location.href = "/" }}>로그아웃</label>
             </div>
           </div>
           <img src="/bell.png" alt="알림" className="w-[20px] h-[20px] ml-3" />

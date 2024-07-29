@@ -8,6 +8,7 @@ import { Tooltip } from 'react-tooltip';
 import {
     chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage,
     chatUploadFile, getUpdateMessageList, createMessageReservation, getMessageReservationList, deleteMessageReservation,
+    unsubscribeChatroom
 } from "../API/UserAPI";
 import { getChatDateTimeFormat } from "../Global/Method";
 import { getChatShowDateTimeFormat } from "../Global/Method";
@@ -199,21 +200,16 @@ export default function Chat() {
     }, [tempChatroom])
 
     useEffect(() => {
-
         if (updateMessageList) {
             const updatedMessageList = [...messageList];
-
-            // console.log(messageList);
-            // console.log(updateMessageList);
-
 
             updateMessageList.forEach((updateItem) => {
                 const index = updatedMessageList.findIndex(msgItem => msgItem.id === updateItem.id);
                 if (index !== -1) {
                     updatedMessageList[index] = updateItem;
+                    console.log(index);
                 }
             });
-
 
             setMessageList(updatedMessageList);
 
@@ -250,10 +246,11 @@ export default function Chat() {
         fetchData();
     }, []);
 
-    useEffect(() => {
-        const unsubscribe = () => {
+    const unsubscribe = () => {
+        unsubscribeChatroom(user.username).then(r => console.log(r));
+    }
 
-        }
+    useEffect(() => {
         window.addEventListener("beforeunload", unsubscribe);
         window.addEventListener("popstate", unsubscribe);
         window.addEventListener('unload', unsubscribe)
@@ -263,7 +260,6 @@ export default function Chat() {
             window.removeEventListener('unload', unsubscribe);
         });
     }, [chatroom]);
-
 
     useEffect(() => {
         if (isModalOpen5) {
@@ -480,15 +476,12 @@ export default function Chat() {
                         const message = JSON.parse(e.body).body;
                         const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name: message?.name, username: message?.username, messageType: message?.messageType, readUsers: message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
-
-
-
+                        <></>
                         // getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
 
                         //     setUpdateMessageList(updateMessageList);
 
                         // }));
-
 
 
                         // console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!server!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -505,13 +498,13 @@ export default function Chat() {
                         //     console.log('Received usernames:', usernames);
                         // });
 
-                        socket.publish({
 
-                            destination: "/api/pub/updateChatroom/" + Chatroom?.id,
-                            body: JSON.stringify({ username: user?.username })
+                    });
 
-                        });
+                    socket.publish({
 
+                        destination: "/api/pub/updateChatroom/" + Chatroom?.id,
+                        body: JSON.stringify({ username: user?.username })
 
                     });
 
@@ -522,11 +515,13 @@ export default function Chat() {
                         console.log("sub/check");
                         console.log(data);
 
-                        // getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
+                        //들어오자마자 읽고 바꾸기
+                        getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
 
-                        //     setUpdateMessageList(updateMessageList);
+                            setUpdateMessageList(updateMessageList);
+                            console.log("1111111111111111111111111111111" + updateMessageList);
 
-                        // }));
+                        }));
 
                     }, JSON.stringify({ username: user?.username }));
 
@@ -538,6 +533,7 @@ export default function Chat() {
                 const updateSub1 = socket.subscribe("/api/sub/updateChatroom/" + Chatroom?.id, (e: any) => {
                     const data = JSON.parse(e.body);
                     setTempChatroom(data.body);
+                    console.log(data.body);
                 }, JSON.stringify({ username: user?.username }));
                 setUpdateSub(updateSub1);
 
@@ -574,8 +570,8 @@ export default function Chat() {
                             <div></div>
                         )
                     }
-                </div>
-            </div>
+                </div >
+            </div >
             <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
                 <div>
                     {Chatroom?.latestMessage?.sendTime == null ? (
@@ -589,7 +585,7 @@ export default function Chat() {
                 </div>}
 
             </div>
-        </div>
+        </div >
     }
     function ChatDetail({ Chatroom, messageList, innerRef, currentScrollLocation }: { Chatroom: chatroomResponseDTO, messageList: messageResponseDTO[], innerRef: RefObject<HTMLDivElement>, currentScrollLocation: number }) {
         const joinMembers = Array.isArray(Chatroom.users) ? Chatroom.users.length : 0;
@@ -869,7 +865,15 @@ export default function Chat() {
                                     socket.publish({
                                         destination: "/api/pub/message/" + Chatroom?.id,
                                         body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
+
+
                                     });
+                                    getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
+
+                                        setUpdateMessageList(updateMessageList);
+                                        console.log("1111111111111111111111111111111" + updateMessageList);
+
+                                    }));
 
                                     setMessage(''); // 메시지 전송 후 입력 필드 초기화        
                                 }
