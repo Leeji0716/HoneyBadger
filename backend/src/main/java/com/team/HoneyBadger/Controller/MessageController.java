@@ -27,27 +27,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @RequestMapping("/api/message")
 public class MessageController {
     private final MultiService multiService;
-//    private final SimpUserRegistry simpUserRegistry;
-    private final SimpMessagingTemplate messagingTemplate;
-
-//    @Scheduled(fixedRate = 5000) // 1초마다 실행
-//    public void processMessages() {
-//        List<String> readUserToProcess = new ArrayList<>();
-//        String username;
-//
-//        while ((username = messageQueue.poll()) != null) {
-//            readUserToProcess.add(username);
-//        }
-//
-//        if (!readUserToProcess.isEmpty()) {
-//            // 처리 로직 예: 모든 수집된 메시지를 클라이언트로 브로드캐스트
-////            messagingTemplate.convertAndSend("/topic/messages", readUserToProcess);
-//            for (String reader : readUserToProcess){
-//                multiService.readMessage(3L, reader);
-//            }
-//
-//        }
-//    }
     private final ConcurrentLinkedQueue<String> messageQueue = new ConcurrentLinkedQueue<>();
 
     @DeleteMapping //메세지 삭제
@@ -96,20 +75,6 @@ public class MessageController {
     @SendTo("/api/sub/message/{id}") //메세지 보내기
     public ResponseEntity<?> sendMessage(@DestinationVariable Long id, MessageRequestDTO messageRequestDTO) {
         try {
-//            Set<SimpUser> users = simpUserRegistry.getUsers();
-//            List<String> subscriberIds = new ArrayList<>();
-//
-//            for (SimpUser user : users) {
-//                for (SimpSession session : user.getSessions()) {
-//                    for (SimpSubscription subscription : session.getSubscriptions()) {
-//                        if (subscription.getDestination().equals("/api/sub/message/"+id)) {
-//                            subscriberIds.add(user.getName());
-//                            System.out.println(user.getName());
-//                            multiService.readMessage(id, messageRequestDTO.username());
-//                        }
-//                    }
-//                }
-//            }
             MessageResponseDTO messageResponseDTO = multiService.sendMessage(id, messageRequestDTO);
             this.processMessages();
 
@@ -120,9 +85,6 @@ public class MessageController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
     }
-
-    // 주기적으로 메시지를 처리하는 메서드
-//    @Scheduled(fixedRate = 5000) // 1초마다 실행
     public void processMessages() {
         List<String> readUserToProcess = new ArrayList<>();
         String username;
@@ -132,8 +94,6 @@ public class MessageController {
         }
 
         if (!readUserToProcess.isEmpty()) {
-            // 처리 로직 예: 모든 수집된 메시지를 클라이언트로 브로드캐스트
-//            messagingTemplate.convertAndSend("/topic/messages", readUserToProcess);
             for (String reader : readUserToProcess){
                 multiService.readMessage(3L, reader);
             }
