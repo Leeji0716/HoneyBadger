@@ -245,9 +245,7 @@ export default function Chat() {
     }, []);
 
     useEffect(() => {
-
-        const unsubscribe = () => {
-
+        const unsubscribe = ()=> {
         }
         window.addEventListener("beforeunload", unsubscribe);
         window.addEventListener("popstate", unsubscribe);
@@ -258,8 +256,8 @@ export default function Chat() {
             window.removeEventListener('unload', unsubscribe);
         });
     }, [chatroom]);
-
-    useEffect(() => {
+        
+        useEffect(() => {
         if (isModalOpen5) {
             getMessageReservationList(page)
                 .then(r => {
