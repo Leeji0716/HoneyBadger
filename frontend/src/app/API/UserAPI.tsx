@@ -152,7 +152,12 @@ export const getUpdateMessageList = async (chatroomId: number) => {
 };
 
 export const createMessageReservation = async (data: messageReservationRequestDTO) => {
-    const response = await UserApi.post('/api/messageReservation', { data });
+    const response = await UserApi.post('/api/messageReservation', data);
+    return response.data;
+}
+
+export const deleteMessageReservation = async (reservationMessageId: number) => {
+    const response = await UserApi.delete('/api/messageReservation',  {headers :{reservationMessageId}});
     return response.data;
 }
 
