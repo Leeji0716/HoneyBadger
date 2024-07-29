@@ -1660,8 +1660,9 @@ public class MultiService {
         for (ApproverResponseDTO approverResponseDTO : users) {
             if (approverResponseDTO.approverStatus() == 0) {
                 approverService.updateApproverStatus(approval, approverResponseDTO.approver().username(), ApprovalStatus.RUNNING);
-                break;
+
             }
+            break;
         }
 
         return users;

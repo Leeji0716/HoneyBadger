@@ -5,7 +5,7 @@ import DropDown, { Direcion } from "../Global/DropDown";
 import Modal from "../Global/Modal";
 import { Tooltip } from 'react-tooltip';
 
-import { chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage, chatUploadFile, getUpdateMessageList } from "../API/UserAPI";
+import { chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage, chatUploadFile, getUpdateMessageList, createMessageReservation, getMessageReservationList } from "../API/UserAPI";
 import { getChatDateTimeFormat } from "../Global/Method";
 import { getChatShowDateTimeFormat } from "../Global/Method";
 import { getSocket } from "../API/SocketAPI";
@@ -50,6 +50,17 @@ export default function Chat() {
         users: string[];
     }
 
+    interface messageReservationResponseDTO {
+        id: number
+        chatroomId: number
+        message: string
+        username: string
+        name: string
+        messageType: number
+        sendDate: Date | null
+
+    }
+
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
     const [filter, setFilter] = useState(false);
@@ -60,6 +71,8 @@ export default function Chat() {
     const [user, setUser] = useState(null as any);
     const [chatDetail, setChatDetail] = useState(null as any);
     const [messageList, setMessageList] = useState<messageResponseDTO[]>([]);
+    const [reservationMessageList, setReservationMessageList] = useState<messageReservationResponseDTO[]>([]);
+    const [reservationMessages, setReservationMessages] = useState([] as any[]);
     const ACCESS_TOKEN = typeof window == 'undefined' ? null : localStorage.getItem('accessToken');
     const [socket, setSocket] = useState(null as any);
     const [temp, setTemp] = useState(null as any);
@@ -67,10 +80,14 @@ export default function Chat() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isModalOpen1, setIsModalOpen1] = useState(false);
     const [isModalOpen2, setIsModalOpen2] = useState(false);
+    const [isModalOpen3, setIsModalOpen3] = useState(false);
+    const [isModalOpen4, setIsModalOpen4] = useState(false);
+    const [isModalOpen5, setIsModalOpen5] = useState(false);
     const [userList, setUserList] = useState([] as any[])
     const [selectedUsers, setSelectedUsers] = useState(new Set<string>());
     const [chatroomName, setChatroomName] = useState('');
     const file = useRef(null as any);
+    const image = useRef(null as any);
 
     const [isClientLoading, setClientLoading] = useState(true);
     const [keyword, setKeyword] = useState('');
@@ -111,13 +128,38 @@ export default function Chat() {
         setIsModalOpen2(false);
     }
 
+    function handleOpen3Modal() {
+        setIsModalOpen3(true);
+    }
+
+    function handleClose3Modal() {
+        setIsModalOpen3(false);
+    }
+
+    function handleOpen4Modal() {
+        setIsModalOpen4(true);
+    }
+
+    function handleClose4Modal() {
+        setIsModalOpen4(false);
+    }
+
+    function handleOpen5Modal() {
+        setIsModalOpen5(true);
+    }
+
+    function handleClose5Modal() {
+        setIsModalOpen5(false);
+    }
+
+
     useEffect(() => {
         if (ACCESS_TOKEN)
             getUser().then(r => {
                 setUser(r);
                 getUsers().then(r => {
                     setUserList(r);
-            
+
                 }).catch(e => console.log(e))
                 getChat(keyword, page).then(r => {
                     setChatrooms(r.content);
@@ -148,7 +190,7 @@ export default function Chat() {
 
         if (updateMessageList) {
             const updatedMessageList = [...messageList];
-    
+
             // console.log(messageList);
             // console.log(updateMessageList);
 
@@ -365,26 +407,26 @@ export default function Chat() {
                 }
                 setChatroom(Chatroom);
                 setPreChatroomId(Chatroom.id);
-                
+
                 // socket.publish({
                 //     destination: "/api/pub/read/" + Chatroom?.id,
                 //     body: JSON.stringify({ username: user?.username, flag:0 })
                 // });
 
-                
+
                 getChatDetail(Chatroom?.id, nowPage).then(r => {
                     setMessageList([...r.content].reverse());
-                    setMaxPage(r.totalPages);  
+                    setMaxPage(r.totalPages);
 
                     // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
                     const messageSub = socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
                         const message = JSON.parse(e.body).body;
                         const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name: message?.name, username: message?.username, messageType: message?.messageType, readUsers: message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
-                    
+
 
                         getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                        
+
                             setUpdateMessageList(updateMessageList);
 
                         }));
@@ -392,7 +434,7 @@ export default function Chat() {
                         socket.publish({
 
                             destination: "/api/pub/read/" + Chatroom?.id,
-                            body: JSON.stringify({ username: user?.username})
+                            body: JSON.stringify({ username: user?.username })
 
                         });
 
@@ -420,14 +462,14 @@ export default function Chat() {
 
 
                     });
-                
+
                     setMessageSub(messageSub);
 
                     const readSub = socket.subscribe("/api/sub/read/" + Chatroom?.id, (e: any) => {
                         const data = JSON.parse(e.body);
 
                         getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                    
+
                             setUpdateMessageList(updateMessageList);
 
                         }));
@@ -465,9 +507,18 @@ export default function Chat() {
                     )}
                 </div>
                 <div className="flex justify-between mt-2 text-black">
-                    {Chatroom?.latestMessage?.messageType === 0
-                        ? Chatroom?.latestMessage?.message
-                        : <p>사진을 보냈습니다.</p> // todo:타입이 추가되면 설정해야 한다
+                    {
+                        Chatroom?.latestMessage?.messageType === 0 ? (
+                            <div>{Chatroom?.latestMessage?.message}</div>
+                        ) : Chatroom?.latestMessage?.messageType === 1 ? (
+                            <p>사진을 보냈습니다.</p>
+                        ) : Chatroom?.latestMessage?.messageType === 2 ? (
+                            <p>링크를 보냈습니다.</p>
+                        ) : Chatroom?.latestMessage?.messageType === 3 ? (
+                            <p>파일을 보냈습니다.</p>
+                        ) : (
+                            <div>Unknown type</div>
+                        )
                     }
                 </div>
             </div>
@@ -488,7 +539,9 @@ export default function Chat() {
         const [message, setMessage] = useState('');
         const [roomName, setRoomName] = useState(chatroom?.name);
         const [messageType, setMessageType] = useState(0);
+        const [sendDate, setSendDate] = useState<Date | null>(null);
         const [messageListTmp, setMessageListTmp] = useState<messageResponseDTO[]>([]);
+
 
         useEffect(() => {
             setMessageListTmp(messageList);
@@ -553,7 +606,7 @@ export default function Chat() {
                                         <span className="text-md m-3">역할</span>
                                         <button onClick={() => {
                                             addUser({ chatroomId: chatroom.id, username: user.username }).then(r => {
-                                        
+
 
                                             }).catch(e => {
                                                 console.log(e)
@@ -674,9 +727,18 @@ export default function Chat() {
                                     <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
                                     <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
                                         <div className="mt-2 mb-2 ml-3 mr-3">
-                                            {t?.messageType == 0
-                                                ? <><div>{t?.message}</div></>
-                                                : <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
+                                            {
+                                                t?.messageType === 0 ? (
+                                                    <div>{t?.message}</div>
+                                                ) : t?.messageType === 1 ? (
+                                                    <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
+                                                ) : t?.messageType === 2 ? (
+                                                    <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                ) : t?.messageType === 3 ? (
+                                                    <a href={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                ) : (
+                                                    <div>Unknown type</div>
+                                                )
                                             }
                                         </div>
                                     </div>
@@ -691,10 +753,21 @@ export default function Chat() {
                                     </p>
                                     <div className="w-full flex">
                                         <p className="text-black ml-2">
-                                            {t?.messageType == 0
-                                                ? t?.message
-                                                : <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
-                                            }
+                                            <div className="mt-2 mb-2 ml-3 mr-3">
+                                                {
+                                                    t?.messageType === 0 ? (
+                                                        <div>{t?.message}</div>
+                                                    ) : t?.messageType === 1 ? (
+                                                        <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
+                                                    ) : t?.messageType === 2 ? (
+                                                        <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                    ) : t?.messageType === 3 ? (
+                                                        <a href={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                    ) : (
+                                                        <div>Unknown type</div>
+                                                    )
+                                                }
+                                            </div>
                                         </p>
                                         <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
                                         <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">삭제</p>
@@ -765,12 +838,63 @@ export default function Chat() {
                             <img src="/book.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
                         </button>
                         <Tooltip anchorSelect="#book" clickable>
-                            <button>예약 전송</button>
+                            <div className="flex flex-col">
+
+                                <button id="reservationMessage" onClick={handleOpen4Modal}>예약 전송</button>
+                                <button>메시지 예약함</button>
+                            </div>
                         </Tooltip>
+                        <Modal open={isModalOpen4} onClose={handleClose4Modal} escClose={true} outlineClose={true}>
+                            <div className="flex flex-col items-cnete justify-center m-3">
+                                <p className="flex items-center justify-center font-bold">예약 메시지 보내기</p>
+                                <div className="flex flex">
+                                    <div className="m-2">예약 시간 입력 : </div>
+                                    <input type="datetime-local" onChange={e => setSendDate(e.target.value ? new Date(e.target.value) : null)} />
+                                </div>
+                                <input className="h-[400px] " type="text" placeholder="내용을 입력하세요" onChange={e => setMessage(e.target.value)}
+                                    value={message}
+
+                                    onKeyDown={e => {
+                                        if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
+                                            e.preventDefault(); // 폼 제출 방지
+                                            setMessage(''); // 메시지 전송 후 입력 필드 초기화        
+                                        }
+                                    }
+                                    } />
+
+                                <button onClick={() => {
+
+                                    const messageReservationRequestDTO = { chatroomId: chatroom?.id, message: message, messageType: 0, sendDate: sendDate };
+
+                                    createMessageReservation(messageReservationRequestDTO).then(r => {
+                                        setReservationMessageList(r);
+                                        handleClose4Modal();
+                                    }).catch(e => {
+                                        console.error(e);
+                                    });
+                                }}>예약하기</button>
+                            </div>
+                        </Modal>
 
                         <button id="file" onClick={() => { file.current?.click() }}>
                             <img src="/file.png" data-tip="파일" className="file w-[25px] h-[25px] items-center justify-center m-1" />
                             <input ref={file} type="file" hidden onChange={e => {
+                                if (e.target.files && e.target.files[0]) {
+                                    const selectedFile = e.target.files[0];
+                                    if (selectedFile instanceof File) { // File 인스턴스 확인
+                                        chatUploadFile({ chatroomId: chatroom?.id, file: selectedFile })
+                                            .then(r => { setMessage(r); setMessageType(3); })
+                                            .catch(e => console.log(e));
+                                    }
+                                }
+                            }} />
+                        </button>
+                        <Tooltip anchorSelect="#file" clickable>
+                            <button >파일 전송</button>
+                        </Tooltip>
+                        <button id="image" onClick={() => { image.current?.click() }}>
+                            <img src="/image.png" data-tip="이미지" className="image w-[25px] h-[25px] items-center justify-center m-1" />
+                            <input ref={image} type="file" hidden onChange={e => {
                                 if (e.target.files && e.target.files[0]) {
                                     const selectedFile = e.target.files[0];
                                     if (selectedFile instanceof File) { // File 인스턴스 확인
@@ -781,9 +905,50 @@ export default function Chat() {
                                 }
                             }} />
                         </button>
-                        <Tooltip anchorSelect="#file" clickable>
-                            <button >파일 전송</button>
+
+                        <Tooltip anchorSelect="#image" clickable>
+                            <button >이미지 전송</button>
                         </Tooltip>
+
+                        <button id="link" onClick={handleOpen3Modal}>
+                            <img src="/link.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
+                        </button>
+
+                        <Tooltip anchorSelect="#link" clickable>
+                            <button>링크 전송</button>
+                        </Tooltip>
+
+
+                        <Modal open={isModalOpen3} onClose={handleClose3Modal} escClose={true} outlineClose={true}>
+                            <div className="overflow-auto w-full">
+                                <p className="font-bold text-3xl m-3 mb-8 flex justify-center">링크 삽입</p>
+                                <input placeholder="링크를 입력해주세요"
+                                    className="bolder-0 outline-none bg-white text-black"
+                                    onChange={e => setMessage(e.target.value)}
+                                    value={message}
+
+                                    onKeyDown={e => {
+                                        setMessageType(2);
+                                        if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
+                                            e.preventDefault(); // 폼 제출 방지
+
+
+                                            if (isReady) {
+
+                                                socket.publish({
+                                                    destination: "/api/pub/message/" + Chatroom?.id,
+                                                    body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
+                                                });
+
+                                                setMessage(''); // 메시지 전송 후 입력 필드 초기화        
+                                            }
+                                        }
+                                    }}
+
+                                />
+                                <button>전송</button>
+                            </div>
+                        </Modal>
                     </div>
                     <button id="sendMessage">
                         <img src="/send.png" className="send w-[40px] h-[40px] items-center justify-center m-1" onClick={() => {

@@ -102,6 +102,13 @@ interface approvalRequestDTO {
     viewersname: string[]
 }
 
+interface messageReservationRequestDTO {
+    chatroomId: number
+    message: string
+    messageType: number
+    sendDate: Date | null
+}
+
 export const getEmail = async (status: number, page: number) => {
     const response = await UserApi.get('/api/email/list', {
         headers: {
@@ -143,6 +150,20 @@ export const getUpdateMessageList = async (chatroomId: number) => {
     const response = await UserApi.get('/api/message/update', { headers: { chatroomId: chatroomId } });
     return response.data;
 };
+
+export const createMessageReservation = async (data: messageReservationRequestDTO) => {
+    const response = await UserApi.post('/api/messageReservation', { data });
+    return response.data;
+}
+
+export const getMessageReservationList = async (page: number) => {
+    const response = await UserApi.get('/api/messageReservation/list',
+        {
+            headers: { Page: page }
+        }
+    );
+    return response.data;
+}
 
 export const reservationEmail = async (data: SendEmail) => {
     const response = await UserApi.post('/api/emailReservation/schedule', data);
