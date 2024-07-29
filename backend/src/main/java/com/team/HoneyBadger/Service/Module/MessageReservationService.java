@@ -64,7 +64,7 @@ public class MessageReservationService {
                 messageReservation.getMessage(),
                 messageReservation.getSender().getUsername(),
                 messageReservation.getSender().getName(),
-                messageReservation.getCreateDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                messageReservation.getSendDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
                 messageReservation.getMessageType()
         );
     }
