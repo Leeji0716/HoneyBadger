@@ -16,11 +16,11 @@ export default function Main(props: Readonly<pageInterface>) {
   const [isSettingOpen, setSettingOpen] = useState(false);
   const user = props.user;
   return (
-    <main id='main' className={"flex relative flex-col h-[953px] w-[1920px] " + (props.classname ? props.classname : '')}>
-      <div className={"absolute text-8xl font-bold flex flex-col items-center justify-center h-[953px] w-[1920px] bg-white z-[1000]" + (props?.isClientLoading ? '' : ' hidden')}>
+    <main id='main' className={"flex relative flex-col layout-fix " + (props.classname ? props.classname : '')}>
+      <div className={"absolute text-8xl font-bold flex flex-col items-center justify-center layout-fix bg-white z-[1000]" + (props?.isClientLoading ? '' : ' hidden')}>
         <img src="/logo.png" />
       </div>
-      <Side open={open} onClose={() => setOpen(false)} escClose={true} outlineClose={true} className="w-[250px] h-full">
+      <Side open={open} onClose={() => setOpen(false)} escClose={true} outlineClose={true} className="w-[13%] h-full">
         <div className="flex flex-col p-4">
           <div className="flex justify-between items-center">
             <img src='/logo_text.png' className="w-[100px] mb-4" />
@@ -36,7 +36,7 @@ export default function Main(props: Readonly<pageInterface>) {
           {user?.role == 13 || user?.department?.role == 1 ? <a href="/inquire" className="flex mb-4"><img src='/inquire.png' className="w-[24px] h-[24px] mr-2" />문의관리</a> : <></>}
         </div>
       </Side>
-      <div className="official-color flex items-center h-[50px] min-h-[50px] w-full ">
+      <div className="official-color flex items-center h-[50px] w-full ">
         {/* 네비바 */}
         <button className="hamburger" onClick={() => setOpen(true)}>
           <span></span>

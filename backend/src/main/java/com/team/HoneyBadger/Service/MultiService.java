@@ -394,12 +394,10 @@ public class MultiService {
         SiteUser user = userService.get(username);
         LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
 
-        int alarmCnt; //
+        int alarmCnt;
 
         if (lastReadMessage == null) {
             if (!chatroom.getMessageList().isEmpty()) {
-//                lastReadMessage = lastReadMessageService.create(user, chatroom, chatroom.getMessageList().get(0).getId());
-//                alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage()) + 1;
                 alarmCnt = chatroom.getMessageList().size();
             } else {
                 alarmCnt = 0;
@@ -408,7 +406,15 @@ public class MultiService {
             alarmCnt = alarmCount(chatroom.getId(), lastReadMessage.getLastReadMessage());
         }
 
-        return ChatroomResponseDTO.builder().id(chatroom.getId()).name(chatroom.getName()).users(users).latestMessage(latestMessageDTO).notification(notificationDTO).alarmCount(alarmCnt).build();
+        return ChatroomResponseDTO.builder()
+                .id(chatroom.getId())
+                .name(chatroom.getName())
+                .users(users)
+                .latestMessage(latestMessageDTO)
+                .notification(notificationDTO)
+                .alarmCount(alarmCnt)
+                .createDate(dateTimeTransfer(chatroom.getCreateDate()))
+                .build();
     }
 
     @Transactional
@@ -1002,11 +1008,17 @@ public class MultiService {
             throw new NotAllowedException("메세지를 입력해주세요.");
         }
 
-        if (messageReservationRequestDTO.sendDate().isBefore(LocalDateTime.now())) {
+        if (messageReservationRequestDTO.reservationDate().isBefore(LocalDateTime.now())) {
             throw new NotAllowedException("지난 시간으로 예약할 수 없습니다.");
         }
 
-        MessageReservation messageReservation = MessageReservation.builder().chatroom(chatroom).message(messageReservationRequestDTO.message()).sender(sender).sendDate(messageReservationRequestDTO.sendDate()).messageType(messageReservationRequestDTO.messageType()).build();
+        MessageReservation messageReservation = MessageReservation.builder()
+                .chatroom(chatroom)
+                .message(messageReservationRequestDTO.message())
+                .sender(sender)
+                .sendDate(messageReservationRequestDTO.reservationDate())
+                .messageType(messageReservationRequestDTO.messageType())
+                .build();
 
         messageReservationService.save(messageReservation);
         return getMessageReservation(messageReservation);
@@ -1014,8 +1026,16 @@ public class MultiService {
 
     @Transactional
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
-        Long sendTime = this.dateTimeTransfer(messageReservation.getSendDate());
-        return MessageReservationResponseDTO.builder().id(messageReservation.getId()).chatroomId(messageReservation.getChatroom().getId()).message(messageReservation.getMessage()).username(messageReservation.getSender().getUsername()).name(messageReservation.getSender().getName()).sendDate(sendTime).messageType(messageReservation.getMessageType()).build();
+        Long reservationDate = this.dateTimeTransfer(messageReservation.getSendDate());
+        return MessageReservationResponseDTO.builder()
+                .id(messageReservation.getId())
+                .chatroomId(messageReservation.getChatroom().getId())
+                .message(messageReservation.getMessage())
+                .username(messageReservation.getSender().getUsername())
+                .name(messageReservation.getSender().getName())
+                .reservationDate(reservationDate)
+                .messageType(messageReservation.getMessageType())
+                .build();
     }
 
 
@@ -1292,7 +1312,7 @@ public class MultiService {
                 if (!cycle.getK().equals(KeyPreset.UC.getValue(user.getUsername()))) {
                     throw new NotAllowedException("접근 권한이 없습니다.");
                 }
-                if (cycleRequestDTO.tagName() == null) {
+                if (cycleRequestDTO.tagName() == null || cycleRequestDTO.tagName().isEmpty()) {
                     if (cycle.getTag() != null) {
                         return getCycleDTO(cycleService.upDateAndDeleteTag(cycle, cycleRequestDTO));
                     }
@@ -1311,7 +1331,7 @@ public class MultiService {
                 if (!cycle.getK().equals(KeyPreset.DC.getValue(user.getDepartment().getName()))) {
                     throw new NotAllowedException("접근 권한이 없습니다.");
                 }
-                if (cycleRequestDTO.tagName() == null) {
+                if (cycleRequestDTO.tagName() == null || cycleRequestDTO.tagName().isEmpty()) {
                     if (cycle.getTag() != null) {
                         return getCycleDTO(cycleService.upDateAndDeleteTag(cycle, cycleRequestDTO));
                     }
@@ -1330,7 +1350,7 @@ public class MultiService {
                 if (!cycle.getK().equals(KeyPreset.TC.getValue(cycleRequestDTO.teamName()))) {
                     throw new NotAllowedException("접근 권한이 없습니다.");
                 }
-                if (cycleRequestDTO.tagName() == null) {
+                if (cycleRequestDTO.tagName() == null || cycleRequestDTO.tagName().isEmpty()) {
                     if (cycle.getTag() != null) {
                         return getCycleDTO(cycleService.upDateAndDeleteTag(cycle, cycleRequestDTO));
                     }
