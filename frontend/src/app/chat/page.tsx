@@ -7,7 +7,7 @@ import { Tooltip } from 'react-tooltip';
 
 import {
     chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage,
-    chatUploadFile, getUpdateMessageList, createMessageReservation, getMessageReservationList, deleteMessageReservation
+    chatUploadFile, getUpdateMessageList, createMessageReservation, getMessageReservationList, deleteMessageReservation,
 } from "../API/UserAPI";
 import { getChatDateTimeFormat } from "../Global/Method";
 import { getChatShowDateTimeFormat } from "../Global/Method";
@@ -65,6 +65,13 @@ export default function Chat() {
 
     }
 
+    interface messageReservationRequestDTO {
+        chatroomId: number
+        message: string
+        messageType: number
+        reservationDate: Date | null
+    }
+
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] = useState(false);
     const [filter, setFilter] = useState(false);
@@ -106,7 +113,8 @@ export default function Chat() {
     const [messageSub, setMessageSub] = useState<any>(null);
     const [readSub, setReadSub] = useState<any>(null);
     const [updateSub, setUpdateSub] = useState<any>(null);
-
+    const [editingReservations, setEditingReservations] = useState({});
+    const [editingContents, setEditingContents] = useState({});
 
 
     function handleOpenModal() {
@@ -156,8 +164,6 @@ export default function Chat() {
     function handleClose5Modal() {
         setIsModalOpen5(false);
     }
-
-
 
     useEffect(() => {
         if (ACCESS_TOKEN)
@@ -245,7 +251,7 @@ export default function Chat() {
     }, []);
 
     useEffect(() => {
-        const unsubscribe = ()=> {
+        const unsubscribe = () => {
 
         }
         window.addEventListener("beforeunload", unsubscribe);
@@ -258,8 +264,8 @@ export default function Chat() {
         });
     }, [chatroom]);
 
-        
-        useEffect(() => {
+
+    useEffect(() => {
         if (isModalOpen5) {
             getMessageReservationList(page)
                 .then(r => {
