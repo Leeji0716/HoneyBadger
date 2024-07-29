@@ -238,6 +238,20 @@ export default function Chat() {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        const unsubscribe = ()=> {
+
+        }
+        window.addEventListener("beforeunload", unsubscribe);
+        window.addEventListener("popstate", unsubscribe);
+        window.addEventListener('unload', unsubscribe)
+        return (() => {
+            window.removeEventListener("beforeunload", unsubscribe);
+            window.removeEventListener("popstate", unsubscribe);
+            window.removeEventListener('unload', unsubscribe);
+        });
+    }, [chatroom]);
+
     const loadPage = () => {
         const chatBox = chatBoxRef.current;
 
@@ -336,7 +350,7 @@ export default function Chat() {
     function ChatList({ Chatroom, ChatDetail, innerRef }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO, innerRef: RefObject<HTMLDivElement> }) {
         const joinMembers = Chatroom.users;
 
-         // 채팅방 프로필
+        // 채팅방 프로필
         function getValue() {
             const targets = [] as any[] //joinMembers.filter(f=> f?.name != user?.username)
             // UseResonseDTO로 바꿔주면 주석 풀면 이미지는 바뀔것이오..
@@ -400,12 +414,13 @@ export default function Chat() {
                 }
                 setChatroom(Chatroom);
 
+
                 getChatDetail(Chatroom?.id, nowPage).then(r => {
-                    // 채팅방 입장
-                    console.log("---------------->/api/pub/check/");
+                    console.log("---------------->123");
                     socket.publish({
                         destination: "/api/pub/check/" + Chatroom?.id,
                         body: JSON.stringify({ username: user?.username })
+
                     });
 
                     setMessageList([...r.content].reverse());
@@ -416,17 +431,56 @@ export default function Chat() {
                         const message = JSON.parse(e.body).body;
                         const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name: message?.name, username: message?.username, messageType: message?.messageType, readUsers: message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
-                        getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-                            setUpdateMessageList(updateMessageList);
-                        }));
+
+
+
+                        // getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
+
+                        //     setUpdateMessageList(updateMessageList);
+
+                        // }));
+
+
+
+                        // console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!server!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        // 서버로 메시지 전송
+                        // socket.publish({
+                        //     destination: '/api/pub/read/' + Chatroom.id,
+                        //     body: JSON.stringify({ username: user?.username })
+                        // });
+
+
+                        // 메시지 수신
+                        // socket.subscribe('/topic/messages', (data:string) => {
+                        //     const usernames = JSON.parse(data);
+                        //     console.log('Received usernames:', usernames);
+                        // });
 
                         socket.publish({
+
                             destination: "/api/pub/updateChatroom/" + Chatroom?.id,
                             body: JSON.stringify({ username: user?.username })
+
                         });
+
+
                     });
 
                     setMessageSub(messageSub);
+
+                    const readSub = socket.subscribe("/api/sub/check/" + Chatroom?.id, (e: any) => {
+                        const data = JSON.parse(e.body);
+                        console.log("sub/check");
+                        console.log(data);
+
+                        // getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
+
+                        //     setUpdateMessageList(updateMessageList);
+
+                        // }));
+
+                    }, JSON.stringify({ username: user?.username }));
+
                     setReadSub(readSub);
 
                 }).catch(e => console.log(e));
@@ -458,18 +512,9 @@ export default function Chat() {
                     )}
                 </div>
                 <div className="flex justify-between mt-2 text-black">
-                    {
-                        Chatroom?.latestMessage?.messageType === 0 ? (
-                            <div>{Chatroom?.latestMessage?.message}</div>
-                        ) : Chatroom?.latestMessage?.messageType === 1 ? (
-                            <p>사진을 보냈습니다.</p>
-                        ) : Chatroom?.latestMessage?.messageType === 2 ? (
-                            <p>링크를 보냈습니다.</p>
-                        ) : Chatroom?.latestMessage?.messageType === 3 ? (
-                            <p>파일을 보냈습니다.</p>
-                        ) : (
-                            <div>Unknown type</div>
-                        )
+                    {Chatroom?.latestMessage?.messageType === 0
+                        ? Chatroom?.latestMessage?.message
+                        : <p>사진을 보냈습니다.</p> // todo:타입이 추가되면 설정해야 한다
                     }
                 </div>
             </div>
@@ -484,7 +529,6 @@ export default function Chat() {
             </div>
         </div>
     }
-
     function ChatDetail({ Chatroom, messageList, innerRef, currentScrollLocation }: { Chatroom: chatroomResponseDTO, messageList: messageResponseDTO[], innerRef: RefObject<HTMLDivElement>, currentScrollLocation: number }) {
         const joinMembers = Array.isArray(Chatroom.users) ? Chatroom.users.length : 0;
         const [message, setMessage] = useState('');
@@ -747,7 +791,7 @@ export default function Chat() {
             </div>
             <div className="flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[159px] items-start">
                 <div className="h-full m-2 w-[98%]">
-                    <textarea placeholder="내용을 입력하세요" className="resize-none bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
+                    <textarea key={Chatroom.id} autoFocus placeholder="내용을 입력하세요" className="resize-none bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
                         value={message}
                         onKeyDown={e => {
                             if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈

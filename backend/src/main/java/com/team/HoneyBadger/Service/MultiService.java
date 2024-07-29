@@ -1027,6 +1027,8 @@ public class MultiService {
     @Transactional
     private MessageReservationResponseDTO getMessageReservation(MessageReservation messageReservation) {
         Long reservationDate = this.dateTimeTransfer(messageReservation.getSendDate());
+        System.out.println(reservationDate);
+        System.out.println(messageReservation.getSendDate());
         return MessageReservationResponseDTO.builder()
                 .id(messageReservation.getId())
                 .chatroomId(messageReservation.getChatroom().getId())
