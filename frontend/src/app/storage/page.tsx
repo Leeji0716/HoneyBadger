@@ -433,7 +433,7 @@ export default function Home() {
         </div>
     }
 
-    return <Main user={user} isClientLoading={isClientLoading} classname="HD">
+    return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-2/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-full w-11/12 bg-white shadow p-2 flex flex-col relative ml-12">
                 <div className="overflow-y-auto flex flex-col">

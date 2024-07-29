@@ -5,7 +5,10 @@ import DropDown, { Direcion } from "../Global/DropDown";
 import Modal from "../Global/Modal";
 import { Tooltip } from 'react-tooltip';
 
-import { chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage, chatUploadFile, getUpdateMessageList, createMessageReservation, getMessageReservationList } from "../API/UserAPI";
+import {
+    chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage,
+    chatUploadFile, getUpdateMessageList, createMessageReservation, getMessageReservationList, deleteMessageReservation
+} from "../API/UserAPI";
 import { getChatDateTimeFormat } from "../Global/Method";
 import { getChatShowDateTimeFormat } from "../Global/Method";
 import { getSocket } from "../API/SocketAPI";
@@ -28,6 +31,7 @@ export default function Chat() {
         latestMessage: messageResponseDTO,
         notification: messageResponseDTO,
         alarmCount: number
+        createDate: number
     }
 
     interface userResponseDTO {
@@ -57,6 +61,7 @@ export default function Chat() {
         username: string
         name: string
         messageType: number
+        // todo : 명칭 변경 필요
         sendDate: Date | null
 
     }
@@ -83,7 +88,7 @@ export default function Chat() {
     const [isModalOpen3, setIsModalOpen3] = useState(false);
     const [isModalOpen4, setIsModalOpen4] = useState(false);
     const [isModalOpen5, setIsModalOpen5] = useState(false);
-    const [userList, setUserList] = useState([] as any[])
+    const [userList, setUserList] = useState<userResponseDTO[]>([]);
     const [selectedUsers, setSelectedUsers] = useState(new Set<string>());
     const [chatroomName, setChatroomName] = useState('');
     const file = useRef(null as any);
@@ -102,6 +107,7 @@ export default function Chat() {
     const [messageSub, setMessageSub] = useState<any>(null);
     const [readSub, setReadSub] = useState<any>(null);
     const [updateSub, setUpdateSub] = useState<any>(null);
+
 
 
     function handleOpenModal() {
@@ -252,6 +258,18 @@ export default function Chat() {
         });
     }, [chatroom]);
 
+        
+        useEffect(() => {
+        if (isModalOpen5) {
+            getMessageReservationList(page)
+                .then(r => {
+                    setReservationMessageList(r.content);
+                    setMaxPage(r.totalPages);
+                })
+                .catch(e => console.error(e));
+        }
+    }, [isModalOpen5, page]);
+
     const loadPage = () => {
         const chatBox = chatBoxRef.current;
 
@@ -317,25 +335,34 @@ export default function Chat() {
     };
 
     const handleCreateChatroom = () => {
-        if (chatroomName && selectedUsers.size > 0) {
+        // 선택된 사용자가 있는지 확인
+        if (selectedUsers.size > 0) {
+            // 선택된 사용자의 Set 객체를 배열로 변환
             const users = Array.from(selectedUsers);
 
+            // 현재 사용자가 배열에 포함되어 있는지 확인하고, 포함되지 않았으면 추가
             if (user && !users.includes(user.username)) {
                 users.push(user.username);
             }
 
+            // 채팅방 요청 객체 생성
             const chatroomRequest: chatroomRequestDTO = { name: chatroomName, users };
+
+            // 채팅방 생성 API 호출
             makeChatroom(chatroomRequest)
                 .then(r => {
+                    // 채팅방 생성 성공 시 모달 닫기, 선택된 사용자 및 채팅방 이름 초기화
                     setIsModalOpen2(false);
                     setSelectedUsers(new Set());
                     setChatroomName('');
                 })
                 .catch(e => {
+                    // 채팅방 생성 실패 시 콘솔에 오류 출력
                     console.error(e);
                 });
         } else {
-            console.error("이름이나 유저를 선택해주세요");
+            // 선택된 사용자가 없을 경우 콘솔에 오류 출력
+            console.error("유저를 선택해주세요");
         }
     };
     const handleSearch = () => {
@@ -352,8 +379,8 @@ export default function Chat() {
 
         // 채팅방 프로필
         function getValue() {
-            const targets = [] as any[] //joinMembers.filter(f=> f?.name != user?.username)
-            // UseResonseDTO로 바꿔주면 주석 풀면 이미지는 바뀔것이오..
+            const targets = joinMembers.filter(f => f?.name != user?.username)
+
 
             switch (joinMembers.length) {
                 case 2: return <img src={targets[0]?.url ? targets[0]?.url : "/pin.png"} className="m-2 w-[80px] h-[80px] rounded-full" />;
@@ -512,15 +539,28 @@ export default function Chat() {
                     )}
                 </div>
                 <div className="flex justify-between mt-2 text-black">
-                    {Chatroom?.latestMessage?.messageType === 0
-                        ? Chatroom?.latestMessage?.message
-                        : <p>사진을 보냈습니다.</p> // todo:타입이 추가되면 설정해야 한다
+                    {
+                        Chatroom?.latestMessage?.messageType === 0 ? (
+                            <div>{Chatroom?.latestMessage?.message}</div>
+                        ) : Chatroom?.latestMessage?.messageType === 1 ? (
+                            <p>사진을 보냈습니다.</p>
+                        ) : Chatroom?.latestMessage?.messageType === 2 ? (
+                            <p>링크를 보냈습니다.</p>
+                        ) : Chatroom?.latestMessage?.messageType === 3 ? (
+                            <p>파일을 보냈습니다.</p>
+                        ) : (
+                            <div></div>
+                        )
                     }
                 </div>
             </div>
             <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
                 <div>
-                    <p className="text-gray-300 whitespace-nowrap">{getChatShowDateTimeFormat(Chatroom?.latestMessage?.sendTime)}</p>
+                    {Chatroom?.latestMessage?.sendTime == null ? (
+                        <p className="text-gray-300 whitespace-nowrap">{getChatDateTimeFormat(Chatroom?.createDate)}</p>
+                    ) : (
+                        <p className="text-gray-300 whitespace-nowrap">{getChatShowDateTimeFormat(Chatroom?.latestMessage?.sendTime)}</p>
+                    )}
                 </div>
                 {Chatroom?.alarmCount == 0 ? "" : <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
                     <p className="text-white text-sm">{Chatroom?.alarmCount}</p>
@@ -536,6 +576,11 @@ export default function Chat() {
         const [messageType, setMessageType] = useState(0);
         const [sendDate, setSendDate] = useState<Date | null>(null);
         const [messageListTmp, setMessageListTmp] = useState<messageResponseDTO[]>([]);
+        function getChatroomNameById(chatroomId: number) {
+            const chatroom = chatrooms.find((room) => room.id === chatroomId);
+            return chatroom ? chatroom.name : 'Unknown Chatroom';
+        }
+
 
 
         useEffect(() => {
@@ -595,7 +640,9 @@ export default function Chat() {
                             <ul className="m-3">
                                 {userList.filter(user => !chatroom.users.includes(user.username)).map((user, index) => (
                                     <li key={index} className="flex justify-between items-center mb-5">
-                                        <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
+                                        <span className="w-[50px] h-[50px]">
+                                            <img src={user.url ? user.url : "/pin.png"} alt="User profile" className="w-[50px] h-[50px]" />
+                                        </span>
                                         <span className="font-bold text-md m-3">{user.name}</span>
                                         <span className=" text-md m-3">부서</span>
                                         <span className="text-md m-3">역할</span>
@@ -826,7 +873,7 @@ export default function Chat() {
                             <div className="flex flex-col">
 
                                 <button id="reservationMessage" onClick={handleOpen4Modal}>예약 전송</button>
-                                <button>메시지 예약함</button>
+                                <button id="reservationMessageList" onClick={handleOpen5Modal}>메시지 예약함</button>
                             </div>
                         </Tooltip>
                         <Modal open={isModalOpen4} onClose={handleClose4Modal} escClose={true} outlineClose={true}>
@@ -860,6 +907,38 @@ export default function Chat() {
                                 }}>예약하기</button>
                             </div>
                         </Modal>
+                        <Modal open={isModalOpen5} onClose={handleClose5Modal} escClose={true} outlineClose={true}>
+                            <div className="flex flex-col items-center m-3">
+                                <p className="flex items-center justify-center font-bold text-xl mb-3">예약 메시지 리스트</p>
+                                <div className="overflow-auto h-[500px] w-full border border-gray-300 rounded-lg">
+                                    <div className="flex justify-between items-center font-bold text-lg m-2">
+                                        <p className="w-1/5 text-center whitespace-nowrap"> 채팅방 이름</p>
+                                        <p className="w-1/5 text-center whitespace-nowrap"> 보낸 시간</p>
+                                        <p className="w-2/5 text-center whitespace-nowrap"> 보낸 메시지</p>
+                                        <p className="w-1/5">편집</p>
+                                    </div>
+                                    <ul className="m-3">
+                                        {reservationMessageList.map((message, index) => (
+                                            <li key={index} className="flex justify-between items-center mb-5 border-b pb-2">
+                                                <span className="text-md w-1/5 text-center">{getChatroomNameById(message.chatroomId)}</span>
+                                                <span className="text-md w-1/5 text-center">{getChatShowDateTimeFormat(message.sendDate)}</span>
+                                                <span className="text-md w-2/5 text-center">{message.message}</span>
+                                                <div className="flex w-1/5">
+                                                    <button className="btn w-1/2 whitespace-nowrap">수정</button>
+                                                    <button className="btn w-1/2 whitespace-nowrap"
+                                                    onClick={()=>{
+                                                        deleteMessageReservation(message.id).then(r=>{
+                                                            setReservationMessageList(r);
+                                                        })
+                                                    }}>삭제</button>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </Modal>
+
 
                         <button id="file" onClick={() => { file.current?.click() }}>
                             <img src="/file.png" data-tip="파일" className="file w-[25px] h-[25px] items-center justify-center m-1" />
@@ -905,7 +984,7 @@ export default function Chat() {
 
 
                         <Modal open={isModalOpen3} onClose={handleClose3Modal} escClose={true} outlineClose={true}>
-                            <div className="overflow-auto w-full">
+                            <div className="overflow-auto w-full m-2">
                                 <p className="font-bold text-3xl m-3 mb-8 flex justify-center">링크 삽입</p>
                                 <input placeholder="링크를 입력해주세요"
                                     className="bolder-0 outline-none bg-white text-black"
@@ -931,7 +1010,7 @@ export default function Chat() {
                                     }}
 
                                 />
-                                <button>전송</button>
+                                <button className="btn">전송</button>
                             </div>
                         </Modal>
                     </div>
