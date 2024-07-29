@@ -157,6 +157,60 @@ body {
   checkbox {
     @apply focus:outline-none
   }
+  .layout-fix-x{
+    @apply SD:SD-x HD:HD-x FHD:FHD-x /* QHD:QHD-x UHD:UHD-x */
+  }
+  .layout-fix-y{
+    @apply SD:SD-y HD:HD-y FHD:FHD-y /*  QHD:QHD-y UHD:UHD-y */
+  }
+  .layout-fix{
+    @apply SD:SD HD:HD FHD:FHD /* QHD:QHD UHD:UHD */
+  }
+  .SD-x{
+    @apply w-[640px] min-w-[640px]
+  }
+  .SD-y{
+    @apply h-[353px] min-h-[353px]
+  }  
+  .SD{
+    @apply SD-x SD-y
+  }
+  .HD-x{
+    @apply w-[1280px] min-w-[1280px]
+  }
+  .HD-y{
+    @apply h-[593px] min-h-[593px]
+  }
+  .HD{
+    @apply HD-x HD-y
+  }
+  .FHD-x{
+    @apply w-[1920px] min-w-[1920px]
+  }
+  .FHD-y{
+    @apply h-[953px] min-h-[953px]
+  }
+  .FHD{
+    @apply FHD-x FHD-y
+  }
+  /* .QHD-x{
+    @apply w-[2560px] min-w-[2560px]
+  }
+  .QHD-y{
+    @apply h-[1313px] min-h-[1313px]
+  }
+  .QHD{
+    @apply QHD-x QHD-y
+  }
+  .UHD-x{
+    @apply w-[3840px] min-w-[3840px]
+  }
+  .UHD-y{
+    @apply h-[2033px] min-h-[2033px]
+  }
+  .UHD{
+    @apply UHD-x UHD-y
+  } */
 }
 
 .truncate {

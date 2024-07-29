@@ -1,7 +1,10 @@
 package com.team.HoneyBadger;
 
+import com.team.HoneyBadger.Entity.Cycle;
 import com.team.HoneyBadger.Entity.SiteUser;
+import com.team.HoneyBadger.Enum.KeyPreset;
 import com.team.HoneyBadger.Enum.UserRole;
+import com.team.HoneyBadger.Repository.CycleRepository;
 import com.team.HoneyBadger.Repository.DepartmentRepository;
 import com.team.HoneyBadger.Repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -19,6 +22,9 @@ class HoneyBadgerApplicationTests {
     private PasswordEncoder encoder;
     @Autowired
     private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private CycleRepository cycleRepository;
 
     @Test
     void contextLoads() {
@@ -38,6 +44,19 @@ class HoneyBadgerApplicationTests {
 
 
     }
+
+    @Test
+    void cycle(){
+        LocalDateTime startDate = LocalDateTime.now();
+        LocalDateTime endDate = LocalDateTime.now().plusDays(5).plusHours(1);
+        for( int i = 0; i < 10; i++){
+            cycleRepository.save(Cycle.builder().title("그룹일정 테스트"+i).content("그룹일정 테스트"+i).k(KeyPreset.DC.getValue("성언이에용")).startDate(startDate).endDate(endDate).tag(null).build());
+            startDate = startDate.plusDays(1);
+            endDate = endDate.plusDays(1);
+        }
+    }
+
+
 
     @Test
     void getMyCycle() {

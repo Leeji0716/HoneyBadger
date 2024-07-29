@@ -1312,7 +1312,7 @@ public class MultiService {
                 if (!cycle.getK().equals(KeyPreset.UC.getValue(user.getUsername()))) {
                     throw new NotAllowedException("접근 권한이 없습니다.");
                 }
-                if (cycleRequestDTO.tagName() == null) {
+                if (cycleRequestDTO.tagName() == null || cycleRequestDTO.tagName().isEmpty()) {
                     if (cycle.getTag() != null) {
                         return getCycleDTO(cycleService.upDateAndDeleteTag(cycle, cycleRequestDTO));
                     }
@@ -1331,7 +1331,7 @@ public class MultiService {
                 if (!cycle.getK().equals(KeyPreset.DC.getValue(user.getDepartment().getName()))) {
                     throw new NotAllowedException("접근 권한이 없습니다.");
                 }
-                if (cycleRequestDTO.tagName() == null) {
+                if (cycleRequestDTO.tagName() == null || cycleRequestDTO.tagName().isEmpty()) {
                     if (cycle.getTag() != null) {
                         return getCycleDTO(cycleService.upDateAndDeleteTag(cycle, cycleRequestDTO));
                     }
@@ -1350,7 +1350,7 @@ public class MultiService {
                 if (!cycle.getK().equals(KeyPreset.TC.getValue(cycleRequestDTO.teamName()))) {
                     throw new NotAllowedException("접근 권한이 없습니다.");
                 }
-                if (cycleRequestDTO.tagName() == null) {
+                if (cycleRequestDTO.tagName() == null || cycleRequestDTO.tagName().isEmpty()) {
                     if (cycle.getTag() != null) {
                         return getCycleDTO(cycleService.upDateAndDeleteTag(cycle, cycleRequestDTO));
                     }
