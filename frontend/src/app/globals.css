@@ -52,7 +52,8 @@ body {
   background-color: rgb(143, 190, 233);
   /* RGB 값으로 배경 색상 설정 */
 
-  background-color: #8fbee9; /* RGB 값으로 배경 색상 설정 */
+  background-color: #8fbee9;
+  /* RGB 값으로 배경 색상 설정 */
 
 }
 
@@ -73,21 +74,21 @@ body {
   cursor: pointer;
   background: transparent;
   border: none;
-  padding: 10px;
+  padding: 0.625rem;
 }
 
 .hamburger span {
   display: block;
-  width: 25px;
+  width: 1.5625rem;
   /* 줄의 너비 */
-  height: 3px;
+  height: 0.1875rem;
   /* 줄의 높이 */
-  margin: 5px auto;
+  margin: 0.3125rem auto;
   background-color: white;
   /* 줄의 색상 */
   transition: all 0.3s ease;
   /* 애니메이션 효과 */
-  border-radius: 1.5px;
+  border-radius: 0.09375rem;
 }
 
 .hamburger1 {
@@ -95,7 +96,7 @@ body {
   cursor: pointer;
   background: transparent;
   border: none;
-  padding: 10px;
+  padding: 0.625rem;
 }
 
 .hamburger1:hover {
@@ -105,16 +106,16 @@ body {
 
 .hamburger1 span {
   display: block;
-  width: 25px;
+  width: 1.5625rem;
   /* 줄의 너비 */
-  height: 3px;
+  height: 0.1875rem;
   /* 줄의 높이 */
-  margin: 5px auto;
+  margin: 0.3125rem auto;
   background-color: black;
   /* 줄의 색상 */
   transition: all 0.3s ease;
   /* 애니메이션 효과 */
-  border-radius: 1.5px;
+  border-radius: 0.09375rem;
 }
 
 .send {
@@ -132,75 +133,91 @@ body {
   background: transparent;
   border: none;
   /* padding: 10px; */
-  margin-right: 3px;
-  width: 30px;
+  margin-right: 0.1875rem;
+  width: 1.875rem;
 }
 
 .mail-hamburger span {
   display: block;
-  width: 2px;
+  width: 0.125rem;
   /* 줄의 너비 */
-  height: 2px;
+  height: 0.125rem;
   /* 줄의 높이 */
-  margin: 5px auto;
+  margin: 0.3125rem auto;
   background-color: black;
   /* 줄의 색상 */
   transition: all 0.3s ease;
   /* 애니메이션 효과 */
-  border-radius: 1.5px;
+  border-radius: 0.09375rem;
 }
+
 
 @layer components {
   .checkbox-div:has(input:checked) {
     @apply border-2 border-[#8fbee9] group-hover:bg-[#dce2e8];
   }
+
+
   checkbox {
     @apply focus:outline-none
   }
-  .layout-fix-x{
-    @apply SD:SD-x HD:HD-x FHD:FHD-x /* QHD:QHD-x UHD:UHD-x */
+
+  .layout-fix-x {
+    @apply SD:SD-x HD:HD-x FHD:FHD-x QHD:QHD-x UHD:UHD-x LAP_16:LAP_16-x
   }
-  .layout-fix-y{
-    @apply SD:SD-y HD:HD-y FHD:FHD-y /*  QHD:QHD-y UHD:UHD-y */
+
+  .layout-fix-y {
+    @apply SD:SD-y HD:HD-y FHD:FHD-y QHD:QHD-y UHD:UHD-y LAP_16:LAP_16-y
   }
-  .layout-fix{
-    @apply SD:SD HD:HD FHD:FHD /* QHD:QHD UHD:UHD */
+
+  .layout-fix {
+    @apply SD:SD HD:HD FHD:FHD QHD:QHD UHD:UHD LAP_16:LAP_16
   }
-  .SD-x{
+
+  .SD-x {
     @apply w-[640px] min-w-[640px]
   }
-  .SD-y{
+
+  .SD-y {
     @apply h-[353px] min-h-[353px]
-  }  
-  .SD{
-    @apply SD-x SD-y
   }
-  .HD-x{
+
+  .SD {
+    @apply SD-x SD-y text-[8px]
+  }
+
+  .HD-x {
     @apply w-[1280px] min-w-[1280px]
   }
-  .HD-y{
+
+  .HD-y {
     @apply h-[593px] min-h-[593px]
   }
-  .HD{
-    @apply HD-x HD-y
+
+  .HD {
+    @apply HD-x HD-y text-[12px]
   }
-  .FHD-x{
+
+  .FHD-x {
     @apply w-[1920px] min-w-[1920px]
   }
-  .FHD-y{
+
+  .FHD-y {
     @apply h-[953px] min-h-[953px]
   }
-  .FHD{
-    @apply FHD-x FHD-y
+
+  .FHD {
+    @apply FHD-x FHD-y text-[16px]
   }
-  /* .QHD-x{
+
+  .QHD-x{
     @apply w-[2560px] min-w-[2560px]
   }
   .QHD-y{
     @apply h-[1313px] min-h-[1313px]
   }
   .QHD{
-    @apply QHD-x QHD-y
+    @apply QHD-x QHD-y text-[24px]
   }
   .UHD-x{
     @apply w-[3840px] min-w-[3840px]
@@ -209,16 +226,30 @@ body {
     @apply h-[2033px] min-h-[2033px]
   }
   .UHD{
-    @apply UHD-x UHD-y
-  } */
+    @apply UHD-x UHD-y text-[32px]
+  }
+  .LAP_16-x{
+    @apply w-[2880px] min-w-[2880px]
+  }
+  .LAP_16-y{
+    @apply h-[1673px] min-h-[1673px]
+  }
+  .LAP_16{
+    @apply LAP_16-x LAP_16-y text-[28px]
+  }
 }
 
 .truncate {
-  display: inline-block; /* Ensure it takes the width of its content */
-  width: 5em; /* Set the width to a value that fits 5 characters */
-  overflow: hidden; /* Hide overflow content */
-  text-overflow: ellipsis; /* Show ... when text overflows */
-  white-space: nowrap; /* Prevent line breaks */
-  text-align: center; /* Center the text within the element */
+  display: inline-block;
+  /* Ensure it takes the width of its content */
+  width: 5em;
+  /* Set the width to a value that fits 5 characters */
+  overflow: hidden;
+  /* Hide overflow content */
+  text-overflow: ellipsis;
+  /* Show ... when text overflows */
+  white-space: nowrap;
+  /* Prevent line breaks */
+  text-align: center;
+  /* Center the text within the element */
 }
-

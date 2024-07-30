@@ -4,7 +4,7 @@ import Main from "@/app/Global/Layout/MainLayout";
 import { useEffect, useRef, useState } from "react";
 import { getFileIcon, getjyDate, getRole, sliceText } from "../Global/Method";
 import Modal from "../Global/Modal";
-import { error } from "console";
+
 
 export default function Approval() {
     interface approvalRequestDTO {
@@ -210,7 +210,7 @@ export default function Approval() {
         return (
             <div className={`flex w-[20%] justify-center items-center ${isActive ? "official-color rounded-md" : ""}`}>
                 <button
-                    className={`font-bold btn-lx text-center ${isActive ? "text-white" : ""}`}
+                    className={`font-bold SD:text-xs btn-lx text-center ${isActive ? "text-white" : ""}`}
                     onClick={() => {
                         setFilter(filterValue);
                         const filteredApprovalList = approvalList.filter(approval => approval.approvalStatus === filterValue);
@@ -227,7 +227,7 @@ export default function Approval() {
     // 한 Approval의 각 approver의 상태
     function GetApproverStatus({ index }: { index: number }) {
         return <>
-            <div className={`w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold flex-col
+            <div className={`w-full h-[6.25rem] flex border-b-2 border-gray-300 justify-center items-center text-2xl font-bold flex-col
             ${getApprovarStatusColor(getSpecificApprover(index)?.approverStatus ?? -1)}`}>{getApprovarStatusText(getSpecificApprover(index)?.approverStatus ?? -1)}
                 <p className="text-sm">{getSpecificApprover(index) !== null && getSpecificApprover(index)?.approverStatus == 2 || getSpecificApprover(index)?.approverStatus == 3
                     ? getjyDate(getSpecificApprover(index)?.approvalDate) : ""}</p>
@@ -300,26 +300,26 @@ export default function Approval() {
             <div className="w-full h-[90%]">
                 <div className="flex flex-wrap w-full">
                     {/* 작성자 정보 */}
-                    <div className="w-[20%] h-[200px] border-2 border-red-300">
-                        <div className="w-full h-[50px] flex border-b-2 border-gray-300">
+                    <div className="w-[20%] h-[12.5rem] border-2 border-red-300">
+                        <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300">
                             <label htmlFor="senderDepartment" className="w-[50%] flex justify-center items-center border-r-2 border-gray-300">기안부서</label>
                             <div className="w-[50%] flex justify-center items-center">
                                 <p id="senderDepartment">{approval.sender?.DepartmentResponseDTO?.name ? approval.sender?.DepartmentResponseDTO?.name : "미할당"}</p>
                             </div>
                         </div>
-                        <div className="w-full h-[50px] flex border-b-2 border-gray-300">
+                        <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300">
                             <label htmlFor="senderName" className="w-[50%] flex justify-center items-center border-r-2 border-gray-300">기안자</label>
                             <div className="w-[50%] flex justify-center items-center">
                                 <p id="senderName">{approval.sender?.name}</p>
                             </div>
                         </div>
-                        <div className="w-full h-[50px] flex border-b-2 border-gray-300">
+                        <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300">
                             <label htmlFor="senderRole" className="w-[50%] flex justify-center items-center border-r-2 border-gray-300">직책</label>
                             <div className="w-[50%] flex justify-center items-center">
                                 <p id="senderRole">{getRole(approval.sender?.role)}</p>
                             </div>
                         </div>
-                        <div className="w-full h-[50px] flex border-b-2 border-gray-300">
+                        <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300">
                             <label htmlFor="sendDate" className="w-[50%] flex justify-center items-center border-r-2 border-gray-300">기안일</label>
                             <div className="w-[50%] flex justify-center items-center">
                                 <p id="sendDate">{getjyDate(approval.sendDate)}</p>
@@ -329,83 +329,83 @@ export default function Approval() {
 
                     {/* 결재 승인자 정보 */}
                     <>
-                        <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] border-t-2 border-r-2 border-b border-gray-300">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(0)?.approver.role ?? -1)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getSpecificApprover(0)?.approver.name}
                             </div>
                             <GetApproverStatus index={0} />
                         </div>
-                        <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] border-t-2 border-r-2 border-b border-gray-300">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(1)?.approver.role ?? -1)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getSpecificApprover(1)?.approver.name}
                             </div>
                             <GetApproverStatus index={1} />
                         </div>
-                        <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] border-t-2 border-r-2 border-b border-gray-300">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(2)?.approver.role ?? -1)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getSpecificApprover(2)?.approver.name}
                             </div>
                             <GetApproverStatus index={2} />
                         </div>
-                        <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] border-t-2 border-r-2 border-b border-gray-300">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(3)?.approver.role ?? -1)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getSpecificApprover(3)?.approver.name}
                             </div>
                             <GetApproverStatus index={3} />
                         </div>
-                        <div className="w-[20%] h-[200px] border-l-2 border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" >
+                        <div className="w-[20%] h-[12.5rem] border-l-2 border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center" >
                                 {getRole(getSpecificApprover(4)?.approver.role ?? -1)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getSpecificApprover(4)?.approver.name}
                             </div>
                             <GetApproverStatus index={4} />
                         </div>
-                        <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(5)?.approver.role ?? -1)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getSpecificApprover(5)?.approver.name}
                             </div>
                             <GetApproverStatus index={5} />
                         </div>
-                        <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(6)?.approver.role ?? -1)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getSpecificApprover(6)?.approver.name}
                             </div>
                             <GetApproverStatus index={6} />
                         </div>
-                        <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(7)?.approver.role ?? -1)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getSpecificApprover(7)?.approver.name}
                             </div>
                             <GetApproverStatus index={7} />
                         </div>
-                        <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(8)?.approver.role ?? -1)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                            <div className="w-full h-[3.125rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getSpecificApprover(8)?.approver.name}
                             </div>
                             <GetApproverStatus index={8} />
@@ -414,23 +414,23 @@ export default function Approval() {
                 </div>
                 {/* 제목 & 내용 & 참조 유저 */}
                 <>
-                    <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
+                    <div className="w-full h-[3.125rem] flex flex-row justify-center border-b-2 border-gray-300">
                         <label className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">제목</label>
                         <label className="w-[90%] flex items-center border-r-2 border-gray-300 pl-5">{approval.title}</label>
                     </div>
-                    <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
+                    <div className="w-full h-[3.125rem] flex flex-row justify-center border-b-2 border-gray-300">
                         <label className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">내용</label>
                         <label className="w-[90%] flex items-center border-r-2 border-gray-300 pl-5">{approval.content}</label>
                     </div>
-                    <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
+                    <div className="w-full h-[3.125rem] flex flex-row justify-center border-b-2 border-gray-300">
                         <label className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">참조인</label>
                         <label className="w-[90%] flex items-center border-r-2 border-gray-300 pl-5">{approvalViewersText}</label>
                     </div>
-                    <div className="w-full h-[170px] border border-gray-300 border-r-2 border-l-2 border-b-2 border-gray-300 flex flex-col flex-wrap overflow-x-scroll">
+                    <div className="w-full h-[10.625rem] border border-gray-300 border-r-2 border-l-2 border-b-2 border-gray-300 flex flex-col flex-wrap overflow-x-scroll">
                         {approval.files.length != 0 ? approval?.files.map((f: originFileResponseDTO, index: number) => (
                             <ul key={index}>
-                                <div className="flex items-center bg-white p-2 w-[500px]">
-                                    <img src={getFileIcon(f.original_name)} className="w-[26px] h-[31px] mr-2" alt="" />
+                                <div className="flex items-center bg-white p-2 w-[31.25rem]">
+                                    <img src={getFileIcon(f.original_name)} className="w-[1.625rem] h-[1.9375rem] mr-2" alt="" />
                                     <a href={f.value}>{sliceText(f.original_name)}</a>
                                 </div>
                             </ul>
@@ -444,7 +444,7 @@ export default function Approval() {
             {/* 전달 & 삭제 & 허가 & 반환 버튼 */}
             <>
                 {approval && approval.sender.username === user.username ?
-                    <div className="w-full h-[40px] mt-5 flex justify-end">
+                    <div className="w-full h-[2.5rem] mt-5 flex justify-end">
                         {approval.approvalStatus < 1 ?
                             <>
                                 <button className="px-4 py-2 bg-red-500 text-white rounded-md mr-2" onClick={() => {
@@ -465,10 +465,10 @@ export default function Approval() {
                         }
                         <button className="px-4 py-2 bg-blue-400 text-white rounded-md mr-2" onClick={() => setIsModalOpen(true)}>전달</button>
                         <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} escClose={true} outlineClose={true}>
-                            <div className="flex flex-col items-center w-[500px] h-[700px]">
+                            <div className="flex flex-col items-center w-[31.25rem] h-[43.75rem]">
                                 <p className="font-bold text-3xl m-3 mb-8 flex justify-center w-full">멤버 추가하기</p>
                                 <div className="w-full flex justify-end">
-                                    <button className="px-4 py-2 official-color text-white rounded-md mr-2 w-[80px] mb-2"
+                                    <button className="px-4 py-2 official-color text-white rounded-md mr-2 w-[5rem] mb-2"
                                         onClick={() => update(approval.id, approvalViewers)}>전달</button>
                                 </div>
                                 <input type="text" className="w-[90%] flex items-center border-2 border-gray-300 pl-5 mb-2"
@@ -505,7 +505,7 @@ export default function Approval() {
                     <></>
                 }
                 {approval && approval.approvers.some(e => e.approver.username === user.username) ? (
-                    <div className="w-full h-[50px] mt-5 flex justify-end">
+                    <div className="w-full h-[3.125rem] mt-5 flex justify-end">
                         {approval.approvers.filter(e => e.approver.username === user.username && e.approverStatus === 1)
                             .map((e, index) => (
                                 <div key={index}>
@@ -550,8 +550,8 @@ export default function Approval() {
         <div className="w-4/12 flex items-center justify-center h-full pt-10 pb-4">
             <div className="w-11/12 h-full">
                 {/* 검색 인풋 */}
-                <div className="flex items-center border-2 border-gray rounded-full h-[50px] mb-5 shadow bg-white">
-                    <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
+                <div className="flex items-center border-2 border-gray rounded-full h-[6%] shadow bg-white">
+                    <img src="/searchg.png" className="w-[1.875rem] h-[1.875rem] m-2" alt="검색 사진" />
                     <input
                         type="text"
                         placeholder="결재 제목 검색"
@@ -564,48 +564,50 @@ export default function Approval() {
                             }
                         }}
                     />
-                    <button className="text-gray-300 whitespace-nowrap w-[50px] h-[50px] m-2" onClick={handleSearch} >
+                    <button className="text-gray-300 whitespace-nowrap w-[3.125rem] h-[3.125rem] m-2" onClick={handleSearch} >
                         검색
                     </button>
                 </div>
 
                 {/* 리스트 */}
-                <div className="bg-white shadow w-full">
-                    {/* 필터 */}
-                    <div className="bg-gray-100 w-full justify-between h-[50px] flex flex-row mb-5">
-                        {renderFilterButton(-1, "전체")}
-                        {renderFilterButton(0, "결재 대기중")}
-                        {renderFilterButton(1, "결재 중")}
-                        {renderFilterButton(2, "허가")}
-                        {renderFilterButton(3, "반환")}
-                    </div>
+                <div className="pt-5 h-[94%]">
+                    <div className="bg-white shadow w-full h-full flex flex-col">
+                        {/* 필터 */}
+                        <div className="bg-gray-100 w-full justify-between h-[3.125rem] min-h-[3.125rem] flex flex-row mb-5">
+                            {renderFilterButton(-1, "전체")}
+                            {renderFilterButton(0, "결재 대기중")}
+                            {renderFilterButton(1, "결재 중")}
+                            {renderFilterButton(2, "허가")}
+                            {renderFilterButton(3, "반환")}
+                        </div>
 
-                    {/* 필터링 된 리스트 -> 누르면 읽음 & 상세보기 */}
-                    <div className="relative flex flex-col justify-center w-full h-full">
-                        <div ref={appBoxRef} onScroll={loadPage} className="w-full h-[705px] overflow-x-hidden overflow-y-scroll">
-                            {approvalList.filter(approval => filter === -1 || approval.approvalStatus === filter).map((approval, index) => (
-                                <div key={index}
-                                    className="w-[550px] h-[50px] border-2 border-gray-300 mb-1 ml-1 rounded-lg shadow-md flex justify-between">
-                                    {user && approval.readUsers.includes(user.username) === false ? <div className="h-full w-[6px] official-color mr-2"></div> : <></>}
-                                    <h4 className="flex items-center justify-center font-bold w-[80%]">
-                                        <a href="#" className="" onClick={() => {
-                                            readApproval(approval?.id).then(
-                                                r => {
-                                                    setApproval(r);
-                                                    const index = approvalList.findIndex(e => e.id === approval.id);
-                                                    const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
-                                                })
-                                        }}>{approval.title}</a>
-                                    </h4>
-                                    <p className={`flex items-center justify-center text-sm w-[20%] ${getStatusColor(approval.approvalStatus)}`}>
-                                        {getStatusText(approval.approvalStatus)}</p>
-                                </div>
-                            ))}
+                        {/* 필터링 된 리스트 -> 누르면 읽음 & 상세보기 */}
+                        <div className="relative flex flex-col justify-center w-full h-[100%]">
+                            <div ref={appBoxRef} onScroll={loadPage} className="w-full h-full overflow-x-hidden overflow-y-scroll">
+                                {approvalList.filter(approval => filter === -1 || approval.approvalStatus === filter).map((approval, index) => (
+                                    <div key={index}
+                                        className="w-[98%] h-[3.125rem] border-2 border-gray-300 mb-1 ml-1 rounded-lg shadow-md flex justify-between">
+                                        {user && approval.readUsers.includes(user.username) === false ? <div className="h-full w-[0.375rem] official-color mr-2"></div> : <></>}
+                                        <h4 className="flex items-center justify-center font-bold w-[80%]">
+                                            <a href="#" className="" onClick={() => {
+                                                readApproval(approval?.id).then(
+                                                    r => {
+                                                        setApproval(r);
+                                                        const index = approvalList.findIndex(e => e.id === approval.id);
+                                                        const pre = [...approvalList]; pre[index] = r; setApprovalList(pre);
+                                                    })
+                                            }}>{approval.title}</a>
+                                        </h4>
+                                        <p className={`flex items-center justify-center text-sm w-[20%] ${getStatusColor(approval.approvalStatus)}`}>
+                                            {getStatusText(approval.approvalStatus)}</p>
+                                    </div>
+                                ))}
 
-                            {/* 결재 기안서 만들기 */}
-                            <a href="/approval/ApprovalForm" className="absolute bottom-4 right-4 w-[50px] h-[50px] btn rounded-full official-color text-xl font-bold text-white flex items-center justify-center">
-                                +
-                            </a>
+                                {/* 결재 기안서 만들기 */}
+                                <a href="/approval/ApprovalForm" className="absolute bottom-4 right-4 w-[3.125rem] h-[3.125rem] btn rounded-full official-color text-xl font-bold text-white flex items-center justify-center">
+                                    +
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
