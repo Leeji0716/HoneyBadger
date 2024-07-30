@@ -939,16 +939,21 @@ public class MultiService {
         try {
             SiteUser reader = userService.get(username);
             Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
+            Participant participant = participantService.get(reader, chatroom);
 
-            LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
-            Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
+            if (chatroom.getParticipants().contains(participant)){
+                LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
+                Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
 
-            for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
-                HashSet<String> sets = new HashSet<>(message.getReadUsers());
-                sets.add(reader.getUsername());
-                messageService.updateRead(message, sets.stream().toList());
+                for (Message message : startId != null ? messageService.getList(startId) : chatroom.getMessageList()) { //읽음처리
+                    HashSet<String> sets = new HashSet<>(message.getReadUsers());
+                    sets.add(reader.getUsername());
+                    messageService.updateRead(message, sets.stream().toList());
+                }
             }
-
+            else {
+                throw new DataNotFoundException("채팅방에 있는 유저가 아닙니다.");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
