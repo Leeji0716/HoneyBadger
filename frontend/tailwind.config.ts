@@ -14,19 +14,33 @@ const config: Config = {
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       fontSize: {
-        xxs: ['9px', { lineHeight: '14px' }]
-      },
-    },
+        xxs: ['0.6rem', '0.75rem']
+      }
+    }
+    ,
     screens: { // 아래의 값들은 min-width이다.
-      sm: '640px',
-      md: '768px',
-      lg: '1024px',
-      xl: '1280px',
-      SD: '640px', // 480
-      HD: '1366px', // 768
-      FHD: '1920px', // 1080
-      QHD: '2560px', // 1440
-      UHD: '3840px', // 2160
+      // SD: { min: '640px', max: '640px' }, // 480
+      // HD: { min: '1280px', max: '1280px' }, // 720
+      // FHD: { min: '1920px', max: '1920px' }, // 1080
+      // QHD: { min: '2560px', max: '2560px' }, // 1440
+      // UHD: { min: '3840px', max: '3840px' }, // 2160
+      // LAP_16: { min: '2880px', max: '2880px' }, // 1800
+
+
+      // SD: '640px', // 480
+      // HD: '1280px', // 720
+      // FHD: '1920px',// 1080
+      // QHD: '2560px', // 1440
+      // UHD: '3840px', // 2160
+      // LAP_16: '2880px', // 1800
+
+      SD: { min: '640px', max: '1279px' }, // 480
+      HD: { min: '1280px', max: '1919px' }, // 720
+      FHD: { min: '1920px', max: '2559px' }, // 1080
+      QHD: { min: '2560px', max: '2879px' }, // 1440
+      LAP_16: { min: '2880px', max: '3839px' }, // 1800
+      UHD: { min: '3840px', max: '3840px' }, // 2160
+
     }
   },
   daisyui: {
