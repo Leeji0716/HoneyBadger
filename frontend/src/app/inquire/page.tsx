@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {  getDateTimeKorean } from "../Global/Method";
+import { getDateTimeKorean } from "../Global/Method";
 import { checkQuestion, createQuestion, getQuestions, getUser, updateQuestionAnswer } from "../API/UserAPI";
 import Modal from "../Global/Modal";
 import '../quill.bubble.css';
@@ -26,6 +26,7 @@ export default function Home() {
     const [error, setError] = useState('');
     const quillInstance = useRef<ReactQuill>(null);
     const [isAdmin, setAdmin] = useState(false);
+    const [isLoading, setLoading] = useState(false);
     const modules = useMemo(
         () => ({
             toolbar: {
@@ -51,14 +52,14 @@ export default function Home() {
                     const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
                     console.log(e);
                 });
-        else{
+        else {
             const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
         }
     }, [ACCESS_TOKEN])
 
     useEffect(() => {
         if (page >= 0)
-            getQuestions(page, keyword).then(r => { setQuetions([...questions, ...r?.content]); setMaxPage(r?.totalPages) }).catch(e => console.log(e));
+            getQuestions(page, keyword).then(r => { setLoading(false); setQuetions([...questions, ...r?.content]); setMaxPage(r?.totalPages) }).catch(e => console.log(e));
         else
             setPage(0);
     }, [page])
@@ -233,7 +234,14 @@ export default function Home() {
 
             <div className="w-[55rem] h-[32rem] flex flex-col py-4 px-2 border-2 rounded-lg border-black">
 
-                <div className="h-full overflow-y-scroll flex flex-col">
+                <div className="h-full overflow-y-scroll flex flex-col" onScroll={e => {
+                    const element = e.target as HTMLElement;
+
+                    if (!isLoading && page < maxPage && element.scrollHeight - element.clientHeight == element.scrollTop) {
+                        setLoading(true);
+                        setPage(page + 1);
+                    }
+                }}>
                     {questions.map((question, index) => <Question key={index} question={question} />)}
                 </div>
             </div>
