@@ -8,10 +8,10 @@ import { Tooltip } from 'react-tooltip';
 import {
     chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage,
     chatUploadFile, getUpdateMessageList, createMessageReservation, getMessageReservationList, deleteMessageReservation,
-    unsubscribeChatroom
+    unsubscribeChatroom, messageFileList, messageImageList, messageLinkList, searchUsers
 } from "../API/UserAPI";
 import { getChatDateTimeFormat } from "../Global/Method";
-import { getChatShowDateTimeFormat } from "../Global/Method";
+import { getChatShowDateTimeFormat, getFileIcon } from "../Global/Method";
 import { getSocket } from "../API/SocketAPI";
 
 export default function Chat() {
@@ -95,21 +95,28 @@ export default function Chat() {
     const [isModalOpen3, setIsModalOpen3] = useState(false);
     const [isModalOpen4, setIsModalOpen4] = useState(false);
     const [isModalOpen5, setIsModalOpen5] = useState(false);
+    const [isModalOpen6, setIsModalOpen6] = useState(false);
     const [userList, setUserList] = useState<userResponseDTO[]>([]);
     const [selectedUsers, setSelectedUsers] = useState(new Set<string>());
     const [chatroomName, setChatroomName] = useState('');
     const file = useRef(null as any);
     const image = useRef(null as any);
+    const [searchedUsers, setSearchedUsers] = useState([] as any[]);
 
     const [isClientLoading, setClientLoading] = useState(true);
     const [keyword, setKeyword] = useState('');
+    const [userKeyword, setUserKeyword] = useState('');
     const [page, setPage] = useState(0);
+    const [size, setSize] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [maxPage, setMaxPage] = useState(0);
     const [tempChatroom, setTempChatroom] = useState(null as any);
     const chatBoxRef = useRef<HTMLDivElement>(null);
     const [currentScrollLocation, setCurrentScrollLocation] = useState(0);
     const [updateMessageList, setUpdateMessageList] = useState<messageResponseDTO[]>([]);
+    const [imageList, setImageList] = useState<messageResponseDTO[]>([]);
+    const [linkList, setLinkList] = useState<messageResponseDTO[]>([]);
+    const [fileList, setFileList] = useState<messageResponseDTO[]>([]);
     const [preChatroomId, setPreChatroomId] = useState(0);
     const [messageSub, setMessageSub] = useState<any>(null);
     const [readSub, setReadSub] = useState<any>(null);
@@ -164,6 +171,14 @@ export default function Chat() {
 
     function handleClose5Modal() {
         setIsModalOpen5(false);
+    }
+
+    function handleOpen6Modal() {
+        setIsModalOpen6(true);
+    }
+
+    function handleClose6Modal() {
+        setIsModalOpen6(false);
     }
 
     useEffect(() => {
@@ -280,6 +295,16 @@ export default function Chat() {
         }
     }, [isModalOpen5, page]);
 
+    useEffect(() => {
+        if (isModalOpen6) {
+            messageImageList(chatroom.id).then(setImageList);
+            messageFileList(chatroom.id).then(setFileList);
+            messageLinkList(chatroom.id).then(setLinkList);
+        }
+    }, [isModalOpen6, chatroom?.id]);
+
+
+
     const loadPage = () => {
         const chatBox = chatBoxRef.current;
 
@@ -387,6 +412,16 @@ export default function Chat() {
         setPage(0);
         getChat(keyword, page).then(r => {
             setChatrooms(r.content);
+        }).catch(error => {
+            console.error("Search error:", error);
+        });
+    };
+
+    const handleUserSearch = () => {
+        setPage(0);
+        setSize(10);
+        searchUsers(userKeyword, page,size).then(r => {
+            setSearchedUsers(r.content);
         }).catch(error => {
             console.error("Search error:", error);
         });
@@ -587,6 +622,8 @@ export default function Chat() {
             </div>
         </div >
     }
+    
+    
     function ChatDetail({ Chatroom, messageList, innerRef, currentScrollLocation }: { Chatroom: chatroomResponseDTO, messageList: messageResponseDTO[], innerRef: RefObject<HTMLDivElement>, currentScrollLocation: number }) {
         const joinMembers = Array.isArray(Chatroom.users) ? Chatroom.users.length : 0;
         const [message, setMessage] = useState('');
@@ -594,6 +631,7 @@ export default function Chat() {
         const [messageType, setMessageType] = useState(0);
         const [sendDate, setSendDate] = useState<Date | null>(null);
         const [messageListTmp, setMessageListTmp] = useState<messageResponseDTO[]>([]);
+        const [activeTab, setActiveTab] = useState('photos');
         function getChatroomNameById(chatroomId: number) {
             const chatroom = chatrooms.find((room) => room.id === chatroomId);
             return chatroom ? chatroom.name : 'Unknown Chatroom';
@@ -654,9 +692,23 @@ export default function Chat() {
                 <Modal open={isModalOpen} onClose={handleCloseModal} escClose={true} outlineClose={true}>
                     <div>
                         <p className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</p>
+                        <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[50px] mb-5">
+                            <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
+                            <input
+                                type="text"
+                                placeholder="참여자 검색"
+                                className="bolder-0 outline-none bg-white text-black w-[80%]"
+                                value={userKeyword}
+                                onChange={e => setUserKeyword(e.target.value)}
+                            />
+                            <button className="text-gray-300 whitespace-nowrap"
+                                onClick={handleUserSearch} >
+                                검색
+                            </button>
+                        </div>
                         <div className="overflow-auto h-[500px]">
                             <ul className="m-3">
-                                {userList.filter(user => !chatroom.users.includes(user.username)).map((user, index) => (
+                                {searchedUsers.filter(user => !chatroom.users.includes(user.username)).map((user, index) => (
                                     <li key={index} className="flex justify-between items-center mb-5">
                                         <span className="w-[50px] h-[50px]">
                                             <img src={user.url ? user.url : "/pin.png"} alt="User profile" className="w-[50px] h-[50px]" />
@@ -714,10 +766,87 @@ export default function Chat() {
                                 setChatroom(null);
                             })
                         }}>나가기</button>
-                        <button>사진/동영상</button>
-                        <button>파일</button>
+                        <button onClick={handleOpen6Modal}>보관함</button>
                         <button></button>
                     </DropDown>
+
+                    <Modal open={isModalOpen6} onClose={handleClose6Modal} escClose={true} outlineClose={true}>
+                        <div className="official-color h-[50px] flex justify-center">
+
+                            <div className="text-1xl flex justify-center gap-20 mt-1">
+                                <button className={` ${activeTab === 'photos' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('photos')}>사진</button>
+                                <button className={` ${activeTab === 'files' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('files')}>파일</button>
+                                <button className={` ${activeTab === 'links' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('links')}>링크</button>
+                            </div>
+                        </div>
+                        <div className="content">
+                            {activeTab === 'photos' && (
+                                <div className="flex items-center flex-col w-[480px] h-[800px] overflow-x-hidden overflow-y-scroll">
+
+                                    <p className="font-bold flex-wrap: wrap text-3xl m-3">첨부한 이미지</p>
+                                    <div className="flex w-[450px] flex-wrap">
+                                        {imageList.map(image => (
+                                            <div key={image.id} className="w-[150px]">
+                                                <div className="h-[150px] flex justify-center flex-col m-2">
+                                                    <img className="w-full h-[130px] border-2 border-gray-300" src={'http://www.벌꿀오소리.메인.한국:8080' + image?.message} />
+                                                    <span className="w-full h-[20px] font-bold flex justify-center text-sm">{image.name}
+                                                        <p className="text-gray-400 ml-2 text-xs mt-1">
+                                                            {getChatDateTimeFormat(image.sendTime)}
+                                                        </p>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {activeTab === 'files' && (
+                                <div className="flex items-center flex-col w-[480px] h-[800px] overflow-x-hidden overflow-y-scroll">
+
+                                    <p className="font-bold flex-wrap: wrap text-3xl m-3">첨부한 파일</p>
+                                    <div className="flex w-[450px] flex-wrap">
+                                        {fileList.map(file => (
+                                            <div key={file.id} className="w-[150px]">
+                                                <div className="h-[150px] flex justify-center flex-col m-2 border-2 border-gray-300 m-3">
+                                                    <img src={getFileIcon(file?.message)} className="w-[26px] h-[31px] mr-2" alt="" />
+                                                    <a href={'http://www.벌꿀오소리.메인.한국:8080' + file?.message} download target="_blank" rel="noopener noreferrer">
+
+                                                        {file?.message}</a>
+                                                    <span className="w-full h-[20px] font-bold flex justify-center text-sm">{file.name}
+                                                        <p className="text-gray-400 ml-2 text-xs mt-1">
+                                                            {getChatDateTimeFormat(file.sendTime)}
+                                                        </p>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {activeTab === 'links' && (
+                                <div className="flex items-center flex-col w-[600px] h-[800px] overflow-x-hidden overflow-y-scroll">
+
+                                    <p className="font-bold text-3xl m-3">첨부한 링크</p>
+                                    <div className="flex flex-col">
+                                        {linkList.map(link => (
+                                            <div key={link.id} className="">
+                                                <div className="flex justify-center flex m-2 w-[500px] border-2 border-gray-300">
+                                                    <a href={link?.message} className="w-[400px]" target="_blank" rel="noopener noreferrer">{link?.message}</a>
+                                                    <span className="w-[200px] h-[20px] font-bold flex justify-center text-sm">{link.name}
+                                                        <p className="text-gray-400 ml-2 text-xs mt-1 w-[100px]">
+                                                            {getChatDateTimeFormat(link.sendTime)}
+                                                        </p>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                    </Modal>
+
                 </div>
             </div>
             {/* 공지 */}
@@ -790,7 +919,7 @@ export default function Chat() {
                                                 ) : t?.messageType === 3 ? (
                                                     <a href={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
                                                 ) : (
-                                                    <div>Unknown type</div>
+                                                    <div></div>
                                                 )
                                             }
                                         </div>

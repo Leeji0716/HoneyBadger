@@ -170,6 +170,34 @@ export const editMessageReservation = async (reservationMessageId: number, messa
     return response.data;
 }
 
+export const messageFileList = async (chatroomId:number) => {
+    const response = await UserApi.get('/api/chatroom/file',
+        {
+            headers : {chatroomId}
+        }
+    );
+    return response.data;
+}
+
+export const messageImageList = async (chatroomId:number) => {
+    const response = await UserApi.get('/api/chatroom/image',
+        {
+            headers : {chatroomId}
+        }
+    );
+    return response.data;
+}
+
+export const messageLinkList = async (chatroomId:number) => {
+    const response = await UserApi.get('/api/chatroom/link',
+        {
+            headers : {chatroomId}
+        }
+    );
+    return response.data;
+}
+
+
 
 export const getMessageReservationList = async (page: number) => {
     const response = await UserApi.get('/api/messageReservation/list',
