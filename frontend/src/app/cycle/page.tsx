@@ -750,7 +750,7 @@ export default function Cycle() {
                                             onChange={() => setStatusid(1)} />
                                         그룹
                                     </label>
-                                    <label>
+                                    {/* <label>
                                         <input
                                             type="radio"
                                             name="status"
@@ -758,7 +758,7 @@ export default function Cycle() {
                                             checked={statusid === 2}
                                             onChange={() => setStatusid(2)} />
                                         팀 (미구현)
-                                    </label>
+                                    </label> */}
                                 </div>
                                 <div className="flex justify-end gap-2 mt-4">
                                     <button
