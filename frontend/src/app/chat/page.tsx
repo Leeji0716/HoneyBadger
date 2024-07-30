@@ -200,25 +200,40 @@ export default function Chat() {
     }, [tempChatroom])
 
     useEffect(() => {
+        // console.log("이펙트");
+        // console.log(updateMessageList);
+
         if (updateMessageList) {
-            const updatedMessageList = [...messageList];
+            const beforeMessageList = [...messageList];
 
-            updateMessageList.forEach((updateItem) => {
-                const index = updatedMessageList.findIndex(msgItem => msgItem.id === updateItem.id);
+            // console.log("이전 메세지");
+            // console.log(beforeMessageList);
+
+            updateMessageList.forEach((updateItem) => { //업데이트 메세지 돌리기
+                const index = beforeMessageList.findIndex(msgItem => msgItem.id === updateItem.id); //업데이트 범위 시작 인덱스 찾기
+
+                console.log(index);
+                console.log(updateItem);
                 if (index !== -1) {
-                    updatedMessageList[index] = updateItem;
-                    console.log(index);
+                    beforeMessageList[index] = updateItem;
+                    // console.log(`메시지 업데이트됨: ${updateItem.id}`);
+                    // console.log(beforeMessageList[index]);
                 }
+
+                // if (index !== -1) {
+                //     beforeMessageList[index] = updateItem;
+                //     console.log(`메시지 업데이트됨: ${updateItem.id}`);}
+                // } else {
+                //     beforeMessageList.push(updateItem);
+                //     console.log(`새 메시지 추가됨: ${updateItem.id}`);
+                // }
             });
+            // console.log(beforeMessageList);
 
-            setMessageList(updatedMessageList);
-
-            // console.log("ㅁㅁㅁㅁㅁㅁㅁ");
-            // console.log(messageList);
-            // console.log(updatedMessageList);
-
+            setMessageList(beforeMessageList);
         }
     }, [updateMessageList]);
+
 
     useEffect(() => {
         if (temp) {
@@ -226,7 +241,7 @@ export default function Chat() {
 
             test.push(temp);
 
-            setMessageList(test);
+            setMessageList(test); updateMessageList
 
             setTemp(null);
         }
@@ -476,7 +491,6 @@ export default function Chat() {
                         const message = JSON.parse(e.body).body;
                         const temp = { id: message?.id, message: message?.message, sendTime: message?.sendTime, name: message?.name, username: message?.username, messageType: message?.messageType, readUsers: message?.readUsers } as messageResponseDTO; // 위에꺼 확인해보고 지우세요
                         setTemp(temp);
-                        <></>
                         // getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
 
                         //     setUpdateMessageList(updateMessageList);
@@ -498,14 +512,11 @@ export default function Chat() {
                         //     console.log('Received usernames:', usernames);
                         // });
 
-
                     });
 
                     socket.publish({
-
                         destination: "/api/pub/updateChatroom/" + Chatroom?.id,
                         body: JSON.stringify({ username: user?.username })
-
                     });
 
                     setMessageSub(messageSub);
@@ -515,15 +526,15 @@ export default function Chat() {
                         console.log("sub/check");
                         console.log(data);
 
-                        //들어오자마자 읽고 바꾸기
-                        getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-
-                            setUpdateMessageList(updateMessageList);
-                            console.log("1111111111111111111111111111111" + updateMessageList);
-
-                        }));
-
                     }, JSON.stringify({ username: user?.username }));
+                    //들어오자마자 읽고 바꾸기
+                    getUpdateMessageList(Chatroom?.id).then((r => {
+                        setUpdateMessageList(r);
+                        console.log("들어오자마자 읽고 바꾸기");
+                        console.log(updateMessageList);
+                        console.log(r);
+                        console.log("=======================================");
+                    }));
 
                     setReadSub(readSub);
 
@@ -599,11 +610,9 @@ export default function Chat() {
             return chatroom ? chatroom.name : 'Unknown Chatroom';
         }
 
-
-
         useEffect(() => {
             setMessageListTmp(messageList);
-            // console.log("이게뭔데");
+            console.log("이게뭔데");
             // console.log(messageList);
         }, []);
 
@@ -865,16 +874,7 @@ export default function Chat() {
                                     socket.publish({
                                         destination: "/api/pub/message/" + Chatroom?.id,
                                         body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
-
-
                                     });
-                                    getUpdateMessageList(Chatroom?.id).then((updateMessageList => {
-
-                                        setUpdateMessageList(updateMessageList);
-                                        console.log("1111111111111111111111111111111" + updateMessageList);
-
-                                    }));
-
                                     setMessage(''); // 메시지 전송 후 입력 필드 초기화        
                                 }
                             }
@@ -1022,15 +1022,11 @@ export default function Chat() {
                                         setMessageType(2);
                                         if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
                                             e.preventDefault(); // 폼 제출 방지
-
-
                                             if (isReady) {
-
                                                 socket.publish({
                                                     destination: "/api/pub/message/" + Chatroom?.id,
                                                     body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
                                                 });
-
                                                 setMessage(''); // 메시지 전송 후 입력 필드 초기화        
                                             }
                                         }
