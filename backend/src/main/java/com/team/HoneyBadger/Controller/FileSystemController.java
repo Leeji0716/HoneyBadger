@@ -48,6 +48,8 @@ public class FileSystemController {
         if (tokenDTO.isOK()) try {
             List<FolderResponseDTO> dto = multiService.getFileFolders(URLDecoder.decode(location, StandardCharsets.UTF_8));
             return ResponseEntity.status(HttpStatus.OK).body(dto);
+        }catch (IOException e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("file error");
         } catch (DataNotFoundException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }

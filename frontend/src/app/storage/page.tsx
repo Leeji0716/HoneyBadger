@@ -275,7 +275,7 @@ export default function Home() {
     function UploadImage(type: number) {
         switch (type) {
             case 0: return "/folder.png";
-            case 1: return "/png.png";
+            case 1: return "/png.PNG";
             case 2: return "/video.png";
             case 3: return "/audio.png";
             case 4: return "/compress.png";
@@ -340,9 +340,9 @@ export default function Home() {
                 ascName = '오래된순';
                 break;
         }
-        return <div className={"absolute bg-white top-5 right-0 border-2 w-[120px] h-[84px] flex flex-col text-left" + (descOpen ? '' : ' hidden')}>
-            <label className={"cursor-pointer hover:underline p-2 flex items-center h-[40px]" + (!desc ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setDesc(false); setDescOpen(false); setReload(true); }}>{ascName} {!desc ? <img alt="down" width={20} height={20} src="/downo.png" className="w-[20px] h-[20px] ml-auto" /> : <></>}</label>
-            <label className={"cursor-pointer hover:underline p-2 flex items-center h-[40px]" + (desc ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setDesc(true); setDescOpen(false); setReload(true); }}>{descName} {desc ? <img alt="down" width={20} height={20} src="/downo.png" className="w-[20px] h-[20px] ml-auto" /> : <></>}</label>
+        return <div className={"absolute bg-white top-5 right-0 border-2 w-[10rem] h-[5.25rem] flex flex-col text-left" + (descOpen ? '' : ' hidden')}>
+            <label className={"cursor-pointer hover:underline p-2 flex items-center h-[2.5rem]" + (!desc ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setDesc(false); setDescOpen(false); setReload(true); }}>{ascName} {!desc ? <img alt="down" width={20} height={20} src="/downo.png" className="w-[1.25rem] h-[1.25rem] ml-auto" /> : <></>}</label>
+            <label className={"cursor-pointer hover:underline p-2 flex items-center h-[2.5rem]" + (desc ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setDesc(true); setDescOpen(false); setReload(true); }}>{descName} {desc ? <img alt="down" width={20} height={20} src="/downo.png" className="w-[1.25rem] h-[1.25rem] ml-auto" /> : <></>}</label>
         </div>
     }
     function renew(location: string, page: number, type: number, keyword: string) {
@@ -374,13 +374,13 @@ export default function Home() {
         return <>
             <div className={"flex items-center" + (location == props.url ? ' text-[#8fbee9]' : '')} style={{ paddingLeft: (stack * 7) }}>
                 {folder.child.length > 0 ?
-                    <img alt="right" width={12} height={12} src={folds.includes(props.url) ? "/right.png" : "/down.png"} className="w-[12px] h-[12px] cursor-pointer mr-1" onClick={() => {
+                    <img alt="right" width={12} height={12} src={folds.includes(props.url) ? "/right.png" : "/down.png"} className="w-[0.75rem] h-[0.75rem] cursor-pointer mr-1" onClick={() => {
                         if (folds.includes(props.url))
                             setFolds([...folds.filter(f => f != props.url)])
                         else
                             setFolds([...folds, props.url])
                     }} />
-                    : <p className="w-[12px] h-[12px] mr-1" />
+                    : <p className="w-[0.75rem] h-[0.75rem] mr-1" />
                 }
                 <label className="cursor-pointer hover:underline" onClick={() => renew(props.url, 0, -1, "")}>{folder?.name}</label>
             </div>
@@ -393,13 +393,13 @@ export default function Home() {
         return <div className="flex flex-col mt-2">
             <div className="flex items-center">
                 {props.folderList?.length > 0 ?
-                    <img alt="up/down" width={18} height={18} src={folds.includes(props.name) ? '/right.png' : '/down.png'} className="w-[18px] h-[18px] mr-1 cursor-pointer" onClick={() => {
+                    <img alt="up/down" width={18} height={18} src={folds.includes(props.name) ? '/right.png' : '/down.png'} className="w-[1.125rem] h-[1.125rem] mr-1 cursor-pointer" onClick={() => {
                         if (folds.includes(props.name))
                             setFolds([...folds.filter(f => f != props.name)]);
                         else
                             setFolds([...folds, props.name]);
                     }} />
-                    : <p className="w-[18px] h-[18px] mr-1" />
+                    : <p className="w-[1.125rem] h-[1.125rem] mr-1" />
                 }
                 <label className={"cursor-pointer hover:underline font-bold flex text-lg items-center" + (base == props?.name ? ' text-[#8fbee9]' : '')} onClick={e => {
                     if (base == props.name && (e.target as HTMLElement).tagName == "IMG")
@@ -452,18 +452,18 @@ export default function Home() {
                         <FolderTree name={`전체 ${getRole(user?.role)}`} location={'/api/role/' + getRole(user?.role) + '/storage'} folderList={baseFolders[`${getRole(user?.role)}`]} />
                         : <></>}
 
-                    {/* <label className="cursor-pointer hover:underline pl-[18px] text-lg mt-2 font-bold">사진</label>
-                    <label className="cursor-pointer hover:underline pl-[18px] text-lg mt-2 font-bold">동영상</label>
-                    <label className="cursor-pointer hover:underline pl-[18px] text-lg mt-2 font-bold">음악</label> */}
+                    {/* <label className="cursor-pointer hover:underline pl-[1.125rem] text-lg mt-2 font-bold">사진</label>
+                    <label className="cursor-pointer hover:underline pl-[1.125rem] text-lg mt-2 font-bold">동영상</label>
+                    <label className="cursor-pointer hover:underline pl-[1.125rem] text-lg mt-2 font-bold">음악</label> */}
                 </div>
-                <div className="h-[150px] absolute bottom-0 left-0 w-full mt-auto border flex flex-col items-center p-8">
+                <div className="h-[9.375rem] absolute bottom-0 left-0 w-full mt-auto border flex flex-col items-center p-8">
                     <div className="flex justify-between items-end w-full">
                         <label><label className="text-[#8fbee9]">{CalcSize(used)}</label> / {CalcSize(max)}</label>
                         <label className="text-xs text-gray-500">여유 {CalcSize(max - used)}</label>
                     </div>
                     <input type="range" className={"range range-xs mt-2" + (used / max >= 0.95 ? ' range-error' : used / max >= 0.8 ? ' range-warning' : ' range-info')} defaultValue={used * 1000 / max} min={0} max={1000} disabled />
                     {/* <label className="flex mt-2 self-end items-center"><img alt="trash" width={24}
-                        height={24} src="/trash_can.png" className="w-[24px] h-[24px]" />휴지통</label> */}
+                        height={24} src="/trash_can.png" className="w-[1.5rem] h-[1.5rem]" />휴지통</label> */}
                 </div>
             </div>
         </div>
@@ -476,13 +476,13 @@ export default function Home() {
                             if (str == '')
                                 return;
                             return <div key={index} className="flex items-center">
-                                <img alt="right" width={20} height={20} src="/right.png" className="w-[20px] h-[20px]" />
+                                <img alt="right" width={20} height={20} src="/right.png" className="w-[1.25rem] h-[1.25rem]" />
                                 <label className="flex items-center cursor-pointer hover:underline" onClick={() => renew(baseLocation + location.replaceAll(baseLocation, "").split("/").slice(0, index + 2).join("/"), 0, -1, "")}>{str}</label>
                             </div>
                         })}
                     </div>
 
-                    <div className="border-2 border-gray-500 rounded-lg flex p-2 w-[360px]">
+                    <div className="border-2 border-gray-500 rounded-lg flex p-2 w-[22.5rem]">
                         <input id="file_input" placeholder="검색어.." type="text" className="outline-none text-xs w-full" defaultValue={keyword} onKeyDown={(e) => { if (e.key == "Enter") document.getElementById('file_search')?.click() }} onChange={e => {
                             const x = document.getElementById('file_x');
                             if (e.target.value != "")
@@ -490,11 +490,11 @@ export default function Home() {
                             else
                                 x?.classList?.add('hidden');
                         }} />
-                        <img alt="file_x" width={16} height={16} id="file_x" src="/x.png" className="w-[16px] h-[16px] cursor-pointer hover:border-2 hover:border-gray-400 rounded-lg mr-2 hidden" onClick={e => {
+                        <img alt="file_x" width={16} height={16} id="file_x" src="/x.png" className="w-[1rem] h-[1rem] cursor-pointer hover:border-2 hover:border-gray-400 rounded-lg mr-2 hidden" onClick={e => {
                             (document.getElementById('file_input') as HTMLInputElement).value = "";
                             (e.target as HTMLElement).classList.add('hidden');
                         }} />
-                        <img alt="file_search" width={16} height={16} id="file_search" src="/searchb.png" className="w-[16px] h-[16px] cursor-pointer" onClick={() => {
+                        <img alt="file_search" width={16} height={16} id="file_search" src="/searchb.png" className="w-[1rem] h-[1rem] cursor-pointer" onClick={() => {
                             const value = (document.getElementById('file_input') as HTMLInputElement).value;
                             renew(baseLocation, 0, -1, value);
                         }} />
@@ -508,10 +508,10 @@ export default function Home() {
                             else
                                 setSelect([]);
                         }} />
-                        <img alt="-" width={24} height={24} src="/-.png" className={"w-[24px] h-[24px] mr-2 cursor-pointer" + (selects.length == 0 || selects.length == files.length ? ' hidden' : '')} onClick={() => { setSelect([]); (document.getElementById('all') as HTMLInputElement).checked = false; }} />
+                        <img alt="-" width={24} height={24} src="/-.png" className={"w-[1.5rem] h-[1.5rem] mr-2 cursor-pointer" + (selects.length == 0 || selects.length == files.length ? ' hidden' : '')} onClick={() => { setSelect([]); (document.getElementById('all') as HTMLInputElement).checked = false; }} />
                         <div className="relative">
                             <button className="btn btn-info btn-sm text-white mr-1" onClick={() => { setOpenUpload(!isOpenUpload) }}>올리기</button>
-                            <div className={"absolute border-2 p-2 flex flex-col left-4 top-8 bg-white w-[100px]" + (isOpenUpload ? '' : ' hidden')}>
+                            <div className={"absolute border-2 p-2 flex flex-col left-4 top-8 bg-white w-[6.25rem]" + (isOpenUpload ? '' : ' hidden')}>
                                 <button className="text-sm" onClick={() => document.getElementById('file_upload')?.click()}>파일 올리기</button>
                                 <input id="file_upload" multiple type="file" hidden onChange={e => {
                                     if (!socket.connected) {
@@ -607,7 +607,7 @@ export default function Home() {
                                     e.target.value = '';
                                 }} />
                                 <button className="text-sm" onClick={() => document.getElementById('folder_upload')?.click()}>폴더 올리기</button>
-                                <input id="folder_upload" type="file" hidden webkitdirectory="" onChange={e=>{
+                                <input id="folder_upload" type="file" hidden webkitdirectory="" onChange={e => {
                                     if (!socket.connected) {
                                         window.location.reload();
                                         alert('오류 발생으로 페이지를 새로고칩니다.');
@@ -699,7 +699,7 @@ export default function Home() {
                                         }
                                     }
                                     e.target.value = '';
-                                }}/>
+                                }} />
                             </div>
                         </div>
                         <button className={"btn btn-xs mr-1 hover:underline" + (keyword || selects.length > 0 ? ' hidden' : '')} onClick={() => {
@@ -751,15 +751,15 @@ export default function Home() {
                         {/* <button className={"btn btn-xs mr-1 hover:underline " + (selects.length > 0 ? '' : ' hidden')}><p className="my-auto text-xs h-full">...</p></button> */}
                         <div className="relative">
                             <button className="btn btn-xs hover:underline" onClick={() => setTypeOpen(!typeOpen)}>파일유형</button>
-                            <div className={"absolute top-8 z-[1] border-2 left-0 bg-white w-[150px] h-[220px] p-2 flex flex-col" + (typeOpen ? '' : ' hidden')}>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[25px]" + (type == -1 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(-1); setTypeOpen(false); setPage(0); setReload(true); }}><p className="w-[5px] h-[5px] mr-2" />전체 <img alt="down" width={20} height={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (type == -1 ? '' : ' hidden')} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[25px]" + (type == 0 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(0); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="folder" width={20} height={20} src="/folder.png" className="w-[20px] h-[20px] mr-2" /> 폴더 <img alt="down" width={20} height={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (type == 0 ? '' : ' hidden')} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[25px]" + (type == 1 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(1); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="png" height={20} width={20} src="/png.png" className="w-[20px] h-[20px] mr-2" />이미지 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (type == 1 ? '' : ' hidden')} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[25px]" + (type == 2 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(2); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="video" height={20} width={20} src="/video.png" className="w-[20px] h-[20px] mr-2" />비디오 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (type == 2 ? '' : ' hidden')} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[25px]" + (type == 3 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(3); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="audio" height={20} width={20} src="/audio.png" className="w-[20px] h-[20px] mr-2" />오디오 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (type == 3 ? '' : ' hidden')} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[25px]" + (type == 4 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(4); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="compress" height={20} width={20} src="/compress.png" className="w-[20px] h-[20px] mr-2" />압축 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (type == 4 ? '' : ' hidden')} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[25px]" + (type == 5 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(5); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="document" height={20} width={20} src="/document.png" className="w-[20px] h-[20px] mr-2" />문서 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (type == 5 ? '' : ' hidden')} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[25px]" + (type == 6 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(6); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="etc" height={20} width={20} src="/etc.png" className="w-[20px] h-[20px] mr-2" />기타 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (type == 6 ? '' : ' hidden')} /></label>
+                            <div className={"absolute top-8 z-[1] border-2 left-0 bg-white w-[9.375rem] h-[21.25rem] p-2 flex flex-col" + (typeOpen ? '' : ' hidden')}>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[1.5rem]" + (type == -1 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(-1); setTypeOpen(false); setPage(0); setReload(true); }}><p className="w-[0.32rem] h-[0.32rem] mr-2" />전체 <img alt="down" width={20} height={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (type == -1 ? '' : ' hidden')} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[1.5rem]" + (type == 0 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(0); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="folder" width={20} height={20} src="/folder.png" className="w-[1.25rem] h-[1.25rem] mr-2" /> 폴더 <img alt="down" width={20} height={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (type == 0 ? '' : ' hidden')} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[1.5rem]" + (type == 1 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(1); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="png" height={20} width={20} src="/png.PNG" className="w-[1.25rem] h-[1.25rem] mr-2" />이미지 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (type == 1 ? '' : ' hidden')} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[1.5rem]" + (type == 2 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(2); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="video" height={20} width={20} src="/video.png" className="w-[1.25rem] h-[1.25rem] mr-2" />비디오 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (type == 2 ? '' : ' hidden')} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[1.5rem]" + (type == 3 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(3); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="audio" height={20} width={20} src="/audio.png" className="w-[1.25rem] h-[1.25rem] mr-2" />오디오 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (type == 3 ? '' : ' hidden')} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[1.5rem]" + (type == 4 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(4); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="compress" height={20} width={20} src="/compress.png" className="w-[1.25rem] h-[1.25rem] mr-2" />압축 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (type == 4 ? '' : ' hidden')} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[1.5rem]" + (type == 5 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(5); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="document" height={20} width={20} src="/document.png" className="w-[1.25rem] h-[1.25rem] mr-2" />문서 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (type == 5 ? '' : ' hidden')} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[1.5rem]" + (type == 6 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setType(6); setTypeOpen(false); setPage(0); setReload(true); }}><img alt="etc" height={20} width={20} src="/etc.png" className="w-[1.25rem] h-[1.25rem] mr-2" />기타 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (type == 6 ? '' : ' hidden')} /></label>
                             </div>
                         </div>
                         <label className={"text-xs text-gray-400 ml-1" + (selects.length > 0 ? '' : ' hidden')}><label className="text-[#8fbee9]">{selects.length}</label>개 선택</label>
@@ -768,40 +768,40 @@ export default function Home() {
                         <div className="relative">
                             <button className="text-xs flex mr-2 items-center" onClick={() => { setOrderOpen(!orderOpen); setDescOpen(false) }}>
                                 <Order />
-                                <img alt="down" height={18} width={18} src='/down.png' className={"w-[18px] h-[18px] ml-1" + (orderOpen ? ' hidden' : '')} />
-                                <img alt="up" height={18} width={18} src="/up.png" className={"w-[18px] h-[18px] ml-1" + (orderOpen ? '' : ' hidden')} />
+                                <img alt="down" height={18} width={18} src='/down.png' className={"w-[1.125rem] h-[1.125rem] ml-1" + (orderOpen ? ' hidden' : '')} />
+                                <img alt="up" height={18} width={18} src="/up.png" className={"w-[1.125rem] h-[1.125rem] ml-1" + (orderOpen ? '' : ' hidden')} />
                             </button>
-                            <div className={"absolute bg-white z-[1] top-5 right-0 border-2 w-[120px] h-[204px] flex flex-col text-left" + (orderOpen ? '' : ' hidden')}>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[40px]" + (order == 0 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(0); setOrderOpen(false); setDescOpen(false); setDesc(false); setReload(true); }}>종류 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (order == 0 ? "" : " hidden")} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[40px]" + (order == 1 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(1); setOrderOpen(false); setDescOpen(false); setDesc(false); setReload(true); }}>이름 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (order == 1 ? "" : " hidden")} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[40px]" + (order == 2 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(2); setOrderOpen(false); setDescOpen(false); setDesc(false); setReload(true); }}>크기 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (order == 2 ? "" : " hidden")} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[40px]" + (order == 3 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(3); setOrderOpen(false); setDescOpen(false); setDesc(true); setReload(true); }}>수정한날짜 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (order == 3 ? "" : " hidden")} /></label>
-                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[40px]" + (order == 4 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(4); setOrderOpen(false); setDescOpen(false); setDesc(true); setReload(true); }}>올린날짜 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[20px] h-[20px] ml-auto" + (order == 4 ? "" : " hidden")} /></label>
+                            <div className={"absolute bg-white z-[1] top-5 right-0 border-2 w-[11.25rem] h-[12.75rem] flex flex-col text-left" + (orderOpen ? '' : ' hidden')}>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[2.5rem]" + (order == 0 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(0); setOrderOpen(false); setDescOpen(false); setDesc(false); setReload(true); }}>종류 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (order == 0 ? "" : " hidden")} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[2.5rem]" + (order == 1 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(1); setOrderOpen(false); setDescOpen(false); setDesc(false); setReload(true); }}>이름 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (order == 1 ? "" : " hidden")} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[2.5rem]" + (order == 2 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(2); setOrderOpen(false); setDescOpen(false); setDesc(false); setReload(true); }}>크기 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (order == 2 ? "" : " hidden")} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[2.5rem]" + (order == 3 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(3); setOrderOpen(false); setDescOpen(false); setDesc(true); setReload(true); }}>수정한날짜 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (order == 3 ? "" : " hidden")} /></label>
+                                <label className={"cursor-pointer hover:underline p-2 flex items-center h-[2.5rem]" + (order == 4 ? ' font-bold text-[#8fbee9]' : '')} onClick={() => { setOrder(4); setOrderOpen(false); setDescOpen(false); setDesc(true); setReload(true); }}>올린날짜 <img alt="down" height={20} width={20} src="/downo.png" className={"w-[1.25rem] h-[1.25rem] ml-auto" + (order == 4 ? "" : " hidden")} /></label>
                             </div>
                         </div>
                         {order > 0 && order < 5 ?
                             <div className="relative z-[1]">
                                 <button className="text-xs flex mr-2 items-center" onClick={() => { setOrderOpen(false); setDescOpen(!descOpen); }}>
                                     <Desc />
-                                    <img alt="down" height={20} width={20} src='/down.png' className="w-[18px] h-[18px] ml-1" />
+                                    <img alt="down" height={20} width={20} src='/down.png' className="w-[1.125rem] h-[1.125rem] ml-1" />
                                 </button>
                                 <DescButton />
                             </div>
                             : <></>
                         }
-                        <img alt="list" height={20} width={20} src="/list.png" className={'w-[20px] h-[20px] cursor-pointer mx-2' + (style ? '' : ' hidden')} onClick={() => setStyle(!style)} />
-                        <img alt="listo" height={20} width={20} src="/listo.png" className={'w-[20px] h-[20px] cursor-pointer mx-2' + (style ? ' hidden' : '')} />
-                        <img alt="grid" height={20} width={20} src="/grid.png" className={'w-[20px] h-[20px] cursor-pointer mx-2' + (style ? ' hidden' : '')} onClick={() => setStyle(!style)} />
-                        <img alt="grido" height={20} width={20} src="/grido.png" className={'w-[20px] h-[20px] cursor-pointer mx-2' + (style ? '' : ' hidden')} />
-                        <img alt="exclamation" height={20} width={20} src="/exclamation.png" className={"w-[20px] h-[20px] cursor-pointer mx-2" + (extra ? ' hidden' : '')} onClick={() => setExtra(!extra)} />
-                        <img alt="exclamationo" height={20} width={20} src="/exclamationo.png" className={"w-[20px] h-[20px] cursor-pointer mx-2" + (extra ? '' : ' hidden')} onClick={() => setExtra(!extra)} />
+                        <img alt="list" height={20} width={20} src="/list.png" className={'w-[1.25rem] h-[1.25rem] cursor-pointer mx-2' + (style ? '' : ' hidden')} onClick={() => setStyle(!style)} />
+                        <img alt="listo" height={20} width={20} src="/listo.png" className={'w-[1.25rem] h-[1.25rem] cursor-pointer mx-2' + (style ? ' hidden' : '')} />
+                        <img alt="grid" height={20} width={20} src="/grid.png" className={'w-[1.25rem] h-[1.25rem] cursor-pointer mx-2' + (style ? ' hidden' : '')} onClick={() => setStyle(!style)} />
+                        <img alt="grido" height={20} width={20} src="/grido.png" className={'w-[1.25rem] h-[1.25rem] cursor-pointer mx-2' + (style ? '' : ' hidden')} />
+                        <img alt="exclamation" height={20} width={20} src="/exclamation.png" className={"w-[1.25rem] h-[1.25rem] cursor-pointer mx-2" + (extra ? ' hidden' : '')} onClick={() => setExtra(!extra)} />
+                        <img alt="exclamationo" height={20} width={20} src="/exclamationo.png" className={"w-[1.25rem] h-[1.25rem] cursor-pointer mx-2" + (extra ? '' : ' hidden')} onClick={() => setExtra(!extra)} />
                     </div>
                 </div>
                 <div className="divider"></div>
-                <div className="flex SD:h-[120px] HD:h-[310px] FHD:h-[670px]" onContextMenu={e => e.preventDefault()}>
+                <div className="flex h-[75%]" onContextMenu={e => e.preventDefault()}>
                     {style ? // Icon 형태
                         <div className="overflow-y-auto flex flex-wrap w-full h-full ">
-                            {files?.map((file, index) => <div key={index} className="w-[150px] h-[196px] group cursor-pointer mr-2 mb-2" onMouseDown={e => { if (e.button == 2) e.preventDefault() }} onClick={e => {
+                            {files?.map((file, index) => <div key={index} className="w-[9.375rem] h-[12.25rem] group cursor-pointer mr-2 mb-2" onMouseDown={e => { if (e.button == 2) e.preventDefault() }} onClick={e => {
                                 setDescOpen(false);
                                 setTypeOpen(false);
                                 setOrderOpen(false);
@@ -821,14 +821,14 @@ export default function Home() {
                                     }
                                 }
                             }}>
-                                <div className="checkbox-div w-[150px] h-[150px] relative flex flex-col items-center justify-center rounded-lg group-hover:border-2 border-gray-300" >
+                                <div className="checkbox-div w-[9.375rem] h-[9.375rem] relative flex flex-col items-center justify-center rounded-lg group-hover:border-2 border-gray-300" >
                                     <input type="checkbox" checked={selects.includes(file)} name="check" className="absolute top-2 left-2 checkbox border-0 [--chkbg:#8fbee9] [--chkfg:white] self-start group-hover:border-gray-300 checked:group-hover:border-[#dce2e8] group-hover:border-2 " onChange={() => { }} onClick={e => {
                                         if ((e.target as HTMLInputElement).checked)
                                             setSelect([...selects, file]);
                                         else
                                             setSelect([...selects.filter(f => f.name != file.name)]);
                                     }} />
-                                    <img alt="fileType" height={80} width={80} src={FileTypeImage(file)} className="w-[80px] h-[80px]" />
+                                    <img alt="fileType" height={80} width={80} src={FileTypeImage(file)} className="w-[5rem] h-[5rem]" />
                                 </div>
                                 <div className="my-auto text-center w-full text-sm">{file?.name}</div>
                             </div>)}
@@ -838,20 +838,20 @@ export default function Home() {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th className="w-[30px] min-w-[30px]"></th>
-                                        <th className="w-[44px] min-w-[44px]">종류</th>
+                                        <th className="w-[1.875rem] min-w-[1.875rem]"></th>
+                                        <th className="w-[2.75rem] min-w-[2.75rem]">종류</th>
                                         <th className="w-full text-left">이름</th>
-                                        <th className="w-[100px] min-w-[100px]">크기</th>
-                                        <th className="w-[200px] min-w-[200px] text-right">수정한 날짜</th>
+                                        <th className="w-[6.25rem] min-w-[6.25rem]">크기</th>
+                                        <th className="w-[12.5rem] min-w-[12.5rem] text-right">수정한 날짜</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {files?.map((file, index) => <tr key={index}>
-                                        <td className="w-[30px]">
+                                        <td className="w-[1.875rem]">
                                             <input type="checkbox" name="check" className="checkbox checkbox-sm [--chkbg:#8fbee9] [--chkfg:white] self-start border border-gray-300 checked:hover:border-[#dce2e8] hover:border-2 " />
                                         </td>
                                         <td className="p-2">
-                                            <img alt="filyType" height={28} width={28} src={FileTypeImage(file)} className="w-[28px] h-[28px]" />
+                                            <img alt="filyType" height={28} width={28} src={FileTypeImage(file)} className="w-[1.75rem] h-[1.75rem]" />
                                         </td>
                                         <td>
                                             <label className="cursor-pointer hover:underline" onClick={() => {
@@ -881,34 +881,34 @@ export default function Home() {
 
                     {extra ?
                         selects.length == 0 ?
-                            <div className="flex flex-col w-[280px] min-w-[280px] h-full border-l-2 p-4 items-center justify-center">
+                            <div className="flex flex-col w-[25rem] min-w-[25rem] h-full border-l-2 p-4 items-center justify-center">
                                 <div className="text-center break-keep text-gray-400 text-sm">
                                     원하는 파일, 폴더를 선택하면 이곳에 상세보기가 표시됩니다.
                                 </div>
                             </div>
                             :
-                            <div className="flex flex-col w-[280px] min-w-[280px] h-full border-l-2 p-4">
+                            <div className="flex flex-col w-[25rem] min-w-[25rem] h-full border-l-2 p-4">
                                 <div className="flex">
-                                    <div className="font-bold w-[232px] break-all">{selects[selects.length - 1]?.name}</div>
-                                    <button className="w-[24px] min-w-[24px] h-[24px]" onClick={() => setExtra(false)}><img alt="x" width={24} height={24} src="/x.png" className="w-[24px] h-[24px]" /></button>
+                                    <div className="font-bold w-[14.5rem] break-all">{selects[selects.length - 1]?.name}</div>
+                                    <button className="w-[1.5rem] min-w-[1.5rem] h-[1.5rem]" onClick={() => setExtra(false)}><img alt="x" width={24} height={24} src="/x.png" className="w-[1.5rem] h-[1.5rem]" /></button>
                                 </div>
-                                <div className="p-4 flex w-[246px] h-[246px] items-center justify-center">
-                                    <img alt="fileType" height={150} width={150} src={FileTypeImage(selects[selects.length - 1])} className="w-[150px] h-[150px]" />
+                                <div className="p-4 flex w-[15.375rem] h-[15.375rem] items-center justify-center">
+                                    <img alt="fileType" height={150} width={150} src={FileTypeImage(selects[selects.length - 1])} className="w-[9.375rem] h-[9.375rem]" />
                                 </div>
-                                <div>
+                                <div>1
                                     <table>
                                         <tbody className="text-xs text-left">
                                             <tr>
-                                                <th className="w-[80px] min-w-[80px]">종류</th>
-                                                <td className="w-[166px]">{FileTypeName(selects[selects.length - 1])}</td>
+                                                <th className="w-[5rem] min-w-[5rem]">종류</th>
+                                                <td className="w-[10.375rem]">{FileTypeName(selects[selects.length - 1])}</td>
                                             </tr>
                                             <tr>
                                                 <th>위치</th>
-                                                <td><div className="w-[166px] overflow-ellipsis whitespace-nowrap overflow-hidden">{base}:{location.replaceAll(baseLocation, "")}/</div></td>
+                                                <td><div className="w-[10.375rem] overflow-ellipsis whitespace-nowrap overflow-hidden">{base}:{location.replaceAll(baseLocation, "")}/</div></td>
                                             </tr>
                                             <tr>
                                                 <th>크기</th>
-                                                <td><div className="w-[166px] overflow-ellipsis whitespace-nowrap overflow-hidden">{CalcSize(selects[selects.length - 1].size)}({selects[selects.length - 1].size} bytes)</div></td>
+                                                <td><div className="w-[10.375rem] overflow-ellipsis whitespace-nowrap overflow-hidden">{CalcSize(selects[selects.length - 1].size)}({selects[selects.length - 1].size} bytes)</div></td>
                                             </tr>
                                             <tr>
                                                 <th>올린 날짜</th>
@@ -925,7 +925,7 @@ export default function Home() {
                         :
                         <></>
                     }
-                    <div className={"absolute bottom-8 right-8 flex cursor-pointer justify-between items-center px-4 border-2 bg-[#8fbee9] z-[2] w-[380px] h-[50px]" + (uploads.length > 0 && sendFold ? '' : ' hidden')} onClick={e => {
+                    <div className={"absolute bottom-8 right-8 flex cursor-pointer justify-between items-center px-4 border-2 bg-[#8fbee9] z-[2] w-[35rem] h-[3.125rem]" + (uploads.length > 0 && sendFold ? '' : ' hidden')} onClick={e => {
                         if ((e.target as HTMLElement).id == 'cancel')
                             return;
                         setSendFold(!sendFold);
@@ -951,7 +951,7 @@ export default function Home() {
                         }} >닫기</label>
 
                     </div>
-                    <div className={"absolute bottom-8 right-8 p-4 flex flex-col border-2 bg-white z-[2] w-[380px] h-[400px]" + (uploads.length > 0 && !sendFold ? '' : ' hidden')}>
+                    <div className={"absolute bottom-8 right-8 p-4 flex flex-col border-2 bg-white z-[2] w-[35rem] h-[25rem]" + (uploads.length > 0 && !sendFold ? '' : ' hidden')}>
                         <div className="flex justify-between items-center">
                             <label>
                                 <label className="text-[#8fbee9]">{uploads.filter(f => f.status == 0).length}</label>
@@ -959,8 +959,8 @@ export default function Home() {
                                 <label className="font-bold">{uploads.filter(f => f.status == 1).length > 0 ? '올리는 중' : '완료'}</label>
                             </label>
                             <div className="flex">
-                                <img alt="-" width={16} height={16} src="/-b.png" className="w-[16px] h-[16px] cursor-pointer mr-2" onClick={() => setSendFold(!sendFold)} />
-                                <img alt="large_x" width={16} height={16} src="/large_x.png" className="w-[16px] h-[16px] cursor-pointer" onClick={() => {
+                                <img alt="-" width={16} height={16} src="/-b.png" className="w-[1rem] h-[1rem] cursor-pointer mr-2" onClick={() => setSendFold(!sendFold)} />
+                                <img alt="large_x" width={16} height={16} src="/large_x.png" className="w-[1rem] h-[1rem] cursor-pointer" onClick={() => {
                                     if (uploads.filter(f => f.status == 1).length > 0) {
                                         if (confirm("모든 업로드를 취소하시겠습니까?")) {
                                             // 취소기능
@@ -981,12 +981,12 @@ export default function Home() {
                             {uploads?.map((upload, index) => <div key={index} className="flex flex-col mt-2">
                                 <input key={upload.key} type="range" className={"range range-xs mt-2 mb-1 cursor-default" + (upload.bytes ? (upload.status == 1 ? ' range-success' : (upload.status == 0 ? ' range-info' : ' range-warning')) : '')} value={upload.bytes ? (upload.index * 1000 / upload.totalIndex) : 0} min={0} max={1000} disabled onChange={() => { }} />
                                 <div className="flex">
-                                    <img alt="file" width={32} height={32} src={UploadImage(upload.type)} className="w-[32px] h-[32px] mr-2" />
-                                    <div className="flex flex-col text-xs w-[327px]">
-                                        <div className={"w-[260px] whitespace-nowrap overflow-ellipsis overflow-hidden" + (upload.status == -1 ? ' line-through' : '')}>{upload.name}</div>
-                                        <div className={"w-[260px] " + (upload.status == -1 ? ' line-through' : '')}>{upload.bytes ? `${CalcSize(upload.bytes.length)} ${base}:${upload.location}` : '파일 불러오는중'}</div>
+                                    <img alt="file" width={32} height={32} src={UploadImage(upload.type)} className="w-[2rem] h-[2rem] mr-2" />
+                                    <div className="flex flex-col text-xs w-[20.4rem]">
+                                        <div className={"w-[16.25rem] whitespace-nowrap overflow-ellipsis overflow-hidden" + (upload.status == -1 ? ' line-through' : '')}>{upload.name}</div>
+                                        <div className={"w-[16.25rem] " + (upload.status == -1 ? ' line-through' : '')}>{upload.bytes ? `${CalcSize(upload.bytes.length)} ${base}:${upload.location}` : '파일 불러오는중'}</div>
                                     </div>
-                                    <img alt="cancel" height={16} width={16} src="/large_x.png" className="w-[16px] min-w-[16px] h-[16px] min-h-[16px] cursor-pointer" hidden={upload.status != 1} onClick={() => {
+                                    <img alt="cancel" height={16} width={16} src="/large_x.png" className="w-[1rem] min-w-[1rem] h-[1rem] min-h-[1rem] cursor-pointer" hidden={upload.status != 1} onClick={() => {
                                         upload.status = -1;
                                         cancelUpload({ Location: upload.url, Name: upload.name, Key: upload.key });
                                     }} />
@@ -996,8 +996,8 @@ export default function Home() {
                     </div>
                 </div>
                 {uploadConfirm.length > 0 ?
-                    <div style={{ zIndex: 100 }} className={"fixed top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-0 bg-white w-[360px] h-[360px] border-2 p-4 flex flex-col"}>
-                        <img src="/large_x.png" className="w-[16px] h-[16px] self-end cursor-pointer" onClick={() => {
+                    <div style={{ zIndex: 100 }} className={"fixed top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-0 bg-white w-[22.5rem] h-[22.5rem] border-2 p-4 flex flex-col"}>
+                        <img src="/large_x.png" className="w-[1rem] h-[1rem] self-end cursor-pointer" onClick={() => {
                             const confirm = uploadConfirm[uploadConfirm.length - 1];
                             if (confirm.upload) {
                                 confirm.upload.status = -1;
@@ -1006,7 +1006,7 @@ export default function Home() {
                             confirmRef.current = confirmRef.current.filter(f => f != confirm);
                             setUploadConfirm([...confirmRef.current]);
                         }} />
-                        <img src="/exclamation.png" className="w-[100px] h-[100px] self-center p-4" />
+                        <img src="/exclamation.png" className="w-[6.25rem] h-[6.25rem] self-center p-4" />
                         <label className="self-center font-bold text-sm pt-2">이 위치에 같은 이름의 파일이 이미있습니다.</label>
                         <label className="self-center font-bold text-sm pb-2">기존 파일을 덮어 쓰시겠습니까?</label>
                         <div className="flex flex-col p-4">
@@ -1075,13 +1075,13 @@ export default function Home() {
                     : <></>}
 
                 {maxPage > 1 ?
-                    < div className="flex justify-center items-center absolute bottom-0 left-0 w-full h-[45px]">
-                        <img alt="lleft" height={16} width={16} src={page > 0 ? "/lleft.png" : "/lleftg.png"} className={"w-[16px] h-[16px]" + (page > 0 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
+                    < div className="flex justify-center items-center absolute bottom-0 left-0 w-full pb-4">
+                        <img alt="lleft" height={16} width={16} src={page > 0 ? "/lleft.png" : "/lleftg.png"} className={"w-[1rem] h-[1rem]" + (page > 0 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
                             const now = Math.max(0, page - (page % 10) - 1);
                             setFiles([]);
                             renew(location, now, type, keyword);
                         }} />
-                        <img alt="left" height={16} width={16} src={page > 0 ? "/left.png" : "/leftg.png"} className={"w-[16px] h-[16px]" + (page > 0 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
+                        <img alt="left" height={16} width={16} src={page > 0 ? "/left.png" : "/leftg.png"} className={"w-[1rem] h-[1rem]" + (page > 0 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
                             const now = Math.max(0, page - 1);
                             setFiles([]);
                             renew(location, now, type, keyword);
@@ -1095,12 +1095,12 @@ export default function Home() {
                                 renew(location, now, type, keyword);
                             }}>{now + 1}</button>;
                         })}
-                        <img alt="right" height={16} width={16} src={page < maxPage - 1 ? "/right.png" : "/rightg.png"} className={"w-[16px] h-[16px]" + (page < maxPage - 1 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
+                        <img alt="right" height={16} width={16} src={page < maxPage - 1 ? "/right.png" : "/rightg.png"} className={"w-[1rem] h-[1rem]" + (page < maxPage - 1 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
                             const now = Math.min(maxPage - 1, page + 1);
                             setFiles([]);
                             renew(location, now, type, keyword);
                         }} />
-                        <img alt="rright" height={16} width={16} src={page < maxPage - 1 ? "/rright.png" : "/rrightg.png"} className={"w-[16px] h-[16px]" + (page < maxPage - 1 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
+                        <img alt="rright" height={16} width={16} src={page < maxPage - 1 ? "/rright.png" : "/rrightg.png"} className={"w-[1rem] h-[1rem]" + (page < maxPage - 1 ? ' cursor-pointer hover:bg-gray-300 rounded-full' : '')} onClick={() => {
                             const now = Math.min(maxPage - 1, (page - page % 10) + 10);
                             setFiles([]);
                             renew(location, now, type, keyword);

@@ -345,10 +345,31 @@ export function getFileIcon(fileName: string) {
 }
 
 // 파일 이름 자르기
-export function sliceText (text: string) {
+export function sliceText(text: string) {
     const extensionIndex = text.lastIndexOf('.');
     const name = extensionIndex !== -1 ? text.slice(0, extensionIndex) : text;
     const extension = extensionIndex !== -1 ? text.slice(extensionIndex) : '';
     return name.length > 8 ? name.slice(0, 15) + '...' + extension : text;
 }
 
+export function timeToString(time: number) {
+    time = time / 1000;
+    if (time < 60) {
+        return Math.floor(time) + " 초";
+    } else if (time < 60 * 60) {
+        const minutes = time / 60;
+        const seconds = time % 60;
+        return Math.floor(minutes) + " 분 " + Math.floor(seconds) +  " 초";
+    } else if (time < 60 * 60 * 24) {
+        const hours = time / (60 * 60);
+        const minutes = (time % (60 * 60)) / 60;
+        const seconds = time % 60;
+        return Math.floor(hours) + " 시간 " + Math.floor(minutes) + " 분 " + Math.floor(seconds) + " 초";
+    } else {
+        const days = time / (60 * 60 * 24);
+        const hours = (time % (60 * 60 * 24)) / (60 * 60);
+        const minutes = (time % (60 * 60)) / 60;
+        const seconds = time % 60;
+        return Math.floor(days).toLocaleString('ko-kr', { maximumFractionDigits: 0 }) + " 일 " + Math.floor(hours) + " 시간 " + Math.floor(minutes) + " 분 " + Math.floor(seconds) + " 초";
+    }
+}

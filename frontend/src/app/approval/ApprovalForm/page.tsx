@@ -71,17 +71,19 @@ export default function Approval() {
     // 승인 유저 dropdown으로 선택하기
     function SelectApprover({ index, modal, id }: { index: number, modal: any, id: string }) {
         return <>
-            {getSpecificApprover(index) == null ? "선택" : ""}
+            {getSpecificApprover(index) == null ? <label className="cursor-pointer hover:underline">선택</label> : <></>}
             <DropDown
                 open={modal}
                 onClose={() => setSettingOpen(false)}
-                children={renderUserList(index)}
-                className={"h-[300px] overflow-y-scroll bg-white"}
+
+                className={"h-[18.75rem] overflow-y-scroll bg-white"}
                 width={200}
                 height={100}
                 defaultDriection={Direcion.DOWN}
                 button={id}
-            />
+            >
+                {renderUserList(index)}
+            </DropDown>
         </>
     }
 
@@ -210,23 +212,24 @@ export default function Approval() {
                 const approvalRequest: approvalRequestDTO = { title: title, content: content, sender: user.username, approversname: finalApprover, viewersname: viewer };
                 const form = new FormData();
                 fileList.forEach(file => form.append('attachments', file));
-                if(fileList.length == 0){
-                    createApproval(approvalRequest).then(r => window.location.href="/approval").catch(e => console.log(e));
-                }else{  
+                if (fileList.length == 0) {
+                    createApproval(approvalRequest).then(r => window.location.href = "/approval").catch(e => console.log(e));
+                } else {
                     createApproval(approvalRequest)
-                    .then(response => {
-                        return approvalFiles({ attachments: form, approvalId: response.id })
-                            .then((r) => {
-                                console.log(r);
-                                window.location.href = "/approval";
-                            })
-                            .catch(error => {
-                                console.error("파일 에러", error);
-                            });
-                    })
-                    .catch(error => {
-                        console.error("An error occurred in createApproval:", error);
-                    });}
+                        .then(response => {
+                            return approvalFiles({ attachments: form, approvalId: response.id })
+                                .then((r) => {
+                                    console.log(r);
+                                    window.location.href = "/approval";
+                                })
+                                .catch(error => {
+                                    console.error("파일 에러", error);
+                                });
+                        })
+                        .catch(error => {
+                            console.error("An error occurred in createApproval:", error);
+                        });
+                }
             }
         } else {
             console.error("제목이나 승인자가 없습니다.");
@@ -238,34 +241,36 @@ export default function Approval() {
     return <Main user={user} isClientLoading={isClientLoading}>
         <div className="w-full flex items-center justify-center h-full pt-10 pb-4">
             <div className="w-11/12 h-full bg-white shadow flex flex-col justify-center items-center gap-2 ">
-                <h1 className="font-bold text-2xl flex items-center h-[50px]">결재 작성</h1>
+                <div className="flex justify-center items-center w-full relative">
+                    <h1 className="font-bold text-2xl flex items-center h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem]">결재 작성</h1>
+                    <a href="#" className="right-16 absolute self-end text-white btn btn-sm official-color w-[6.25rem] h-[1.875rem]" onClick={() => handleCreateApproval()}>보내기</a>
+                </div>
                 <div className="w-11/12 h-[90%]">
-                    <div className="flex flex-row justify-end">
-                        <a href="#" className="btn official-color w-[100px] h-[30px]" onClick={() => handleCreateApproval()}>보내기</a>
-                    </div>
+
+
                     {/* 작성자 및 결재 승인자 정보 */}
                     <div className="flex flex-wrap w-full">
                         {/* 작성자 정보 */}
-                        <div className="w-[20%] h-[200px] border-2 border-red-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300">
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-2 border-red-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300">
                                 <label htmlFor="senderDepartment" className="w-[50%] flex justify-center items-center border-r-2 border-gray-300">기안부서</label>
                                 <div className="w-[50%] flex justify-center items-center">
                                     <p id="senderDepartment">{user?.department?.name ? user?.department?.name : "미할당"}</p>
                                 </div>
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300">
                                 <label htmlFor="senderName" className="w-[50%] flex justify-center items-center border-r-2 border-gray-300">기안자</label>
                                 <div className="w-[50%] flex justify-center items-center">
                                     <p id="senderName">{user?.name}</p>
                                 </div>
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300">
                                 <label htmlFor="senderRole" className="w-[50%] flex justify-center items-center border-r-2 border-gray-300">직책</label>
                                 <div className="w-[50%] flex justify-center items-center">
                                     <p id="senderRole">{getRole(user?.role)}</p>
                                 </div>
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300">
                                 <label htmlFor="sendDate" className="w-[50%] flex justify-center items-center border-r-2 border-gray-300">기안일</label>
                                 <div className="w-[50%] flex justify-center items-center">
                                     <p id="sendDate">{nowDate}</p>
@@ -274,118 +279,118 @@ export default function Approval() {
                         </div>
 
                         {/* 결재 승인자 정보 */}
-                        <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-t-2 border-r-2 border-b border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(0)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(0)}>
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center cursor-pointer hover:line-through hover:font-bold" onClick={() => handleIndexChange(0)}>
                                 {getSpecificApprover(0)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectZero"
+                            <div className="w-full h-[6.25rem] HD:h-[5rem] SD:h-[4rem] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectZero"
                                 onClick={() => setZeroOpen(!zeroOpen)}>
                                 <SelectApprover index={0} modal={zeroOpen} id={"selectZero"} />
                             </div>
                         </div>
 
-                        <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-t-2 border-r-2 border-b border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(1)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(1)}>
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center cursor-pointer hover:line-through hover:font-bold" onClick={() => handleIndexChange(1)}>
                                 {getSpecificApprover(1)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectOne"
+                            <div className="w-full h-[6.25rem] HD:h-[5rem] SD:h-[4rem] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectOne"
                                 onClick={() => setOneOpen(!oneOpen)}>
                                 <SelectApprover index={1} modal={oneOpen} id={"selectOne"} />
                             </div>
                         </div>
 
-                        <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-t-2 border-r-2 border-b border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(2)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(2)}>
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center cursor-pointer hover:line-through hover:font-bold" onClick={() => handleIndexChange(2)}>
                                 {getSpecificApprover(2)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectTwo"
+                            <div className="w-full h-[6.25rem] HD:h-[5rem] SD:h-[4rem] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectTwo"
                                 onClick={() => setTwoOpen(!twoOpen)}>
                                 <SelectApprover index={2} modal={twoOpen} id={"selectTwo"} />
                             </div>
                         </div>
 
-                        <div className="w-[20%] h-[200px] border-t-2 border-r-2 border-b border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-t-2 border-r-2 border-b border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(3)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(3)}>
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center cursor-pointer hover:line-through hover:font-bold" onClick={() => handleIndexChange(3)}>
                                 {getSpecificApprover(3)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectThree"
+                            <div className="w-full h-[6.25rem] HD:h-[5rem] SD:h-[4rem] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectThree"
                                 onClick={() => setThreeOpen(!threeOpen)}>
                                 <SelectApprover index={3} modal={threeOpen} id={"selectThree"} />
                             </div>
                         </div>
 
-                        <div className="w-[20%] h-[200px] border-l-2 border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" >
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-l-2 border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center" >
                                 {getRole(getSpecificApprover(4)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(4)}>
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center cursor-pointer hover:line-through hover:font-bold" onClick={() => handleIndexChange(4)}>
                                 {getSpecificApprover(4)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectFour"
+                            <div className="w-full h-[6.25rem] HD:h-[5rem] SD:h-[4rem] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectFour"
                                 onClick={() => setFourOpen(!fourOpen)}>
                                 <SelectApprover index={4} modal={fourOpen} id={"selectFour"} />
                             </div>
                         </div>
 
-                        <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(5)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(5)}>
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center cursor-pointer hover:line-through hover:font-bold" onClick={() => handleIndexChange(5)}>
                                 {getSpecificApprover(5)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectFive"
+                            <div className="w-full h-[6.25rem] HD:h-[5rem] SD:h-[4rem] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectFive"
                                 onClick={() => setFiveOpen(!fiveOpen)}>
                                 <SelectApprover index={5} modal={fiveOpen} id={"selectFive"} />
                             </div>
                         </div>
 
-                        <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(6)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(6)}>
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center cursor-pointer hover:line-through hover:font-bold" onClick={() => handleIndexChange(6)}>
                                 {getSpecificApprover(6)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectSix"
+                            <div className="w-full h-[6.25rem] HD:h-[5rem] SD:h-[4rem] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectSix"
                                 onClick={() => setSixOpen(!sixOpen)}>
                                 <SelectApprover index={6} modal={sixOpen} id={"selectSix"} />
                             </div>
                         </div>
 
-                        <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(7)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(7)}>
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center cursor-pointer hover:line-through hover:font-bold" onClick={() => handleIndexChange(7)}>
                                 {getSpecificApprover(7)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectSeven"
+                            <div className="w-full h-[6.25rem] HD:h-[5rem] SD:h-[4rem] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectSeven"
                                 onClick={() => setSevenOpen(!sevenOpen)}>
                                 <SelectApprover index={7} modal={sevenOpen} id={"selectSeven"} />
                             </div>
                         </div>
 
-                        <div className="w-[20%] h-[200px] border-r-2 border-b-2 border-gray-300">
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center">
+                        <div className="w-[20%] h-[12.5rem] HD:h-[10rem] SD:h-[8rem] border-r-2 border-b-2 border-gray-300">
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center">
                                 {getRole(getSpecificApprover(8)?.role)}
                             </div>
-                            <div className="w-full h-[50px] flex border-b-2 border-gray-300 justify-center items-center" onClick={() => handleIndexChange(8)}>
+                            <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex border-b-2 border-gray-300 justify-center items-center cursor-pointer hover:line-through hover:font-bold" onClick={() => handleIndexChange(8)}>
                                 {getSpecificApprover(8)?.name}
                             </div>
-                            <div className="w-full h-[100px] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectEight"
+                            <div className="w-full h-[6.25rem] HD:h-[5rem] SD:h-[4rem] flex border-b-2 border-gray-300 justify-center items-center text-gray-500" id="selectEight"
                                 onClick={() => setEightOpen(!eightOpen)}>
                                 <SelectApprover index={8} modal={eightOpen} id={"selectEight"} />
                             </div>
@@ -394,36 +399,38 @@ export default function Approval() {
 
                     {/* 제목 & 내용 & 참조인 */}
                     <>
-                        <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
+                        <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex flex-row justify-center border-b-2 border-gray-300">
                             <label htmlFor="title" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">제목</label>
                             <input type="text" id="title" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="제목을 입력해주세요."
                                 defaultValue={title} onChange={(e) => { setTitle(e.target.value); }} />
                         </div>
-                        <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
+                        <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex flex-row justify-center border-b-2 border-gray-300">
                             <label htmlFor="content" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">내용</label>
                             <input type="text" id="content" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="내용을 입력해주세요."
                                 defaultValue={content} onChange={(e) => { setContent(e.target.value); }} />
                         </div>
-                        <div className="w-full h-[50px] flex flex-row justify-center border-b-2 border-gray-300">
+                        <div className="w-full h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem] flex flex-row justify-center border-b-2 border-gray-300">
                             <label htmlFor="selectViewer" className="w-[10%] flex justify-center items-center border-r-2 border-l-2 border-gray-300">참조인</label>
                             <input type="text" id="selectViewer" className="w-[90%] border-r-2 border-gray-300 pl-5" placeholder="참조인을 선택해주세요."
                                 value={selectedViewersText} onClick={() => setSettingOpen(!settingOpen)} onChange={(e) => handleInputChange(e)} />
                             <DropDown
                                 open={settingOpen}
                                 onClose={() => setSettingOpen(false)}
-                                children={renderUsersList()}
-                                className={"w-full h-[300px] overflow-y-scroll"}
+
+                                className={"w-full h-[18.75rem] overflow-y-scroll"}
                                 width={200}
                                 height={100}
                                 defaultDriection={Direcion.DOWN}
                                 button={"selectViewer"}
-                            />
+                            >
+                                {renderUsersList()}
+                            </DropDown>
                         </div>
                     </>
 
                     {/* 파일 */}
                     <>
-                        <div className="flex w-[1400px] gap-5">
+                        <div className="flex w-[87.5rem] gap-5">
                             <input id="file" hidden type="file" multiple className="border-b-2" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                                 if (event.target.files) {
                                     const filesArray = Array.from(event.target.files);
@@ -431,19 +438,19 @@ export default function Approval() {
                                 }
                             }} />
                         </div>
-                        <div className="w-full h-[170px] border border-gray-300 border-r-2 border-l-2 border-b-2 border-gray-300 flex flex-col flex-wrap overflow-x-scroll relative">
-                            <img src="/plus.png" alt="" className="w-[30px] h-[30px] fixed bottom-12 right-40 cursor-pointer"
+                        <div className="w-full h-[21%] border border-gray-300 border-r-2 border-l-2 border-b-2 border-gray-300 flex flex-col flex-wrap overflow-x-scroll relative">
+                            <img src="/plus.png" alt="" className="w-[1.875rem] h-[1.875rem] fixed bottom-12 right-40 cursor-pointer"
                                 onClick={() => document.getElementById('file')?.click()}></img>
                             {fileList.length !== 0 && fileList.map((f: File, index: number) => (
                                 <ul key={index}>
-                                    <div className="flex items-center bg-white p-2 w-[500px]">
-                                        <img src="/x.png" alt="" className="mr-2 w-[26px] h-[31px] cursor-pointer"
+                                    <div className="flex items-center bg-white p-2 w-[31.25rem]">
+                                        <img src="/x.png" alt="" className="mr-2 w-[1.625rem] h-[1.9375rem] cursor-pointer"
                                             onClick={() => {
                                                 const removeFile = [...fileList];
                                                 removeFile.splice(index, 1);
                                                 setFileList(removeFile);
                                             }}></img>
-                                        <img src={getFileIcon(f.name)} className="w-[26px] h-[31px] mr-2" alt="" />
+                                        <img src={getFileIcon(f.name)} className="w-[1.625rem] h-[1.9375rem] mr-2" alt="" />
                                         <p>{sliceText(f.name)}</p>
                                     </div>
                                 </ul>

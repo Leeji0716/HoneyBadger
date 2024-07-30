@@ -1525,13 +1525,13 @@ public class MultiService {
             case 2:
                 List<String> teamName = teamPeopleService.findMyTeamNameList(user);
                 List<CycleTag> cycleTagListTC = new ArrayList<>();
-                if(teamName.isEmpty())
+                if (teamName.isEmpty())
                     return new ArrayList<>();
-                for(String name : teamName){
+                for (String name : teamName) {
                     List<CycleTag> teamCycle = cycleTagService.myTag(KeyPreset.TC.getValue(name));
                     cycleTagListTC.addAll(teamCycle);
                 }
-                if(cycleTagListTC.isEmpty())
+                if (cycleTagListTC.isEmpty())
                     return new ArrayList<>();
                 return cycleTagListTC.stream().map(this::getTagDto).toList();
             default:
@@ -1757,8 +1757,8 @@ public class MultiService {
     }
 
 
-    public ApprovalResponseDTO acceptApprover(Long approvalId, String username, Boolean Binary) throws NotAllowedException{
-        Approval approval = approvalService.get (approvalId);
+    public ApprovalResponseDTO acceptApprover(Long approvalId, String username, Boolean Binary) throws NotAllowedException {
+        Approval approval = approvalService.get(approvalId);
         List<Approver> approvers = approval.getApprovers();
         int index = -1;
         for (int i = 0; i < approvers.size(); i++) {
@@ -1797,23 +1797,23 @@ public class MultiService {
 
 
     public Page<ApprovalResponseDTO> getApprovalList(String username, String keyword, int page) {
-        Pageable pageable = PageRequest.of (page,20);
-        Page<Approval> approvalList = approvalService.getList (username,keyword,pageable);
+        Pageable pageable = PageRequest.of(page, 20);
+        Page<Approval> approvalList = approvalService.getList(username, keyword, pageable);
 
-        List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<> ();
+        List<ApprovalResponseDTO> approvalResponseDTOS = new ArrayList<>();
         for (Approval approval : approvalList) {
             ApprovalResponseDTO approvalResponseDTO = getApproval(approval);
             approvalResponseDTOS.add(approvalResponseDTO);
         }
 
-        return new PageImpl<> (approvalResponseDTOS, pageable, approvalList.getTotalElements ());
+        return new PageImpl<>(approvalResponseDTOS, pageable, approvalList.getTotalElements());
     }
 
-    public ApprovalResponseDTO addViewer(Long approvalId, ApprovalRequestDTO approvalRequestDTO, String username) throws NotAllowedException{
+    public ApprovalResponseDTO addViewer(Long approvalId, ApprovalRequestDTO approvalRequestDTO, String username) throws NotAllowedException {
 
         Approval approval = approvalService.get(approvalId);
 
-        if(!approval.getSender ().getUsername().equals (username)) throw new NotAllowedException ("생성자만 수정 가능합니다.");
+        if (!approval.getSender().getUsername().equals(username)) throw new NotAllowedException("생성자만 수정 가능합니다.");
 
         List<Viewer> currentViewers = approval.getViewers();
         Set<String> currentViewerUsernames = currentViewers.stream()
@@ -1894,10 +1894,10 @@ public class MultiService {
         return transferFileToDTO(file);
     }
 
-    public List<FolderResponseDTO> getFileFolders(String location) {
+    public List<FolderResponseDTO> getFileFolders(String location) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         File file = new File(path + location);
-        if (!file.exists()) throw new DataNotFoundException("file not found");
+        if (file.exists()) file.createNewFile();
         List<FolderResponseDTO> list = new ArrayList<>();
         if (file.isDirectory()) for (File child : file.listFiles())
             if (child.isDirectory()) list.add(transferFolderToDTO(child));
@@ -1977,7 +1977,7 @@ public class MultiService {
     public FileUploadResponseDTO saveFile(String username, FileUploadRequestDTO uploadDTO) throws IOException, NotAllowedException {
         SiteUser user = userService.get(username);
         String base = uploadDTO.baseLocation();
-        if (!base.equals("/api/user/admin/storage") && (user.getDepartment() == null || (!base.equals("/api/department/" + user.getDepartment().getName() + "/storage") && (user.getRole() == null || !base.equals("/api/department/" + user.getDepartment().getName() + "/role/" + user.getRole().getName() + "/storage")))) && (user.getRole() == null || !base.equals("/api/role/" + user.getRole().getName() + "/storage")))
+        if (!base.equals("/api/user/" + username + "/storage") && (user.getDepartment() == null || (!base.equals("/api/department/" + user.getDepartment().getName() + "/storage") && (user.getRole() == null || !base.equals("/api/department/" + user.getDepartment().getName() + "/role/" + user.getRole().getName() + "/storage")))) && (user.getRole() == null || !base.equals("/api/role/" + user.getRole().getName() + "/storage")))
             throw new NotAllowedException("not allowed location");
 
         if (!dataStack.containsKey(username)) dataStack.put(username, new HashMap<>());
