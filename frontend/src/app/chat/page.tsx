@@ -123,9 +123,16 @@ export default function Chat() {
     const [updateSub, setUpdateSub] = useState<any>(null);
     const [editingReservations, setEditingReservations] = useState({});
     const [editingContents, setEditingContents] = useState({});
+    const addUsersInputRef = useRef<HTMLInputElement | null>(null);
+    const [showNotification, setShowNotification] = useState(false);
+    const toggleNotification = () => {
+        setShowNotification(!showNotification);
+    };
+
 
 
     function handleOpenModal() {
+        addUsersInputRef.current?.focus();
         setIsModalOpen(true);
     }
 
@@ -215,36 +222,26 @@ export default function Chat() {
     }, [tempChatroom])
 
     useEffect(() => {
-        // console.log("이펙트");
-        // console.log(updateMessageList);
-
         if (updateMessageList) {
             const beforeMessageList = [...messageList];
 
-            // console.log("이전 메세지");
-            // console.log(beforeMessageList);
 
             updateMessageList.forEach((updateItem) => { //업데이트 메세지 돌리기
                 const index = beforeMessageList.findIndex(msgItem => msgItem.id === updateItem.id); //업데이트 범위 시작 인덱스 찾기
 
-                console.log(index);
-                console.log(updateItem);
-                if (index !== -1) {
-                    beforeMessageList[index] = updateItem;
-                    // console.log(`메시지 업데이트됨: ${updateItem.id}`);
-                    // console.log(beforeMessageList[index]);
-                }
 
                 // if (index !== -1) {
                 //     beforeMessageList[index] = updateItem;
-                //     console.log(`메시지 업데이트됨: ${updateItem.id}`);}
-                // } else {
-                //     beforeMessageList.push(updateItem);
-                //     console.log(`새 메시지 추가됨: ${updateItem.id}`);
+                //     console.log(`메시지 업데이트됨: ${updateItem.id}`);
+                //     console.log(beforeMessageList[index]);
                 // }
-            });
-            // console.log(beforeMessageList);
 
+                if (index !== -1) {
+                    beforeMessageList[index] = updateItem;
+                } else {
+                    beforeMessageList.push(updateItem);
+                }
+            });
             setMessageList(beforeMessageList);
         }
     }, [updateMessageList]);
@@ -253,10 +250,9 @@ export default function Chat() {
     useEffect(() => {
         if (temp) {
             const test: messageResponseDTO[] = [...messageList];
-
             test.push(temp);
 
-            setMessageList(test); updateMessageList
+            setMessageList(test);
 
             setTemp(null);
         }
@@ -277,7 +273,7 @@ export default function Chat() {
     }, []);
 
     const unsubscribe = () => {
-        unsubscribeChatroom(user.username).then(r => console.log(r));
+        unsubscribeChatroom(user.username);
     }
 
     useEffect(() => {
@@ -295,9 +291,6 @@ export default function Chat() {
         if (isModalOpen5) {
             getMessageReservationList(page)
                 .then(r => {
-                    console.log("asdsss");
-                    console.log(r);
-                    console.log(getChatDateTimeFormat(1722235002641));
                     if (Array.isArray(r.content)) {
                         setReservationMessageList(r.content);
                     } else {
@@ -413,6 +406,8 @@ export default function Chat() {
                     setIsModalOpen2(false);
                     setSelectedUsers(new Set());
                     setChatroomName('');
+                    setMessageList([]);
+                    getChat(keyword, page).then(r => { setChatrooms(r.content); setMaxPage(r.totalPages); }).catch(e => console.log(e));
                 })
                 .catch(e => {
                     // 채팅방 생성 실패 시 콘솔에 오류 출력
@@ -435,7 +430,7 @@ export default function Chat() {
     const handleUserSearch = () => {
         setPage(0);
         setSize(10);
-        searchUsers(userKeyword, page,size).then(r => {
+        searchUsers(userKeyword, page, size).then(r => {
             setSearchedUsers(r.content);
         }).catch(error => {
             console.error("Search error:", error);
@@ -492,35 +487,23 @@ export default function Chat() {
                 if (Chatroom) {
                     setPage(0);
                     nowPage = 0;
-                    console.log('unsub');
                     if (messageSub) {
                         socket.unsubscribe(messageSub.id)
-                        console.log(messageSub.id);
                     }
                     if (readSub) {
                         socket.unsubscribe(readSub.id);
-                        console.log(readSub.id);
                     }
 
                     if (updateSub) {
                         socket.unsubscribe(updateSub.id);
-                        console.log(updateSub.id);
                     }
                 }
                 setChatroom(Chatroom);
 
 
                 getChatDetail(Chatroom?.id, nowPage).then(r => {
-                    console.log("---------------->123");
-                    socket.publish({
-                        destination: "/api/pub/check/" + Chatroom?.id,
-                        body: JSON.stringify({ username: user?.username })
-
-                    });
-
                     setMessageList([...r.content].reverse());
                     setMaxPage(r.totalPages);
-
                     // url 통해서 messageList 요청 -> 요청().then(r=> setMessageList(r)).catch(e=>console.log(e));
                     const messageSub = socket.subscribe("/api/sub/message/" + Chatroom?.id, (e: any) => {
                         const message = JSON.parse(e.body).body;
@@ -532,44 +515,34 @@ export default function Chat() {
 
                         // }));
 
+                        socket.publish({
+                            destination: "/api/pub/check/" + Chatroom?.id,
+                            body: JSON.stringify({ username: user?.username })
 
-                        // console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!server!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        // 서버로 메시지 전송
-                        // socket.publish({
-                        //     destination: '/api/pub/read/' + Chatroom.id,
-                        //     body: JSON.stringify({ username: user?.username })
-                        // });
+                        });
+
+                        socket.publish({
+                            destination: "/api/pub/updateChatroom/" + Chatroom?.id,
+                            body: JSON.stringify({ username: user?.username })
+                        });
+
+                        const readSub = socket.subscribe("/api/sub/check/" + Chatroom?.id, (e: any) => {
+                            const data = JSON.parse(e.body);
+
+                        }, JSON.stringify({ username: user?.username }));
+                        //들어오자마자 읽고 바꾸기
+                        getUpdateMessageList(Chatroom?.id).then((r => {
+                            setUpdateMessageList(r);
+                        }));
 
 
-                        // 메시지 수신
-                        // socket.subscribe('/topic/messages', (data:string) => {
-                        //     const usernames = JSON.parse(data);
-                        //     console.log('Received usernames:', usernames);
-                        // });
 
                     });
 
-                    socket.publish({
-                        destination: "/api/pub/updateChatroom/" + Chatroom?.id,
-                        body: JSON.stringify({ username: user?.username })
-                    });
+
 
                     setMessageSub(messageSub);
 
-                    const readSub = socket.subscribe("/api/sub/check/" + Chatroom?.id, (e: any) => {
-                        const data = JSON.parse(e.body);
-                        console.log("sub/check");
-                        console.log(data);
-
-                    }, JSON.stringify({ username: user?.username }));
-                    //들어오자마자 읽고 바꾸기
-                    getUpdateMessageList(Chatroom?.id).then((r => {
-                        setUpdateMessageList(r);
-                        console.log("들어오자마자 읽고 바꾸기");
-                        console.log(updateMessageList);
-                        console.log(r);
-                        console.log("=======================================");
-                    }));
 
                     setReadSub(readSub);
 
@@ -579,7 +552,6 @@ export default function Chat() {
                 const updateSub1 = socket.subscribe("/api/sub/updateChatroom/" + Chatroom?.id, (e: any) => {
                     const data = JSON.parse(e.body);
                     setTempChatroom(data.body);
-                    console.log(data.body);
                 }, JSON.stringify({ username: user?.username }));
                 setUpdateSub(updateSub1);
 
@@ -607,11 +579,11 @@ export default function Chat() {
                         Chatroom?.latestMessage?.messageType === 0 ? (
                             <div>{Chatroom?.latestMessage?.message}</div>
                         ) : Chatroom?.latestMessage?.messageType === 1 ? (
-                            <p>사진을 보냈습니다.</p>
+                            <div>사진을 보냈습니다.</div>
                         ) : Chatroom?.latestMessage?.messageType === 2 ? (
-                            <p>링크를 보냈습니다.</p>
+                            <div>링크를 보냈습니다.</div>
                         ) : Chatroom?.latestMessage?.messageType === 3 ? (
-                            <p>파일을 보냈습니다.</p>
+                            <div>파일을 보냈습니다.</div>
                         ) : (
                             <div></div>
                         )
@@ -621,577 +593,60 @@ export default function Chat() {
             <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
                 <div>
                     {Chatroom?.latestMessage?.sendTime == null ? (
-                        <p className="text-gray-300 whitespace-nowrap">{getChatDateTimeFormat(Chatroom?.createDate)}</p>
+                        <div className="text-gray-300 whitespace-nowrap">{getChatDateTimeFormat(Chatroom?.createDate)}</div>
                     ) : (
-                        <p className="text-gray-300 whitespace-nowrap">{getChatShowDateTimeFormat(Chatroom?.latestMessage?.sendTime)}</p>
+                        <div className="text-gray-300 whitespace-nowrap">{getChatShowDateTimeFormat(Chatroom?.latestMessage?.sendTime)}</div>
                     )}
                 </div>
                 {Chatroom?.alarmCount == 0 ? "" : <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
-                    <p className="text-white text-sm">{Chatroom?.alarmCount}</p>
+                    <div className="text-white text-sm">{Chatroom?.alarmCount}</div>
                 </div>}
 
             </div>
         </div >
     }
-    
-    
-    function ChatDetail({ Chatroom, messageList, innerRef, currentScrollLocation }: { Chatroom: chatroomResponseDTO, messageList: messageResponseDTO[], innerRef: RefObject<HTMLDivElement>, currentScrollLocation: number }) {
-        const joinMembers = Array.isArray(Chatroom.users) ? Chatroom.users.length : 0;
-        const [message, setMessage] = useState('');
-        const [roomName, setRoomName] = useState(chatroom?.name);
-        const [messageType, setMessageType] = useState(0);
-        const [sendDate, setSendDate] = useState<Date | null>(null);
-        const [messageListTmp, setMessageListTmp] = useState<messageResponseDTO[]>([]);
-        const [activeTab, setActiveTab] = useState('photos');
-        function getChatroomNameById(chatroomId: number) {
-            const chatroom = chatrooms.find((room) => room.id === chatroomId);
-            return chatroom ? chatroom.name : 'Unknown Chatroom';
-        }
-
-        useEffect(() => {
-            setMessageListTmp(messageList);
-            console.log("이게뭔데");
-            // console.log(messageList);
-        }, []);
-
-        useEffect(() => {
-            if (innerRef.current) {
-                if (currentScrollLocation == 0) {
-                    innerRef.current.scrollTop = innerRef.current.scrollHeight;
-                }
-                else {
-                    innerRef.current.scrollTop = currentScrollLocation;
-                }
+    const joinMembers = Array.isArray(chatroom?.users) ? chatroom.users.length : 0;
+    const [message, setMessage] = useState('');
+    const [roomName, setRoomName] = useState(chatroom?.name);
+    const [messageType, setMessageType] = useState(0);
+    const [sendDate, setSendDate] = useState<Date | null>(null);
+    // const [messageListTmp, setMessageListTmp] = useState<messageResponseDTO[]>([]);
+    const [activeTab, setActiveTab] = useState('photos');
+    function getChatroomNameById(chatroomId: number) {
+        const chatroom = chatrooms.find((room) => room.id === chatroomId);
+        return chatroom ? chatroom.name : 'Unknown Chatroom';
+    }
+    useEffect(() => {
+        if (chatBoxRef.current) {
+            if (currentScrollLocation == 0) {
+                chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
             }
-        }, [messageListTmp])
+            else {
+                chatBoxRef.current.scrollTop = currentScrollLocation;
+            }
+        }
+    }, [messageList])
+
+    function ChatDetail({ Chatroom, messageList, innerRef, currentScrollLocation }: { Chatroom: chatroomResponseDTO, messageList: messageResponseDTO[], innerRef: RefObject<HTMLDivElement>, currentScrollLocation: number }) {
 
 
-        return <div>
-            <div className="flex w-full justify-between border-b-2">
-                <div className="text-black flex w-[50%]">
-                    <img src="/pig.png" className="m-2 w-[70px] h-[70px] rounded-full" />
-                    <div className="flex flex-col justify-center">
-                        <div className="flex">
-                            <div className="text-black font-bold text-3xl mb-1 whitespace-nowrap">
-                                {chatroom?.name ? (
-                                    <span>{chatroom.name}</span>
-                                ) : (
-                                    Chatroom?.users
-                                        .filter((u: any) => u?.username !== user?.username) // 현재 사용자 제외
-                                        .map((u: any, index: number, array: any[]) => (
-                                            <span key={u?.username}>
-                                                {u?.username}
-                                                {index < array.length - 1 && ", "}
-                                            </span>
-                                        ))
-                                )}
-                            </div>
-                            <button onClick={handleOpen1Modal}> 이름편집</button>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <button onClick={handleOpenModal}>
-                                <img src="/people.png" className="w-[30px] h-[30px]" />
-                            </button>
-                            <p className="flex items-end text-xl w-[30px] h-[30px] text-official-color">
-                                {joinMembers}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <Modal open={isModalOpen} onClose={handleCloseModal} escClose={true} outlineClose={true}>
-                    <div>
-                        <p className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</p>
-                        <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[50px] mb-5">
-                            <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
-                            <input
-                                type="text"
-                                placeholder="참여자 검색"
-                                className="bolder-0 outline-none bg-white text-black w-[80%]"
-                                value={userKeyword}
-                                onChange={e => setUserKeyword(e.target.value)}
-                            />
-                            <button className="text-gray-300 whitespace-nowrap"
-                                onClick={handleUserSearch} >
-                                검색
-                            </button>
-                        </div>
-                        <div className="overflow-auto h-[500px]">
-                            <ul className="m-3">
-                                {searchedUsers.filter(user => !chatroom.users.includes(user.username)).map((user, index) => (
-                                    <li key={index} className="flex justify-between items-center mb-5">
-                                        <span className="w-[50px] h-[50px]">
-                                            <img src={user.url ? user.url : "/pin.png"} alt="User profile" className="w-[50px] h-[50px]" />
-                                        </span>
-                                        <span className="font-bold text-md m-3">{user.name}</span>
-                                        <span className=" text-md m-3">부서</span>
-                                        <span className="text-md m-3">역할</span>
-                                        <button onClick={() => {
-                                            addUser({ chatroomId: chatroom.id, username: user.username }).then(r => {
+        // useEffect(() => {
+        //     setMessageListTmp(messageList);
+        // }, []);
 
-                                            }).catch(e => {
-                                                console.log(e)
-                                            })
-                                        }} className="font-bold text-3xl m-3">+</button>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-                </Modal>
-                <Modal open={isModalOpen1} onClose={handleClose1Modal} escClose={true} outlineClose={true}>
-                    <div className="flex flex-col items-cnete justify-center m-3">
-                        <p className="flex items-center justify-center font-bold">이름 편집</p>
-                        <input type="text" placeholder={chatroom?.name} value={roomName} onChange={e => { console.log(e.target.value); setRoomName(e.target.value) }}
-                        />
-                        <button onClick={() => {
-                            const updatedChatroom = {
-                                ...chatroom,
-                                name: roomName
-                            };
-
-                            editChatroom({ chatroomId: chatroom.id, chatroomResponseDTO: updatedChatroom }).then(r => {
-                                setChatrooms(prev => prev.map(room => room.id === chatroom.id ? r : room));
-                                setChatroom(null);
-                                handleClose1Modal();
-                            }).catch(e => {
-                                console.error(e);
-                            });
-                        }}>변경</button>
-
-                    </div>
-                </Modal>
-
-                <div className="mr-5 w-[50%] flex justify-end items-center">
-                    <button className="hamburger1" id="burger" onClick={() => { setOpen1(!open1), setDrop(!drop) }}>
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                    <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="burger">
-
-                        <button onClick={() => {
-                            chatExit({ chatroomId: chatroom.id, username: user.username }).then((r) => {
-                                // setChatrooms(r);
-                                setChatroom(null);
-                            })
-                        }}>나가기</button>
-                        <button onClick={handleOpen6Modal}>보관함</button>
-                        <button></button>
-                    </DropDown>
-
-                    <Modal open={isModalOpen6} onClose={handleClose6Modal} escClose={true} outlineClose={true}>
-                        <div className="official-color h-[50px] flex justify-center">
-
-                            <div className="text-1xl flex justify-center gap-20 mt-1">
-                                <button className={` ${activeTab === 'photos' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('photos')}>사진</button>
-                                <button className={` ${activeTab === 'files' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('files')}>파일</button>
-                                <button className={` ${activeTab === 'links' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('links')}>링크</button>
-                            </div>
-                        </div>
-                        <div className="content">
-                            {activeTab === 'photos' && (
-                                <div className="flex items-center flex-col w-[480px] h-[800px] overflow-x-hidden overflow-y-scroll">
-
-                                    <p className="font-bold flex-wrap: wrap text-3xl m-3">첨부한 이미지</p>
-                                    <div className="flex w-[450px] flex-wrap">
-                                        {imageList.map(image => (
-                                            <div key={image.id} className="w-[150px]">
-                                                <div className="h-[150px] flex justify-center flex-col m-2">
-                                                    <img className="w-full h-[130px] border-2 border-gray-300" src={'http://www.벌꿀오소리.메인.한국:8080' + image?.message} />
-                                                    <span className="w-full h-[20px] font-bold flex justify-center text-sm">{image.name}
-                                                        <p className="text-gray-400 ml-2 text-xs mt-1">
-                                                            {getChatDateTimeFormat(image.sendTime)}
-                                                        </p>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            {activeTab === 'files' && (
-                                <div className="flex items-center flex-col w-[480px] h-[800px] overflow-x-hidden overflow-y-scroll">
-
-                                    <p className="font-bold flex-wrap: wrap text-3xl m-3">첨부한 파일</p>
-                                    <div className="flex w-[450px] flex-wrap">
-                                        {fileList.map(file => (
-                                            <div key={file.id} className="w-[150px]">
-                                                <div className="h-[150px] flex justify-center flex-col m-2 border-2 border-gray-300 m-3">
-                                                    <img src={getFileIcon(file?.message)} className="w-[26px] h-[31px] mr-2" alt="" />
-                                                    <a href={'http://www.벌꿀오소리.메인.한국:8080' + file?.message} download target="_blank" rel="noopener noreferrer">
-
-                                                        {file?.message}</a>
-                                                    <span className="w-full h-[20px] font-bold flex justify-center text-sm">{file.name}
-                                                        <p className="text-gray-400 ml-2 text-xs mt-1">
-                                                            {getChatDateTimeFormat(file.sendTime)}
-                                                        </p>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            {activeTab === 'links' && (
-                                <div className="flex items-center flex-col w-[600px] h-[800px] overflow-x-hidden overflow-y-scroll">
-
-                                    <p className="font-bold text-3xl m-3">첨부한 링크</p>
-                                    <div className="flex flex-col">
-                                        {linkList.map(link => (
-                                            <div key={link.id} className="">
-                                                <div className="flex justify-center flex m-2 w-[500px] border-2 border-gray-300">
-                                                    <a href={link?.message} className="w-[400px]" target="_blank" rel="noopener noreferrer">{link?.message}</a>
-                                                    <span className="w-[200px] h-[20px] font-bold flex justify-center text-sm">{link.name}
-                                                        <p className="text-gray-400 ml-2 text-xs mt-1 w-[100px]">
-                                                            {getChatDateTimeFormat(link.sendTime)}
-                                                        </p>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                    </Modal>
-
-                </div>
-            </div>
-            {/* 공지 */}
-            {/* <div className="w-full flex justify-center">
-                <div className="bg-[#abcdae] w-[59%] h-[70px] rounded-md flex items-center fixed z-50 absolute p-4">
-                    <img src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="" />
-                    <p className="w-full text-white" style={{ opacity: 1 }}>
-                        {Chatroom?.notification?.message || '공지가 안 뜹니다'}
-                    </p>
-                    <button className="h-full flex items-start mr-2 text-white text-3xl" style={{ opacity: 1 }}>
-                        ⨯
-                    </button>
-                </div>
-            </div> */}
-
-            <div ref={innerRef} onScroll={loadPage} className="h-[600px] w-[100%] overflow-x-hidden overflow-y-scroll">
-                {/* 날짜 */}
-                <div className="flex justify-center">
-                    <div className="inline-flex bg-gray-400 rounded-full text-white font-bold px-4 py-2 text-sm justify-center mt-2 bg-opacity-55">
-                        2024년 07월 05일 금요일
-                    </div>
-                </div>
-
-                {/* 채팅 */}
-                {messageListTmp?.map((t, index) => <div key={index} className="w-full flex flex-col items-start m-1">
-                    {
-                        t.username == user?.username ?
-                            <div className="flex w-full justify-end" id={index.toString()}>
-                                <div className="w-6/12 flex justify-end mr-2">
-
-                                    <p className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap" >{t?.readUsers}, {joinMembers - (t?.readUsers ?? 0)}</p>
-
-                                    <button
-                                        className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
-                                        onClick={() => {
-                                            notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
-                                                .then((r) => {
-                                                    chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
-                                                    setChatrooms([...chatrooms]);
-                                                    setChatroom(r);
-
-                                                })
-                                                .catch((e) => {
-                                                    console.error(e);
-                                                });
-                                        }}
-                                    >
-                                        공지 설정
-                                    </button>
-                                    <button className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
-                                        onClick={() => {
-                                            deleteMessage(Number(t?.id))
-                                                .then(() => {
-                                                    setMessageList(prevMessageList => prevMessageList.filter(message => message.id !== t.id));
-                                                })
-                                                .catch((e) => {
-                                                    console.error("Error deleting message:", e);
-                                                });
-                                        }}>삭제</button>
-                                    <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
-                                    <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
-                                        <div className="mt-2 mb-2 ml-3 mr-3">
-                                            {
-                                                t?.messageType === 0 ? (
-                                                    <div>{t?.message}</div>
-                                                ) : t?.messageType === 1 ? (
-                                                    <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
-                                                ) : t?.messageType === 2 ? (
-                                                    <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                ) : t?.messageType === 3 ? (
-                                                    <a href={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                ) : (
-                                                    <div></div>
-                                                )
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            :
-                            <div className="flex w-6/12 ml-2 mb-3" id={index.toString()}>
-                                <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
-                                <div className="flex flex-col ml-2">
-                                    <p className="text-black font-bold ml-2">
-                                        {t?.name}
-                                    </p>
-                                    <div className="w-full flex">
-                                        <p className="text-black ml-2">
-                                            <div className="mt-2 mb-2 ml-3 mr-3">
-                                                {
-                                                    t?.messageType === 0 ? (
-                                                        <div>{t?.message}</div>
-                                                    ) : t?.messageType === 1 ? (
-                                                        <img src={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} />
-                                                    ) : t?.messageType === 2 ? (
-                                                        <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                    ) : t?.messageType === 3 ? (
-                                                        <a href={'http://www.벌꿀오소리.메인.한국:8080' + t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                    ) : (
-                                                        <div>Unknown type</div>
-                                                    )
-                                                }
-                                            </div>
-                                        </p>
-                                        <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</p>
-                                        <p className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">삭제</p>
-
-                                        <button
-                                            className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
-                                            onClick={() => {
-
-                                                notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
-                                                    .then((r) => {
+        // useEffect(() => {
+        //     if (innerRef.current) {
+        //         if (currentScrollLocation == 0) {
+        //             innerRef.current.scrollTop = innerRef.current.scrollHeight;
+        //         }
+        //         else {
+        //             innerRef.current.scrollTop = currentScrollLocation;
+        //         }
+        //     }
+        // }, [messageListTmp])
 
 
-                                                        chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
-                                                        setChatrooms([...chatrooms]);
-                                                        setChatroom(r);
-
-                                                        console.log(Chatroom);
-                                                    })
-                                                    .catch((e) => {
-                                                        console.error(e);
-                                                    });
-                                            }}
-                                        >
-                                            공지 설정
-                                        </button>
-                                        <p className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap"> {t.readUsers}{joinMembers - (t?.readUsers ?? 0)}</p>
-                                    </div>
-                                </div>
-                            </div>
-                    }
-                </div>)
-                }
-            </div>
-            <div className="flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[159px] items-start">
-                <div className="h-full m-2 w-[98%]">
-                    <textarea key={Chatroom.id} autoFocus placeholder="내용을 입력하세요" className="resize-none bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
-                        value={message}
-                        onKeyDown={e => {
-                            if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
-                                e.preventDefault(); // 폼 제출 방지
-                                if (isReady) {
-                                    socket.publish({
-                                        destination: "/api/pub/message/" + Chatroom?.id,
-                                        body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
-                                    });
-                                    setMessage(''); // 메시지 전송 후 입력 필드 초기화        
-                                }
-                            }
-                        }} />
-                </div>
-
-                {/* 툴팁 부분 */}
-                <div className="flex w-[98%] justify-between font-bold text-gray-500">
-                    <div className="flex">
-
-                        <button id="emoticon">
-                            <img src="/emoticon.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
-                        </button>
-                        <Tooltip anchorSelect="#emoticon" clickable>
-                            <button>이모티콘</button>
-                        </Tooltip>
-
-                        <button id="book">
-                            <img src="/book.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
-                        </button>
-                        <Tooltip anchorSelect="#book" clickable>
-                            <div className="flex flex-col">
-
-                                <button id="reservationMessage" onClick={handleOpen4Modal}>예약 전송</button>
-                                <button id="reservationMessageList" onClick={handleOpen5Modal}>메시지 예약함</button>
-                            </div>
-                        </Tooltip>
-                        <Modal open={isModalOpen4} onClose={handleClose4Modal} escClose={true} outlineClose={true}>
-                            <div className="flex flex-col items-cnete justify-center m-3">
-                                <p className="flex items-center justify-center font-bold">예약 메시지 보내기</p>
-                                <div className="flex flex">
-                                    <div className="m-2">예약 시간 입력 : </div>
-                                    <input type="datetime-local" onChange={e => setSendDate(e.target.value ? new Date(e.target.value) : null)} />
-                                </div>
-                                <textarea className="h-[400px] " placeholder="내용을 입력하세요" onChange={e => setMessage(e.target.value)}
-                                    value={message}
-
-                                    onKeyDown={e => {
-                                        if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
-                                            e.preventDefault(); // 폼 제출 방지
-                                            setMessage(''); // 메시지 전송 후 입력 필드 초기화        
-                                        }
-                                    }
-                                    } />
-
-                                <button onClick={() => {
-
-                                    const messageReservationRequestDTO = { chatroomId: chatroom?.id, message: message, messageType: 0, reservationDate: sendDate };
-
-                                    createMessageReservation(messageReservationRequestDTO).then(r => {
-                                        console.log(r);
-                                        setReservationMessageList(r.content);
-
-                                        handleClose4Modal();
-                                    }).catch(e => {
-                                        console.error(e);
-                                    });
-                                }}>예약하기</button>
-                            </div>
-                        </Modal>
-                        <Modal open={isModalOpen5} onClose={handleClose5Modal} escClose={true} outlineClose={true}>
-                            <div className="flex flex-col items-center m-3">
-                                <p className="flex items-center justify-center font-bold text-xl mb-3 w-[1000px]">예약 메시지 리스트</p>
-                                <div className="overflow-auto h-[500px] w-full border border-gray-300 rounded-lg">
-                                    <div className="flex justify-between items-center font-bold text-lg m-2">
-                                        <p className="w-1/5 text-center whitespace-nowrap">채팅방 이름</p>
-                                        <p className="w-1/5 text-center whitespace-nowrap">예약 시간</p>
-                                        <p className="w-2/5 text-center whitespace-nowrap">보낸 메시지</p>
-                                        <p className="w-1/5">편집</p>
-                                    </div>
-                                    <ul className="m-3">
-                                        {reservationMessageList && reservationMessageList.map((reservationMessage, index) => (
-                                            <li key={index} className="flex justify-between items-center mb-5 border-b pb-2">
-                                                <span className="text-md w-1/5 text-center">{getChatroomNameById(reservationMessage.chatroomId)}</span>
-                                                <span className="text-md w-1/5 text-center">{getChatDateTimeFormat(reservationMessage.reservationDate)}</span>
-                                                <span className="text-md w-2/5 text-center">{reservationMessage.message}</span>
-                                                <div className="flex w-1/5">
-                                                    <button className="btn w-1/2 whitespace-nowrap">수정</button>
-                                                    <button className="btn w-1/2 whitespace-nowrap"
-                                                        onClick={() => {
-                                                            deleteMessageReservation(reservationMessage.id).then(r => {
-                                                                setReservationMessageList(r.content);
-                                                            })
-                                                        }}>삭제</button>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </Modal>
-
-                        <button id="file" onClick={() => { file.current?.click() }}>
-                            <img src="/file.png" data-tip="파일" className="file w-[25px] h-[25px] items-center justify-center m-1" />
-                            <input ref={file} type="file" hidden onChange={e => {
-                                if (e.target.files && e.target.files[0]) {
-                                    const selectedFile = e.target.files[0];
-                                    if (selectedFile instanceof File) { // File 인스턴스 확인
-                                        chatUploadFile({ chatroomId: chatroom?.id, file: selectedFile })
-                                            .then(r => { setMessage(r); setMessageType(3); })
-                                            .catch(e => console.log(e));
-                                    }
-                                }
-                            }} />
-                        </button>
-                        <Tooltip anchorSelect="#file" clickable>
-                            <button >파일 전송</button>
-                        </Tooltip>
-                        <button id="image" onClick={() => { image.current?.click() }}>
-                            <img src="/image.png" data-tip="이미지" className="image w-[25px] h-[25px] items-center justify-center m-1" />
-                            <input ref={image} type="file" hidden onChange={e => {
-                                if (e.target.files && e.target.files[0]) {
-                                    const selectedFile = e.target.files[0];
-                                    if (selectedFile instanceof File) { // File 인스턴스 확인
-                                        chatUploadFile({ chatroomId: chatroom?.id, file: selectedFile })
-                                            .then(r => { setMessage(r); setMessageType(1); })
-                                            .catch(e => console.log(e));
-                                    }
-                                }
-                            }} />
-                        </button>
-
-                        <Tooltip anchorSelect="#image" clickable>
-                            <button >이미지 전송</button>
-                        </Tooltip>
-
-                        <button id="link" onClick={handleOpen3Modal}>
-                            <img src="/link.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
-                        </button>
-
-                        <Tooltip anchorSelect="#link" clickable>
-                            <button>링크 전송</button>
-                        </Tooltip>
-
-
-                        <Modal open={isModalOpen3} onClose={handleClose3Modal} escClose={true} outlineClose={true}>
-                            <div className="overflow-auto w-full m-2">
-                                <p className="font-bold text-3xl m-3 mb-8 flex justify-center">링크 삽입</p>
-                                <input placeholder="링크를 입력해주세요"
-                                    className="bolder-0 outline-none bg-white text-black"
-                                    onChange={e => setMessage(e.target.value)}
-                                    value={message}
-
-                                    onKeyDown={e => {
-                                        setMessageType(2);
-                                        if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
-                                            e.preventDefault(); // 폼 제출 방지
-                                            if (isReady) {
-                                                socket.publish({
-                                                    destination: "/api/pub/message/" + Chatroom?.id,
-                                                    body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
-                                                });
-                                                setMessage(''); // 메시지 전송 후 입력 필드 초기화        
-                                            }
-                                        }
-                                    }}
-
-                                />
-                                <button className="btn"
-
-                                    onClick={() => {
-                                        if (isReady) {
-
-                                            socket.publish({
-                                                destination: "/api/pub/message/" + Chatroom?.id,
-                                                body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
-                                            });
-                                        }
-                                    }}
-
-                                >전송</button>
-                            </div>
-                        </Modal>
-                    </div>
-                    <button id="sendMessage">
-                        <img src="/send.png" className="send w-[40px] h-[40px] items-center justify-center m-1" onClick={() => {
-                            if (isReady) {
-
-                                socket.publish({
-                                    destination: "/api/pub/message/" + Chatroom?.id,
-                                    body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
-                                });
-                            }
-                        }} />
-                    </button>
-                </div>
-            </div>
-        </div >
+        return <></>;
     }
 
     return <Main user={user} isClientLoading={isClientLoading}>
@@ -1210,7 +665,7 @@ export default function Chat() {
                 </button>
                 <Modal open={isModalOpen2} onClose={handleClose2Modal} escClose={true} outlineClose={true}>
                     <div >
-                        <p className="font-bold text-3xl m-3 mb-8 flex justify-center">채팅방 만들기</p>
+                        <div className="font-bold text-3xl m-3 mb-8 flex justify-center">채팅방 만들기</div>
                         <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] m-2">
                             <input
                                 type="text"
@@ -1221,7 +676,7 @@ export default function Chat() {
                             />
 
                         </div>
-                        <p className="font-bold ml-2">추가 인원 선택</p>
+                        <div className="font-bold ml-2">추가 인원 선택</div>
                         <div className="overflow-auto w-full h-[500px]">
                             <ul className="m-3">
 
@@ -1266,27 +721,27 @@ export default function Chat() {
                         </button>
                     </div>
                     <div className="justify-start w-full">
-                        <p className="font-bold ml-3 text-gray-300">
+                        <div className="font-bold ml-3 text-gray-300">
                             내 프로필
-                        </p>
+                        </div>
                         <div className="flex hover:bg-gray-400 text-white rounded-md">
                             <img src="/pin.png" className="m-2 w-[80px] h-[80px] rounded-full" />
                             <div className="w-full m-2 flex flex-col">
                                 <div className="flex justify-between">
-                                    <p className="text-black font-bold">{user?.name}</p>
+                                    <div className="text-black font-bold">{user?.name}</div>
 
                                 </div>
                                 <div className="flex flex-col mt-2">
-                                    <p className="text-black">{user?.username}</p>
-                                    <p className="text-black text-sm">:)</p>
+                                    <div className="text-black">{user?.username}</div>
+                                    <div className="text-black text-sm">:)</div>
                                 </div>
                             </div>
                             <div className="w-3/12 h-full flex flex-col justify-end items-end mr-4">
                             </div>
                         </div>
-                        <p className="font-bold ml-3 text-gray-300 mt-3">
+                        <div className="font-bold ml-3 text-gray-300 mt-3">
                             대화 목록
-                        </p>
+                        </div>
                     </div>
                     <div className="w-full justify-end h-[550px] overflow-x-hidden overflow-y-scroll">
                         {chatrooms?.map((chatroom: chatroomResponseDTO, index: number) => <ChatList key={index} Chatroom={chatroom} ChatDetail={chatDetail} innerRef={chatBoxRef} />)}
@@ -1298,7 +753,554 @@ export default function Chat() {
         {/* 오른쪽 부분 */}
         <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
             <div className="h-11/12 w-11/12 bg-white h-full flex flex-col shadow">
-                {chatroom != null ? <ChatDetail Chatroom={chatroom} messageList={messageList} innerRef={chatBoxRef} currentScrollLocation={currentScrollLocation} /> : <></>}
+                {/* {chatroom != null ? <ChatDetail key={chatroom.id} Chatroom={chatroom} messageList={messageList} innerRef={chatBoxRef} currentScrollLocation={currentScrollLocation} /> : <></>} */}
+                <>
+                    <div className={chatroom != null ? '' : 'hidden'}>
+                        <div className="flex w-full justify-between border-b-2">
+                            <div className="text-black flex w-[50%]">
+                                <img src="/pig.png" className="m-2 w-[70px] h-[70px] rounded-full" />
+                                <div className="flex flex-col justify-center">
+                                    <div className="flex">
+                                        <div className="text-black font-bold text-3xl mb-1 whitespace-nowrap">
+                                            {chatroom?.name ? (
+                                                <span>{chatroom.name}</span>
+                                            ) : (
+                                                chatroom?.users
+                                                    .filter((u: any) => u?.username !== user?.username) // 현재 사용자 제외
+                                                    .map((u: any, index: number, array: any[]) => (
+                                                        <span key={u?.username}>
+                                                            {u?.username}
+                                                            {index < array.length - 1 && ", "}
+                                                        </span>
+                                                    ))
+                                            )}
+                                        </div>
+                                        <button onClick={handleOpen1Modal}> 이름편집</button>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <button onClick={handleOpenModal}>
+                                            <img src="/people.png" className="w-[30px] h-[30px]" />
+                                        </button>
+                                        <div className="flex items-end text-xl w-[30px] h-[30px] text-official-color">
+                                            {joinMembers}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Modal open={isModalOpen1} onClose={handleClose1Modal} escClose={true} outlineClose={true}>
+                                <div className="flex flex-col items-cnete justify-center m-3">
+                                    <div className="flex items-center justify-center font-bold">이름 편집</div>
+                                    <input type="text" placeholder={chatroom?.name} value={roomName} onChange={e => { setRoomName(e.target.value) }}
+                                    />
+                                    <button onClick={() => {
+                                        const updatedChatroom = {
+                                            ...chatroom,
+                                            name: roomName
+                                        };
+
+                                        editChatroom({ chatroomId: chatroom?.id, chatroomResponseDTO: updatedChatroom }).then(r => {
+                                            setChatrooms(prev => prev.map(room => room.id === chatroom?.id ? r : room));
+                                            setChatroom(null);
+                                            handleClose1Modal();
+                                        }).catch(e => {
+                                            console.error(e);
+                                        });
+                                    }}>변경</button>
+
+                                </div>
+                            </Modal>
+
+                            <div className="mr-5 w-[50%] flex justify-end items-center">
+                                <button className="hamburger1" id="burger" onClick={() => { setOpen1(!open1), setDrop(!drop) }}>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </button>
+                                <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="burger">
+
+                                    <button onClick={() => {
+                                        chatExit({ chatroomId: chatroom.id, username: user.username }).then((r) => {
+                                            // setChatrooms(r);
+                                            setChatroom(null);
+                                            getChat(keyword, page).then(r => { setChatrooms(r.content); setMaxPage(r.totalPages); }).catch(e => console.log(e));
+                                        })
+                                    }}>나가기</button>
+                                    <button onClick={handleOpen6Modal}>보관함</button>
+                                    <button></button>
+                                </DropDown>
+
+                                <Modal open={isModalOpen6} onClose={handleClose6Modal} escClose={true} outlineClose={true}>
+                                    <div className="official-color h-[50px] flex justify-center">
+
+                                        <div className="text-1xl flex justify-center gap-20 mt-1">
+                                            <button className={` ${activeTab === 'photos' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('photos')}>사진</button>
+                                            <button className={` ${activeTab === 'files' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('files')}>파일</button>
+                                            <button className={` ${activeTab === 'links' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('links')}>링크</button>
+                                        </div>
+                                    </div>
+                                    <div className="content">
+                                        {activeTab === 'photos' && (
+                                            <div className="flex items-center flex-col w-[480px] h-[800px] overflow-x-hidden overflow-y-scroll">
+
+                                                <div className="font-bold flex-wrap: wrap text-3xl m-3">첨부한 이미지</div>
+                                                <div className="flex w-[450px] flex-wrap">
+                                                    {imageList.map(image => (
+                                                        <div key={image.id} className="w-[150px]">
+                                                            <div className="h-[150px] flex justify-center flex-col m-2">
+                                                                <img className="w-full h-[130px] border-2 border-gray-300" src={image?.message} />
+                                                                <span className="w-full h-[20px] font-bold flex justify-center text-sm">{image.name}
+                                                                    <div className="text-gray-400 ml-2 text-xs mt-1">
+                                                                        {getChatDateTimeFormat(image.sendTime)}
+                                                                    </div>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {activeTab === 'files' && (
+                                            <div className="flex items-center flex-col w-[480px] h-[800px] overflow-x-hidden overflow-y-scroll">
+
+                                                <div className="font-bold flex-wrap: wrap text-3xl m-3">첨부한 파일</div>
+                                                <div className="flex w-[450px] flex-wrap">
+                                                    {fileList.map(file => (
+                                                        <div key={file.id} className="w-[150px]">
+                                                            <div className="h-[150px] flex justify-center items-center flex-col m-2 border-2 border-gray-300 m-3">
+                                                                <a href={file?.message} download target="_blank" rel="noopener noreferrer">
+                                                                    <img src={getFileIcon(file?.message)} className="w-[100px] h-[100px] mr-2" alt="" />
+                                                                    {/* {file?.message} */}
+                                                                </a>
+
+                                                                <span className="w-full h-[20px] font-bold flex justify-center text-sm">{file.name}
+                                                                    <div className="text-gray-400 ml-2 text-xs mt-1">
+                                                                        {getChatDateTimeFormat(file.sendTime)}
+                                                                    </div>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {activeTab === 'links' && (
+                                            <div className="flex items-center flex-col w-[600px] h-[800px] overflow-x-hidden overflow-y-scroll">
+
+                                                <div className="font-bold text-3xl m-3">첨부한 링크</div>
+                                                <div className="flex flex-col">
+                                                    {linkList.map(link => (
+                                                        <div key={link.id} className="">
+                                                            <div className="flex justify-center flex m-2 w-[500px]">
+                                                                <a href={link?.message} className="w-[400px]" target="_blank" rel="noopener noreferrer">{link?.message}</a>
+                                                                <span className="w-[200px] h-[20px] font-bold flex justify-center text-sm">{link.name}
+                                                                    <div className="text-gray-400 ml-2 text-xs mt-1 w-[100px]">
+                                                                        {getChatDateTimeFormat(link.sendTime)}
+                                                                    </div>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </Modal>
+
+                            </div>
+                        </div>
+                        {/* 공지 */}
+                        <div>
+                            {!showNotification && (
+                                <div className="w-full flex justify-start ml-3" onClick={toggleNotification}>
+                                    <div className="bg-[#abcdae] w-[70px] h-[70px] rounded-full flex items-center fixed p-4">
+                                        <img src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="Notification" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {showNotification && (
+                                <div className="w-full flex justify-center">
+                                    <div className="bg-[#abcdae] w-[59%] h-[70px] rounded-md flex items-center fixed p-4">
+                                        <img onClick={() => setShowNotification(false)} src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="" />
+                                        <div className="w-full text-white" style={{ opacity: 1 }}>
+                                            {chatroom?.notification?.message || '공지가 안 뜹니다'}
+                                        </div>
+                                        <button
+                                            onClick={() => setShowNotification(false)}
+                                            className="h-full flex items-start mr-2 text-white text-3xl" style={{ opacity: 1 }}>
+                                            ⨯
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div ref={chatBoxRef} onScroll={loadPage} className="h-[600px] w-[100%] overflow-x-hidden overflow-y-scroll">
+                            {/* 날짜 */}
+                            <div className="flex justify-center">
+                                {/* <div className="inline-flex bg-gray-400 rounded-full text-white font-bold px-4 py-2 text-sm justify-center mt-2 bg-opacity-55">
+                                    2024년 07월 05일 금요일
+                                </div> */}
+                            </div>
+
+                            {/* 채팅 */}
+                            {/* {messageListTmp?.map((t, index) => <div key={t.id} className="w-full flex flex-col items-start m-1"> */}
+                            {messageList?.map((t, index) => <div key={t.id + "message"} className="w-full flex flex-col items-start m-1">
+                                {
+                                    t.username == user?.username ?
+                                        <div className="flex w-full justify-end" id={index.toString()}>
+                                            <div className="w-6/12 flex justify-end mr-2">
+
+                                                <div className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap" >{t?.readUsers}, {joinMembers - (t?.readUsers ?? 0)}</div>
+
+                                                <button
+                                                    className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
+                                                    onClick={() => {
+                                                        notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
+                                                            .then((r) => {
+                                                                chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
+                                                                setChatrooms([...chatrooms]);
+                                                                setChatroom(r);
+
+                                                            })
+                                                            .catch((e) => {
+                                                                console.error(e);
+                                                            });
+                                                    }}
+                                                >
+                                                    공지 설정
+                                                </button>
+                                                <button className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
+                                                    onClick={() => {
+                                                        deleteMessage(Number(t?.id))
+                                                            .then(() => {
+                                                                setMessageList(prevMessageList => prevMessageList.filter(message => message.id !== t.id));
+                                                            })
+                                                            .catch((e) => {
+                                                                console.error("Error deleting message:", e);
+                                                            });
+                                                    }}>삭제</button>
+                                                <div className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</div>
+                                                <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
+                                                    <div className="mt-2 mb-2 ml-3 mr-3">
+                                                        {
+                                                            t?.messageType === 0 ? (
+                                                                <div>{t?.message}</div>
+                                                            ) : t?.messageType === 1 ? (
+                                                                <img src={t?.message} />
+                                                            ) : t?.messageType === 2 ? (
+                                                                <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                            ) : t?.messageType === 3 ? (
+                                                                <a href={t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                            ) : (
+                                                                <div></div>
+                                                            )
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        :
+                                        <div className="flex w-6/12 ml-2 mb-3" id={index.toString()}>
+                                            <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
+                                            <div className="flex flex-col ml-2">
+                                                <div className="text-black font-bold ml-2">
+                                                    {t?.name}
+                                                </div>
+                                                <div className="w-full flex">
+                                                    <div className="text-black ml-2">
+                                                        <div className="mt-2 mb-2 ml-3 mr-3">
+                                                            {
+                                                                t?.messageType === 0 ? (
+                                                                    <div>{t?.message}</div>
+                                                                ) : t?.messageType === 1 ? (
+                                                                    <img src={t?.message} />
+                                                                ) : t?.messageType === 2 ? (
+                                                                    <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                                ) : t?.messageType === 3 ? (
+                                                                    <a href={t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                                ) : (
+                                                                    <div></div>
+                                                                )
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</div>
+                                                    <div className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">삭제</div>
+
+                                                    <button
+                                                        className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
+                                                        onClick={() => {
+
+                                                            notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
+                                                                .then((r) => {
+
+
+                                                                    chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
+                                                                    setChatrooms([...chatrooms]);
+                                                                    setChatroom(r);
+
+                                                                })
+                                                                .catch((e) => {
+                                                                    console.error(e);
+                                                                });
+                                                        }}
+                                                    >
+                                                        공지 설정
+                                                    </button>
+                                                    <div className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap"> {t.readUsers}{joinMembers - (t?.readUsers ?? 0)}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                }
+                            </div>)
+                            }
+                        </div>
+                        <div className="flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[159px] items-start">
+                            <div className="h-full m-2 w-[98%]">
+                                <textarea id="chat_input" key={chatroom?.id} autoFocus={!isModalOpen && !isModalOpen2} placeholder="내용을 입력하세요" className="resize-none bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
+                                    value={message}
+                                    onKeyDown={e => {
+                                        if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
+                                            e.preventDefault(); // 폼 제출 방지
+                                            if (isReady) {
+                                                document.getElementById('send')?.click();
+
+                                                setMessage(''); // 메시지 전송 후 입력 필드 초기화
+                                            }
+                                        }
+                                    }} />
+                            </div>
+
+                            {/* 툴팁 부분 */}
+                            <div className="flex w-[98%] justify-between font-bold text-gray-500">
+                                <div className="flex">
+
+                                    <button id="emoticon">
+                                        <img src="/emoticon.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
+                                    </button>
+                                    <Tooltip anchorSelect="#emoticon" clickable>
+                                        <button>이모티콘</button>
+                                    </Tooltip>
+
+                                    <button id="book">
+                                        <img src="/book.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
+                                    </button>
+                                    <Tooltip anchorSelect="#book" clickable>
+                                        <div className="flex flex-col">
+
+                                            <button id="reservationMessage" onClick={handleOpen4Modal}>예약 전송</button>
+                                            <button id="reservationMessageList" onClick={handleOpen5Modal}>메시지 예약함</button>
+                                        </div>
+                                    </Tooltip>
+                                    <Modal open={isModalOpen4} onClose={handleClose4Modal} escClose={true} outlineClose={true}>
+                                        <div className="flex flex-col items-cnete justify-center m-3">
+                                            <div className="flex items-center justify-center font-bold">예약 메시지 보내기</div>
+                                            <div className="flex flex">
+                                                <div className="m-2">예약 시간 입력 : </div>
+                                                <input type="datetime-local" onChange={e => setSendDate(e.target.value ? new Date(e.target.value) : null)} />
+                                            </div>
+                                            <textarea className="h-[400px] " placeholder="내용을 입력하세요" onChange={e => setMessage(e.target.value)}
+                                                value={message}
+
+                                                onKeyDown={e => {
+                                                    if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
+                                                        e.preventDefault(); // 폼 제출 방지
+                                                        setMessage(''); // 메시지 전송 후 입력 필드 초기화        
+                                                    }
+                                                }
+                                                } />
+
+                                            <button onClick={() => {
+
+                                                const messageReservationRequestDTO = { chatroomId: chatroom?.id, message: message, messageType: 0, reservationDate: sendDate };
+
+                                                createMessageReservation(messageReservationRequestDTO).then(r => {
+                                                    setReservationMessageList(r.content);
+
+                                                    handleClose4Modal();
+                                                }).catch(e => {
+                                                    console.error(e);
+                                                });
+                                            }}>예약하기</button>
+                                        </div>
+                                    </Modal>
+                                    <Modal open={isModalOpen5} onClose={handleClose5Modal} escClose={true} outlineClose={true}>
+                                        <div className="flex flex-col items-center m-3">
+                                            <div className="flex items-center justify-center font-bold text-xl mb-3 w-[1000px]">예약 메시지 리스트</div>
+                                            <div className="overflow-auto h-[500px] w-full border border-gray-300 rounded-lg">
+                                                <div className="flex justify-between items-center font-bold text-lg m-2">
+                                                    <div className="w-1/5 text-center whitespace-nowrap">채팅방 이름</div>
+                                                    <div className="w-1/5 text-center whitespace-nowrap">예약 시간</div>
+                                                    <div className="w-2/5 text-center whitespace-nowrap">보낸 메시지</div>
+                                                    <div className="w-1/5">편집</div>
+                                                </div>
+                                                <ul className="m-3">
+                                                    {reservationMessageList && reservationMessageList.map((reservationMessage, index) => (
+                                                        <li key={index} className="flex justify-between items-center mb-5 border-b pb-2">
+                                                            <span className="text-md w-1/5 text-center">{getChatroomNameById(reservationMessage.chatroomId)}</span>
+                                                            <span className="text-md w-1/5 text-center">{getChatDateTimeFormat(reservationMessage.reservationDate)}</span>
+                                                            <span className="text-md w-2/5 text-center">{reservationMessage.message}</span>
+                                                            <div className="flex w-1/5">
+                                                                <button className="btn w-1/2 whitespace-nowrap">수정</button>
+                                                                <button className="btn w-1/2 whitespace-nowrap"
+                                                                    onClick={() => {
+                                                                        deleteMessageReservation(reservationMessage.id).then(r => {
+                                                                            setReservationMessageList(r.content);
+                                                                        })
+                                                                    }}>삭제</button>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </Modal>
+
+                                    <button id="file" onClick={() => { file.current?.click() }}>
+                                        <img src="/file.png" data-tip="파일" className="file w-[25px] h-[25px] items-center justify-center m-1" />
+                                        <input ref={file} type="file" hidden onChange={e => {
+                                            if (e.target.files && e.target.files[0]) {
+                                                const selectedFile = e.target.files[0];
+                                                if (selectedFile instanceof File) { // File 인스턴스 확인
+                                                    chatUploadFile({ chatroomId: chatroom?.id, file: selectedFile })
+                                                        .then(r => { setMessage(r); setMessageType(3); const interval = setInterval(() => { document.getElementById('send')?.click(); clearInterval(interval); }, 100) })
+                                                        .catch(e => console.log(e));
+                                                }
+                                                e.target.value = '';
+                                            }
+                                        }} />
+                                    </button>
+                                    <Tooltip anchorSelect="#file" clickable>
+                                        <button >파일 전송</button>
+                                    </Tooltip>
+                                    <button id="image" onClick={() => { image.current?.click() }}>
+                                        <img src="/image.png" data-tip="이미지" className="image w-[25px] h-[25px] items-center justify-center m-1" />
+                                        <input ref={image} type="file" hidden onChange={e => {
+                                            if (e.target.files && e.target.files[0]) {
+                                                const selectedFile = e.target.files[0];
+                                                if (selectedFile instanceof File) { // File 인스턴스 확인
+                                                    chatUploadFile({ chatroomId: chatroom?.id, file: selectedFile })
+                                                        .then(r => { setMessage(r); setMessageType(1); const interval = setInterval(() => { document.getElementById('send')?.click(); clearInterval(interval); }, 100) })
+                                                        .catch(e => console.log(e));
+                                                }
+                                                e.target.value = '';
+                                            }
+                                        }} />
+                                    </button>
+
+                                    <Tooltip anchorSelect="#image" clickable>
+                                        <button >이미지 전송</button>
+                                    </Tooltip>
+
+                                    <button id="link" onClick={handleOpen3Modal}>
+                                        <img src="/link.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
+                                    </button>
+
+                                    <Tooltip anchorSelect="#link" clickable>
+                                        <button>링크 전송</button>
+                                    </Tooltip>
+
+
+                                    <Modal open={isModalOpen3} onClose={handleClose3Modal} escClose={true} outlineClose={true}>
+                                        <div className="overflow-auto w-full m-2">
+                                            <div className="font-bold text-3xl m-3 mb-8 flex justify-center">링크 삽입</div>
+                                            <input placeholder="링크를 입력해주세요"
+                                                className="bolder-0 outline-none bg-white text-black"
+                                                onChange={e => setMessage(e.target.value)}
+                                                value={message}
+
+                                                onKeyDown={e => {
+                                                    setMessageType(2);
+                                                    if (e.key === "Enter" && !e.shiftKey) { // Shift + Enter를 누를 경우는 줄바꿈
+                                                        e.preventDefault(); // 폼 제출 방지
+                                                        if (isReady) {
+                                                            socket.publish({
+                                                                destination: "/api/pub/message/" + chatroom?.id,
+                                                                body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
+                                                            });
+                                                            setMessage(''); // 메시지 전송 후 입력 필드 초기화        
+                                                        }
+                                                    }
+                                                }}
+
+                                            />
+                                            <button className="btn"
+                                                onClick={() => {
+                                                    if (isReady) {
+
+                                                        socket.publish({
+                                                            destination: "/api/pub/message/" + chatroom?.id,
+                                                            body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
+                                                        });
+                                                    }
+                                                }}
+
+                                            >전송</button>
+                                        </div>
+                                    </Modal>
+                                </div>
+                                <button id="sendMessage">
+                                    <img id="send" src="/send.png" className="send w-[40px] h-[40px] items-center justify-center m-1" onClick={() => {
+
+                                        if (isReady && message) {
+                                            socket.publish({
+                                                destination: "/api/pub/message/" + chatroom?.id,
+                                                body: JSON.stringify({ username: user?.username, message: message, messageType: messageType })
+                                            });
+                                            setMessage("");
+                                            setMessageType(0);
+                                            (document.getElementById("chat_input") as HTMLInputElement).value = '';
+                                        }
+                                    }} />
+                                </button>
+                            </div>
+                        </div>
+                    </div >
+                </>
+                <Modal open={isModalOpen} onClose={handleCloseModal} escClose={true} outlineClose={true}>
+                    <div>
+                        <div className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</div>
+                        <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[50px] mb-5">
+                            <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
+                            <input
+                                // ref={addUsersInputRef}
+                                type="text"
+                                placeholder="참여자 검색"
+                                className="bolder-0 outline-none bg-white text-black w-[80%]"
+                                value={userKeyword}
+                                onChange={e => { setUserKeyword(e.target.value); e.target.focus(); }}
+                            />
+                            <button className="text-gray-300 whitespace-nowrap"
+                                onClick={handleUserSearch} >
+                                검색
+                            </button>
+                        </div>
+                        <div className="overflow-auto h-[500px]">
+                            <ul className="m-3">
+                                {searchedUsers.filter(user => !chatroom?.users.includes(user.username)).map((user, index) => (
+                                    <li key={index} className="flex justify-between items-center mb-5">
+                                        <span className="w-[50px] h-[50px]">
+                                            <img src={user.url ? user.url : "/pin.png"} alt="User profile" className="w-[50px] h-[50px]" />
+                                        </span>
+                                        <span className="font-bold text-md m-3">{user.name}</span>
+                                        <span className=" text-md m-3">부서</span>
+                                        <span className="text-md m-3">역할</span>
+                                        <button onClick={() => {
+                                            addUser({ chatroomId: chatroom.id, username: user.username }).then(r => {
+
+                                            }).catch(e => {
+                                                console.log(e)
+                                            })
+                                        }} className="font-bold text-3xl m-3">+</button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </Modal>
             </div>
         </div>
     </Main>
