@@ -954,8 +954,6 @@ public class MultiService {
             else {
                 throw new DataNotFoundException("채팅방에 있는 유저가 아닙니다.");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         } finally {
             lock.unlock();
         }
