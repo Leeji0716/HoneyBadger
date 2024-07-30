@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getUser, createSchedule, fetchSchedules, updateSchedule, deleteSchedule, getTagList, updateTag, deleteTag } from "@/app/API/UserAPI";
 import Main from "@/app/Global/Layout/MainLayout";
-import { eontransferLocalTime, getDateEmailTime, getScheduleDate, isHoliday, transferLocalTime } from "../Global/Method";
+import { eontransferLocalTime, getDateEmailTime, getScheduleDate, isHoliday, timeToString, transferLocalTime } from "../Global/Method";
 import DropDown, { Direcion } from '../Global/DropDown';
 // import MyComponent from "../Global/Accordion";
 
@@ -24,6 +24,7 @@ interface CycleDTO {
 }
 
 interface CycleTagDTO {
+    id: number;
     name: string,
     color: string
 }
@@ -43,6 +44,8 @@ interface Schedule {
     tagName?: string;
     tagColor?: string;
 }
+
+
 
 export default function Cycle() {
     // 상태 변수 정의
@@ -67,9 +70,13 @@ export default function Cycle() {
     const [tags, setTags] = useState<string[]>([]);
     const [color, setColor] = useState<string>("");
     const [tagList, setTagList] = useState<CycleTagResponseDTO[]>([]);
-    const [upcomingCycles, setUpcomingCycles] = useState<Schedule[]>([]); // 새로운 상태
-    const [endDate, setEndDate] = useState<Date>(new Date());   // 예시: 현재 날짜로 초기화
-
+    // const [endDate, setEndDate] = useState<Date>(new Date());
+    const [personal, setPersonal] = useState<CycleResponseDTO[]>([]);
+    const personalRef = useRef(personal);
+    const [group, setGroup] = useState<CycleResponseDTO[]>([]);
+    const groupRef = useRef(group);
+    // const [upcoming, setUpcoming] = useState<any[]>([]);
+    // const [now, setNow] = useState<any[]>([]);
     // 날짜와 월 관련 상수
     const year = selectedDate ? selectedDate.getFullYear() : new Date().getFullYear();
     const month = selectedDate ? selectedDate.getMonth() : new Date().getMonth();
@@ -84,10 +91,13 @@ export default function Cycle() {
 
     // 태그 관련 함수
     const handleEditTag = (tag: CycleTagResponseDTO) => { setSelectedTag(tag); setIsTagModalOpen(true); };
+
     useEffect(() => {
+        console.log("last_date");
         if (last_date)
             setSelectedDate(new Date(JSON.parse(last_date)));
     }, [last_date]);
+
 
     // 스케줄 관련 함수
     const loadSchedules = async () => {
@@ -97,6 +107,7 @@ export default function Cycle() {
                 console.log(`Fetching schedules from: ${formatDateToISO(startDate)} to: ${formatDateToISO(endDate)}`);
                 const personal: CycleDTO[] = await fetchSchedules(startDate, endDate, 0);
                 const group: CycleDTO[] = await fetchSchedules(startDate, endDate, 1);
+
                 const data: CycleDTO[] = [...personal, ...group];
                 const updatedData = data.map(cycle => ({
                     ...cycle,
@@ -105,6 +116,7 @@ export default function Cycle() {
                 }));
                 console.log("Fetched schedules data:", updatedData);
                 setSchedules(updatedData);
+                loadUpcoming();
             } catch (error) {
                 console.error("Failed to fetch schedules:", error);
             }
@@ -156,6 +168,7 @@ export default function Cycle() {
             tagName: tags[0] || '', // 태그의 첫 번째 이름을 사용
             tagColor: color
         };
+
         try {
             if (selectCycle) {
                 await updateSchedule(selectCycle.id, scheduleData, statusid);
@@ -189,25 +202,6 @@ export default function Cycle() {
         }
     };
 
-    const getUpcomingCycles = (schedules: any[]): Schedule[] => {
-        const now = new Date();
-        return schedules
-            .filter((schedule: any) => {
-                const endDate = new Date(schedule.endDate);
-                const fifteenMinutesBeforeEnd = new Date(endDate.getTime() - 15 * 60 * 1000); // 15분 전
-                return now >= fifteenMinutesBeforeEnd && now <= endDate;
-            })
-            .map((schedule: any) => ({
-                id: schedule.id,
-                title: schedule.title,
-                content: schedule.content,
-                startDate: new Date(schedule.startDate).toISOString(),
-                endDate: new Date(schedule.endDate).toISOString(),
-                tagName: schedule.tag?.name,
-                tagColor: schedule.tag?.color,
-            }));
-    };
-
     // DateColumn 컴포넌트
     function DateColumn({ date }: { date: Date }) {
         const now = new Date();
@@ -225,24 +219,88 @@ export default function Cycle() {
         );
     }
 
+    const handleCycleClick = (cycle: CycleDTO) => {
+        setSelectCycle(cycle);
+        setCycleStartDate(eontransferLocalTime(new Date(cycle.startDate)));
+        setCycleEndDate(new Date(cycle.endDate));
+    };
+
+    const getTimeSlots = () => Array.from({ length: 24 }, (_, i) => `${i}:00`);
+
+    function ScheduleCycle() {
+        const [upcoming, setUpcoming] = useState<any[]>([]);
+        const [now, setNow] = useState<any[]>([]);
+
+        useEffect(() => {
+            const interval = setInterval(() => {
+                const now = new Date().getTime();
+                {
+                    const range = 30 * 60 * 1000;
+                    const result = [...personalRef.current[0].cycleDTOList.filter(f => now + range >= f.startDate && now < f.startDate).map(c => {
+                        return { time: c.startDate - now, dto: c };
+                    }), ...groupRef.current[0].cycleDTOList.filter(f => now + range >= f.startDate && now < f.startDate).map(c => {
+                        return { time: c.startDate - now, dto: c };
+                    })];
+                    setUpcoming(result);
+                }
+                {
+                    const result = [...personalRef.current[0].cycleDTOList.filter(f => f.startDate <= now && now <= f.endDate).map(c => {
+                        return { time: c.endDate - now, dto: c };
+                    }), ...groupRef.current[0].cycleDTOList.filter(f => f.startDate <= now && now <= f.endDate).map(c => {
+                        return { time: c.endDate - now, dto: c };
+                    })]
+                    setNow(result);
+                }
+            }, 500);
+            return () => clearInterval(interval);
+        }, []);
+
+        return (
+            <div className="h-[50%] border-r-4 border-l-4 border-b-4">
+                <div className="h-[50%] border-r-4 border-l-4 border-b-4 p-4">
+                    <h2 className="text-xl font-bold mb-2">시작 예졍 일정</h2>
+                    <ul className="h-[80%] overflow-y-auto">
+                        {upcoming.length > 0
+                            ?
+                            upcoming.map((cycle, index) => <li key={index} className="p-2 border-b border-gray-200" >
+                                <div className="flex flex-col">
+                                    <label>
+                                        {cycle.dto.title} </label>
+                                    <label className={"self-end text-xs" + (cycle.time < 1000 * 10 * 60 ? ' text-red-500' : '')}>
+                                        남은 시간 {timeToString(cycle.time)}
+                                    </label>
+                                </div>
+                            </li>)
+                            :
+                            <li className="p-2 text-gray-500">예정 일정이 없습니다.</li>
+                        }
+                    </ul>
+                </div>
+                <div className="h-[50%] border-r-4 border-l-4 border-b-4 p-4">
+                    <h2 className="text-xl font-bold mb-2">진행중 일정</h2>
+                    <ul className="h-[80%] overflow-y-auto">
+                        {now.length > 0
+                            ?
+                            now.map((cycle, index) => <li key={index} className="p-2 border-b border-gray-200" >
+                                <div className="flex flex-col">
+                                    <label>
+                                        {cycle.dto.title} </label>
+                                    <label className={"self-end text-xs" + (cycle.time < 1000 * 10 * 60 ? ' text-red-500' : '')}>
+                                        남은 시간 {timeToString(cycle.time)}
+                                    </label>
+                                </div>
+                            </li>)
+                            :
+                            <li className="p-2 text-gray-500">예정 일정이 없습니다.</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        )
+    }
+
     // 스케줄 테이블 컴포넌트
     function ScheduleTable() {
-        const [dropDownOpen, setDropDownOpen] = useState<number | null>(null);
-
-        const handleCycleClick = (cycle: CycleDTO) => {
-            setSelectCycle(cycle);
-            setCycleStartDate(eontransferLocalTime(new Date(cycle.startDate)));
-            setCycleEndDate(new Date(cycle.endDate));
-            setDropDownOpen(null); // 기존 드롭다운을 닫습니다.
-        };
-
-        const handleDropDownClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, dateIndex: number) => {
-            event.stopPropagation(); // 클릭 이벤트 전파 방지
-            setDropDownOpen(dateIndex);
-        };
-
-        const getTimeSlots = () => Array.from({ length: 24 }, (_, i) => `${i}:00`);
-
         return (
             <table className="w-full border-collapse">
                 <thead>
@@ -281,66 +339,24 @@ export default function Cycle() {
                                     return true;
                                 });
 
-                                const showDropDown = filteredCycles.length > 2; // 사이클이 2개 이상이면 드롭다운을 표시
-
                                 return (
-                                    <td key={`${dateIndex}-${slotIndex}`} className="border w-[10%] h-[60px] relative">
-                                        <div className="flex flex-col h-full justify-center items-center">
-                                            {showDropDown ? (
-                                                <>
-                                                    <button
-                                                        className="mt-1 px-2 py-1 bg-purple-300 text-black rounded"
-                                                        onClick={(e) => handleDropDownClick(e, dateIndex)}
-                                                    >
-                                                        더보기...
-                                                    </button>
-                                                    {dropDownOpen === dateIndex && (
-                                                        <DropDown
-                                                            open={true}
-                                                            onClose={() => setDropDownOpen(null)}
-                                                            className="bg-white"
-                                                            width={200}
-                                                            height={200}
-                                                            defaultDriection={Direcion.DOWN}
-                                                            button=""
-                                                            x={0}
-                                                            y={0}
-                                                        >
-                                                            {filteredCycles.map((cycle: CycleDTO, index: number) => (
-                                                                <div
-                                                                    key={index}
-                                                                    className="cursor-pointer p-2 rounded mb-1 flex items-center space-x-2"
-                                                                    onClick={() => handleCycleClick(cycle)}>
-                                                                    <div
-                                                                        className="w-4 h-4 rounded-md"
-                                                                        style={{ backgroundColor: cycle.tag.color }}
-                                                                        aria-label={`Tag color: ${cycle.tag.name}`}
-                                                                    />
-                                                                    <span className="text-black truncate max-w-[100px]" title={cycle.title}>
-                                                                        {cycle.title}
-                                                                    </span>
-                                                                </div>
-                                                            ))}
-                                                        </DropDown>
-                                                    )}
-                                                </>
-                                            ) : (
-                                                filteredCycles.map((cycle: CycleDTO, index: number) => (
+                                    <td key={`${dateIndex}-${slotIndex}`} className="border w-[10%] h-[150px] relative">
+                                        <div className="flex flex-col h-full justify-center items-center overflow-y-auto max-h-[60px]">
+                                            {filteredCycles.map((cycle: CycleDTO, index: number) => (
+                                                <div
+                                                    key={index}
+                                                    className={`cursor-pointer rounded mb-1 flex items-center space-x-2 ${selectedTag && cycle.tag.id !== selectedTag.id ? 'opacity-0' : 'opacity-100'}`}
+                                                    onClick={() => handleCycleClick(cycle)}>
                                                     <div
-                                                        key={index}
-                                                        className="cursor-pointer p-2 rounded mb-1 flex items-center space-x-2"
-                                                        onClick={() => handleCycleClick(cycle)}>
-                                                        <div
-                                                            className="w-4 h-4 rounded-md"
-                                                            style={{ backgroundColor: cycle.tag.color }}
-                                                            aria-label={`Tag color: ${cycle.tag.name}`}
-                                                        />
-                                                        <span className="text-black truncate max-w-[100px]" title={cycle.title}>
-                                                            {cycle.title}
-                                                        </span>
-                                                    </div>
-                                                ))
-                                            )}
+                                                        className="w-4 h-4 rounded-md"
+                                                        style={{ backgroundColor: cycle.tag.color }}
+                                                        aria-label={`Tag color: ${cycle.tag.name}`}
+                                                    />
+                                                    <span className="text-black truncate max-w-[100px]" title={cycle.title}>
+                                                        {cycle.title}
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </td>
                                 );
@@ -352,43 +368,66 @@ export default function Cycle() {
         );
     }
 
-    // 태그 리스트 필터링 함수
-    function RenderTagList({ tag }: { tag: CycleTagResponseDTO }) {
-        return <div className="flex items-center gap-4 p-2 border border-gray-300 rounded-lg shadow-sm mb-2 bg-white hover:bg-gray-50 transition-colors duration-300">
-            <div className="flex items-center gap-2">
-                <div
-                    className="w-4 h-4 rounded-md"
-                    style={{ backgroundColor: tag.color }}
-                    aria-label={`Tag color: ${tag.name}`}>
-                </div>
-                <span className="text-sm font-medium">{tag.name}</span>
-            </div>
-            <div className="flex-grow"></div>
-            <button
-                onClick={() => handleEditTag(tag)}
-                className="px-2 py-1 text-blue-500 hover:bg-blue-100 rounded-md border border-blue-300 text-xs transition-colors duration-300">
-                수정
-            </button>
-            <button
-                onClick={() => {
-                    deleteTag(tag.id)
-                        .then(() => getTagList(statusid))
-                        .then(r => setTagList(r))
-                        .catch(e => console.log(e));
-                }}
-                className="px-2 py-1 text-red-500 hover:bg-red-100 rounded-md border border-red-300 text-xs transition-colors duration-300">
-                삭제
-            </button>
-        </div>
+    function handleTagClick(tag: CycleTagResponseDTO) {
+        setSelectedTag(tag);
     }
 
+    // 태그 리스트 필터링 함수
+    function RenderTagList({ tag }: { tag: CycleTagResponseDTO }) {
+        return (
+            <div className="flex items-center gap-4 p-2 border border-gray-300 rounded-lg shadow-sm mb-2 bg-white hover:bg-gray-50 transition-colors duration-300">
+                <div className="flex items-center gap-2" onClick={() => handleTagClick(tag)}>
+                    <div
+                        className="w-4 h-4 rounded-md"
+                        style={{ backgroundColor: tag.color }}
+                        aria-label={`Tag color: ${tag.name}`}>
+                    </div>
+                    <span className="text-sm font-medium">{tag.name}</span>
+                </div>
+                <div className="flex-grow"></div>
+                <button
+                    onClick={() => handleEditTag(tag)}
+                    className="px-2 py-1 text-blue-500 hover:bg-blue-100 rounded-md border border-blue-300 text-xs transition-colors duration-300">
+                    수정
+                </button>
+                <button
+                    onClick={() => {
+                        deleteTag(tag.id)
+                            .then(() => getTagList(statusid))
+                            .then(r => setTagList(r))
+                            .catch(e => console.log(e));
+                    }}
+                    className="px-2 py-1 text-red-500 hover:bg-red-100 rounded-md border border-red-300 text-xs transition-colors duration-300">
+                    삭제
+                </button>
+            </div>
+        );
+    }
+    function loadUpcoming() {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() + 1);
+        startDate.setHours(0);
+        startDate.setMinutes(0);
+        startDate.setSeconds(0);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 1);
+
+        fetchSchedules(startDate, endDate, 0).then(r => {
+            personalRef.current = r;
+            setPersonal(personalRef.current);
+        });
+        fetchSchedules(startDate, endDate, 1).then(r => {
+            groupRef.current = r;
+            setPersonal(groupRef.current);
+        });
+    }
     // 초기 데이터 로드
     useEffect(() => {
         if (ACCESS_TOKEN) {
             getUser().then(r => {
                 setUser(r);
                 setClientLoading(false);
-                loadSchedules(); // 초기 로드 시 스케줄 불러오기
+                // loadSchedules(); // 초기 로드 시 스케줄 불러오기
             }).catch(e => {
                 setClientLoading(false);
                 console.log(e);
@@ -437,18 +476,36 @@ export default function Cycle() {
         }
     }, [isModalOpen, selectCycle]);
 
+
+
     // useEffect(() => {
-    //     fetchSchedules(startDate, endDate, statusid)
-    //         .then(data => {
-    //             setSchedules(data);
-    //             setUpcomingCycles(getUpcomingCycles(data));
-    //         })
-    //         .catch(error => console.error('Error fetching schedules:', error));
-    // }, [startDate, endDate, statusid]);
+    //     const interval = setInterval(() => {
+    //         const now = new Date().getTime();
+    //         {
+    //             const range = 30 * 60 * 1000;
+    //             const result = [...personalRef.current[0].cycleDTOList.filter(f => now + range >= f.startDate && now < f.startDate).map(c => {
+    //                 return { time: c.startDate - now, dto: c };
+    //             }), ...groupRef.current[0].cycleDTOList.filter(f => now + range >= f.startDate && now < f.startDate).map(c => {
+    //                 return { time: c.startDate - now, dto: c };
+    //             })];
+    //             setUpcoming(result);
+    //         }
+    //         {
+    //             const result = [...personalRef.current[0].cycleDTOList.filter(f => f.startDate <= now && now <= f.endDate).map(c => {
+    //                 return { time: c.endDate - now, dto: c };
+    //             }), ...groupRef.current[0].cycleDTOList.filter(f => f.startDate <= now && now <= f.endDate).map(c => {
+    //                 return { time: c.endDate - now, dto: c };
+    //             })]
+    //             setNow(result);
+    //         }
+    //     }, 500);
+    //     return () => clearInterval(interval);
+    // }, []);
 
     return (
         <Main user={user} isClientLoading={isClientLoading}>
             <div className="flex bg-white w-full p-2">
+
                 {/* Calendar Sidebar */}
                 <div className="w-[20%] border-4 rounded-tl-lg rounded-bl-lg">
                     {/* Month Navigation */}
@@ -547,7 +604,7 @@ export default function Cycle() {
                             <label htmlFor="personal" className="collapse-title text-xl font-medium">
                                 개인
                             </label>
-                            <div className="collapse-content">
+                            <div className="collapse-content overflow-y-auto max-h-[400px] cursor-pointer" style={{ scrollbarWidth: 'none' }}>
                                 {tagList.length !== 0 ? tagList?.map((t: CycleTagResponseDTO, index: number) => (
                                     <RenderTagList key={index} tag={t} />
                                 )) : <></>}
@@ -561,7 +618,7 @@ export default function Cycle() {
                             <label htmlFor="group" className="collapse-title text-xl font-medium">
                                 그룹
                             </label>
-                            <div className="collapse-content">
+                            <div className="collapse-content overflow-y-auto max-h-[400px] cursor-pointer" style={{ scrollbarWidth: 'none' }}>
                                 {tagList.length !== 0 ? tagList?.map((t: CycleTagResponseDTO, index: number) => (
                                     <RenderTagList key={index} tag={t} />
                                 )) : <></>}
@@ -603,30 +660,12 @@ export default function Cycle() {
                         <button
                             className="h-full border-b-2 border-r-2 border-l-2 flex items-center justify-center cursor-pointer text-sm font-medium text-blue-500"
                             onClick={() => {
-                                setSelectCycle(null);  // 선택된 일정 초기화
                                 setIsModalOpen(true);
                             }}>
                             일정 생성
                         </button>
                     </div>
-
-                    {/* Search Section */}
-                    <div className="h-[50%] border-r-4 border-l-4 border-b-4">upcoming cycle 15
-                        <div className="h-[50%] border-r-4 border-l-4 border-b-4 p-4">
-                            <h2 className="text-xl font-bold mb-2">Upcoming Cycles</h2>
-                            <ul>
-                                {upcomingCycles.length > 0 ? (
-                                    upcomingCycles.map((cycle, index) => (
-                                        <li key={index} className="p-2 border-b border-gray-200">
-                                            {cycle.title}
-                                        </li>
-                                    ))
-                                ) : (
-                                    <li className="p-2 text-gray-500">Upcoming cycles are not available.</li>
-                                )}
-                            </ul>
-                        </div>
-                    </div>
+                    <ScheduleCycle />
 
                     {/* Schedule Details */}
                     <div className="h-[40%] border-r-4 border-l-4 border-b-4 p-4">
