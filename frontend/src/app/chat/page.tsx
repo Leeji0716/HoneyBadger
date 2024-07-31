@@ -446,35 +446,35 @@ export default function Chat() {
 
 
             switch (joinMembers.length) {
-                case 2: return <img src={targets[0]?.url ? targets[0]?.url : "/pin.png"} className="m-2 w-[80px] h-[80px] rounded-full" />;
+                case 2: return <img src={targets[0]?.url ? targets[0]?.url : "/pin.png"} className="m-2 w-[5rem] h-[5rem] rounded-full" />;
 
-                case 3: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
-                    <div className="w-[80px] h-[40px] flex">
-                        <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full ml-2 mt-2" />
+                case 3: return <div className="m-2 w-[5rem] h-[5rem] flex flex-col justify-center items-center ">
+                    <div className="w-[5rem] h-[2.5rem] flex">
+                        <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full ml-2 mt-2" />
                     </div>
-                    <div className="w-[80px] h-[40px] flex justify-end">
-                        <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full mr-2 mb-2" />
+                    <div className="w-[5rem] h-[2.5rem] flex justify-end">
+                        <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full mr-2 mb-2" />
                     </div>
                 </div>
 
-                case 4: return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
-                    <div className="w-[80px] h-[40px] flex justify-center">
-                        <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
+                case 4: return <div className="m-2 w-[5rem] h-[5rem] flex flex-col justify-center items-center ">
+                    <div className="w-[5rem] h-[2.5rem] flex justify-center">
+                        <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
                     </div>
-                    <div className="w-[80px] h-[40px] flex">
-                        <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
-                        <img src={targets[2]?.url ? targets[2].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
+                    <div className="w-[5rem] h-[2.5rem] flex">
+                        <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                        <img src={targets[2]?.url ? targets[2].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
                     </div>
                 </div>
                 default:
-                    return <div className="m-2 w-[80px] h-[80px] flex flex-col justify-center items-center ">
-                        <div className="w-[80px] h-[40px] flex">
-                            <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
-                            <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
+                    return <div className="m-2 w-[5rem] h-[5rem] flex flex-col justify-center items-center ">
+                        <div className="w-[5rem] h-[2.5rem] flex">
+                            <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                            <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
                         </div>
-                        <div className="w-[80px] h-[40px] flex">
-                            <img src={targets[2]?.url ? targets[2].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
-                            <img src={targets[3]?.url ? targets[3].url : "/pigp.png"} className="w-[40px] h-[40px] rounded-full" />
+                        <div className="w-[5rem] h-[2.5rem] flex">
+                            <img src={targets[2]?.url ? targets[2].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                            <img src={targets[3]?.url ? targets[3].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
                         </div>
                     </div>
             }
@@ -599,7 +599,7 @@ export default function Chat() {
                         <div className="text-gray-300 whitespace-nowrap">{getChatShowDateTimeFormat(Chatroom?.latestMessage?.sendTime)}</div>
                     )}
                 </div>
-                {Chatroom?.alarmCount == 0 ? "" : <div className="bg-red-500 rounded-full w-[20px] h-[20px] flex justify-center items-center mt-2">
+                {Chatroom?.alarmCount == 0 ? "" : <div className="bg-red-500 rounded-full w-[1.25rem] h-[1.25rem] flex justify-center items-center mt-2">
                     <div className="text-white text-sm">{Chatroom?.alarmCount}</div>
                 </div>}
 
@@ -662,13 +662,13 @@ export default function Chat() {
                             <button>단체</button>
                         </DropDown>
                     </div>
-                    <button onClick={handleOpen2Modal} className="absolute bottom-5 left-5 w-[50px] h-[50px] rounded-full bg-blue-300 text-xl font-bold text-white">
+                    <button onClick={handleOpen2Modal} className="absolute bottom-5 left-5 w-[3.125rem] h-[3.125rem] rounded-full bg-blue-300 text-xl font-bold text-white">
                         +
                     </button>
                     <Modal open={isModalOpen2} onClose={handleClose2Modal} escClose={true} outlineClose={true}>
                         <div >
                             <div className="font-bold text-3xl m-3 mb-8 flex justify-center">채팅방 만들기</div>
-                            <div className="flex flex-row border-2 border-gray-300 rounded-md w-[400px] h-[40px] m-2">
+                            <div className="flex flex-row border-2 border-gray-300 rounded-md w-[25rem] h-[2.5rem] m-2">
                                 <input
                                     type="text"
                                     placeholder="채팅방 이름을 입력해주세요"
@@ -679,12 +679,12 @@ export default function Chat() {
 
                             </div>
                             <div className="font-bold ml-2">추가 인원 선택</div>
-                            <div className="overflow-auto w-full h-[500px]">
+                            <div className="overflow-auto w-full h-[31.25rem]">
                                 <ul className="m-3">
 
                                     {userList.map((user, index) => (
                                         <li key={index} className="flex justify-between items-center mb-5">
-                                            <span className="w-[50px] h-[50px]"><img src="/pin.png" alt="" /></span>
+                                            <span className="w-[3.125rem] h-[3.125rem]"><img src="/pin.png" alt="" /></span>
                                             <span className="font-bold text-md m-3">{user.name}</span>
                                             <span className=" text-md m-3">부서</span>
                                             <span className="text-md m-3">역할</span>
@@ -708,8 +708,8 @@ export default function Chat() {
 
 
                     <div className="flex flex-col items-center">
-                        <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[50px] mb-5">
-                            <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
+                        <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[3.125rem] mb-5">
+                            <img src="/searchg.png" className="w-[1.875rem] h-[1.875rem] m-2" alt="검색 사진" />
                             <input
                                 type="text"
                                 placeholder="대화방, 참여자 검색"
@@ -727,7 +727,7 @@ export default function Chat() {
                                 내 프로필
                             </div>
                             <div className="flex hover:bg-gray-400 text-white rounded-md">
-                                <img src={user?.url ? user.url : "/pin.png"} className="m-2 w-[80px] h-[80px] rounded-full" />
+                                <img src={user?.url ? user.url : "/pin.png"} className="m-2 w-[5rem] h-[5rem] rounded-full" />
                                 <div className="w-full m-2 flex flex-col">
                                     <div className="flex justify-between">
                                         <div className="text-black font-bold">{user?.name}</div>
@@ -745,7 +745,7 @@ export default function Chat() {
                                 대화 목록
                             </div>
                         </div>
-                        <div className="w-full justify-end h-[450px] overflow-x-hidden overflow-y-scroll">
+                        <div className="w-full justify-end h-[28.125rem] HD:h-[20rem] SD:h-[16rem] overflow-x-hidden overflow-y-scroll">
                             {chatrooms?.map((chatroom: chatroomResponseDTO, index: number) => <ChatList key={index} Chatroom={chatroom} ChatDetail={chatDetail} innerRef={chatBoxRef} />)}
                         </div>
                     </div>
@@ -761,7 +761,7 @@ export default function Chat() {
                         <div className={'h-full flex flex-col relative' + (chatroom != null ? '' : ' hidden')}>
                             <div className="flex w-full justify-between border-b-2">
                                 <div className="text-black flex w-[50%]">
-                                    <img src="/pig.png" className="m-2 w-[70px] h-[70px] rounded-full" />
+                                    <img src="/pig.png" className="m-2 w-[4.375rem] h-[4.375rem] rounded-full" />
                                     <div className="flex flex-col justify-center">
                                         <div className="flex">
                                             <div className="text-black font-bold text-3xl mb-1 whitespace-nowrap">
@@ -782,9 +782,9 @@ export default function Chat() {
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <button onClick={handleOpenModal}>
-                                                <img src="/people.png" className="w-[30px] h-[30px]" />
+                                                <img src="/people.png" className="w-[1.875rem] h-[1.875rem]" />
                                             </button>
-                                            <div className="flex items-end text-xl w-[30px] h-[30px] text-official-color">
+                                            <div className="flex items-end text-xl w-[1.875rem] h-[1.875rem] text-official-color">
                                                 {joinMembers}
                                             </div>
                                         </div>
@@ -833,25 +833,25 @@ export default function Chat() {
                                     </DropDown>
 
                                     <Modal open={isModalOpen6} onClose={handleClose6Modal} escClose={true} outlineClose={true}>
-                                        <div className="official-color h-[50px] flex justify-center">
+                                        <div className="official-color h-[3.125rem] flex justify-center">
 
                                             <div className="text-1xl flex justify-center gap-20 mt-1">
-                                                <button className={` ${activeTab === 'photos' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('photos')}>사진</button>
-                                                <button className={` ${activeTab === 'files' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('files')}>파일</button>
-                                                <button className={` ${activeTab === 'links' ? 'bg-white w-[100px] rounded-t-2xl' : 'w-[100px]'}`} onClick={() => setActiveTab('links')}>링크</button>
+                                                <button className={` ${activeTab === 'photos' ? 'bg-white w-[6.25rem] rounded-t-2xl' : 'w-[6.25rem]'}`} onClick={() => setActiveTab('photos')}>사진</button>
+                                                <button className={` ${activeTab === 'files' ? 'bg-white w-[6.25rem] rounded-t-2xl' : 'w-[6.25rem]'}`} onClick={() => setActiveTab('files')}>파일</button>
+                                                <button className={` ${activeTab === 'links' ? 'bg-white w-[6.25rem] rounded-t-2xl' : 'w-[6.25rem]'}`} onClick={() => setActiveTab('links')}>링크</button>
                                             </div>
                                         </div>
                                         <div className="content">
                                             {activeTab === 'photos' && (
-                                                <div className="flex items-center flex-col w-[480px] h-[800px] overflow-x-hidden overflow-y-scroll">
+                                                <div className="flex items-center flex-col w-[30rem] h-[50rem] overflow-x-hidden overflow-y-scroll">
 
                                                     <div className="font-bold flex-wrap: wrap text-3xl m-3">첨부한 이미지</div>
-                                                    <div className="flex w-[450px] flex-wrap">
+                                                    <div className="flex w-[28.125rem] flex-wrap">
                                                         {imageList.map(image => (
-                                                            <div key={image.id} className="w-[150px]">
-                                                                <div className="h-[150px] flex justify-center flex-col m-2">
-                                                                    <img className="w-full h-[130px] border-2 border-gray-300" src={image?.message} />
-                                                                    <span className="w-full h-[20px] font-bold flex justify-center text-sm">{image.name}
+                                                            <div key={image.id} className="w-[9.375rem]">
+                                                                <div className="h-[9.375rem] flex justify-center flex-col m-2">
+                                                                    <img className="w-full h-[8.125rem] border-2 border-gray-300" src={image?.message} />
+                                                                    <span className="w-full h-[1.25rem] font-bold flex justify-center text-sm">{image.name}
                                                                         <div className="text-gray-400 ml-2 text-xs mt-1">
                                                                             {getChatDateTimeFormat(image.sendTime)}
                                                                         </div>
@@ -863,19 +863,19 @@ export default function Chat() {
                                                 </div>
                                             )}
                                             {activeTab === 'files' && (
-                                                <div className="flex items-center flex-col w-[480px] h-[800px] overflow-x-hidden overflow-y-scroll">
+                                                <div className="flex items-center flex-col w-[30rem] h-[50rem] overflow-x-hidden overflow-y-scroll">
 
                                                     <div className="font-bold flex-wrap: wrap text-3xl m-3">첨부한 파일</div>
-                                                    <div className="flex w-[450px] flex-wrap">
+                                                    <div className="flex w-[28.125rem] flex-wrap">
                                                         {fileList.map(file => (
-                                                            <div key={file.id} className="w-[150px]">
-                                                                <div className="h-[150px] flex justify-center items-center flex-col m-2 border-2 border-gray-300 m-3">
+                                                            <div key={file.id} className="w-[9.375rem]">
+                                                                <div className="h-[9.375rem] flex justify-center items-center flex-col m-2 border-2 border-gray-300 m-3">
                                                                     <a href={file?.message} download target="_blank" rel="noopener noreferrer">
-                                                                        <img src={getFileIcon(file?.message)} className="w-[100px] h-[100px] mr-2" alt="" />
+                                                                        <img src={getFileIcon(file?.message)} className="w-[6.25rem] h-[6.25rem] mr-2" alt="" />
                                                                         {/* {file?.message} */}
                                                                     </a>
 
-                                                                    <span className="w-full h-[20px] font-bold flex justify-center text-sm">{file.name}
+                                                                    <span className="w-full h-[1.25rem] font-bold flex justify-center text-sm">{file.name}
                                                                         <div className="text-gray-400 ml-2 text-xs mt-1">
                                                                             {getChatDateTimeFormat(file.sendTime)}
                                                                         </div>
@@ -887,16 +887,16 @@ export default function Chat() {
                                                 </div>
                                             )}
                                             {activeTab === 'links' && (
-                                                <div className="flex items-center flex-col w-[600px] h-[800px] overflow-x-hidden overflow-y-scroll">
+                                                <div className="flex items-center flex-col w-[37.5rem] h-[50rem] overflow-x-hidden overflow-y-scroll">
 
                                                     <div className="font-bold text-3xl m-3">첨부한 링크</div>
                                                     <div className="flex flex-col">
                                                         {linkList.map(link => (
                                                             <div key={link.id} className="">
-                                                                <div className="flex justify-center flex m-2 w-[500px]">
-                                                                    <a href={link?.message} className="w-[400px]" target="_blank" rel="noopener noreferrer">{link?.message}</a>
-                                                                    <span className="w-[200px] h-[20px] font-bold flex justify-center text-sm">{link.name}
-                                                                        <div className="text-gray-400 ml-2 text-xs mt-1 w-[100px]">
+                                                                <div className="flex justify-center flex m-2 w-[31.25rem]">
+                                                                    <a href={link?.message} className="w-[25rem]" target="_blank" rel="noopener noreferrer">{link?.message}</a>
+                                                                    <span className="w-[12.5rem] h-[1.25rem] font-bold flex justify-center text-sm">{link.name}
+                                                                        <div className="text-gray-400 ml-2 text-xs mt-1 w-[6.25rem]">
                                                                             {getChatDateTimeFormat(link.sendTime)}
                                                                         </div>
                                                                     </span>
@@ -915,16 +915,16 @@ export default function Chat() {
                             <div className={chatroom?.notification?.message ? '' : ' hidden'}>
                                 {!showNotification && (
                                     <div className="w-full flex justify-start ml-3" onClick={toggleNotification}>
-                                        <div className="bg-[#abcdae] w-[70px] h-[70px] rounded-full flex items-center fixed p-4">
-                                            <img src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="Notification" />
+                                        <div className="bg-[#abcdae] w-[4.375rem] h-[4.375rem] rounded-full flex items-center fixed p-4">
+                                            <img src="/noti.png" className="w-[3.75rem] h-[3.75rem] mr-2" alt="Notification" />
                                         </div>
                                     </div>
                                 )}
 
                                 {showNotification && (
                                     <div className="w-full flex justify-center">
-                                        <div className="bg-[#abcdae] w-[59%] h-[70px] rounded-md flex items-center fixed p-4">
-                                            <img onClick={() => setShowNotification(false)} src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="" />
+                                        <div className="bg-[#abcdae] w-[59%] h-[4.375rem] rounded-md flex items-center fixed p-4">
+                                            <img onClick={() => setShowNotification(false)} src="/noti.png" className="w-[3.75rem] h-[3.75rem] mr-2" alt="" />
                                             <div className="w-full text-white" style={{ opacity: 1 }}>
                                                 {chatroom?.notification?.message}
                                             </div>
@@ -938,7 +938,7 @@ export default function Chat() {
                                 )}
                             </div>
 
-                            <div ref={chatBoxRef} onScroll={loadPage} className="h-[575px] w-[100%] overflow-x-hidden overflow-y-auto">
+                            <div ref={chatBoxRef} onScroll={loadPage} className="SD:h-[20rem] HD:h-[25rem] h-[35.9375rem] w-[100%] overflow-x-hidden overflow-y-auto">
                                 {/* 날짜 */}
                                 <div className="flex justify-center">
                                     {/* <div className="inline-flex bg-gray-400 rounded-full text-white font-bold px-4 py-2 text-sm justify-center mt-2 bg-opacity-55">
@@ -1005,7 +1005,7 @@ export default function Chat() {
                                             </div>
                                             :
                                             <div className="flex w-6/12 ml-2 mb-3" id={index.toString()}>
-                                                <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
+                                                <img src="/pigp.png" className="w-[2.5rem] h-[2.5rem] rounded-full" />
                                                 <div className="flex flex-col ml-2">
                                                     <div className="text-black font-bold ml-2">
                                                         {t?.name}
@@ -1060,7 +1060,7 @@ export default function Chat() {
                                 }
                             </div>
 
-                            <div className="absolute bottom-0 flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[150px] items-start">
+                            <div className="absolute bottom-0 flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[9.375rem] items-start">
                                 <div className="h-full m-2 w-[98%]">
                                     <textarea id="chat_input" key={chatroom?.id} autoFocus={!isModalOpen && !isModalOpen2} placeholder="내용을 입력하세요" className="resize-none bolder-0 outline-none bg-white text-black w-full h-full" onChange={e => setMessage(e.target.value)}
                                         value={message}
@@ -1081,14 +1081,14 @@ export default function Chat() {
                                     <div className="flex">
 
                                         <button id="emoticon">
-                                            <img src="/emoticon.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
+                                            <img src="/emoticon.png" className="w-[1.5625rem] h-[1.5625rem] items-center justify-center m-1" />
                                         </button>
                                         <Tooltip anchorSelect="#emoticon" clickable>
                                             <button>이모티콘</button>
                                         </Tooltip>
 
                                         <button id="book">
-                                            <img src="/book.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
+                                            <img src="/book.png" className="w-[1.5625rem] h-[1.5625rem] items-center justify-center m-1" />
                                         </button>
                                         <Tooltip anchorSelect="#book" clickable>
                                             <div className="flex flex-col">
@@ -1104,7 +1104,7 @@ export default function Chat() {
                                                     <div className="m-2">예약 시간 입력 : </div>
                                                     <input type="datetime-local" onChange={e => setSendDate(e.target.value ? new Date(e.target.value) : null)} />
                                                 </div>
-                                                <textarea className="h-[400px] " placeholder="내용을 입력하세요" onChange={e => setMessage(e.target.value)}
+                                                <textarea className="h-[25rem] " placeholder="내용을 입력하세요" onChange={e => setMessage(e.target.value)}
                                                     value={message}
 
                                                     onKeyDown={e => {
@@ -1131,8 +1131,8 @@ export default function Chat() {
                                         </Modal>
                                         <Modal open={isModalOpen5} onClose={handleClose5Modal} escClose={true} outlineClose={true}>
                                             <div className="flex flex-col items-center m-3">
-                                                <div className="flex items-center justify-center font-bold text-xl mb-3 w-[1000px]">예약 메시지 리스트</div>
-                                                <div className="overflow-auto h-[500px] w-full border border-gray-300 rounded-lg">
+                                                <div className="flex items-center justify-center font-bold text-xl mb-3 w-[62.5rem]">예약 메시지 리스트</div>
+                                                <div className="overflow-auto h-[31.25rem] w-full border border-gray-300 rounded-lg">
                                                     <div className="flex justify-between items-center font-bold text-lg m-2">
                                                         <div className="w-1/5 text-center whitespace-nowrap">채팅방 이름</div>
                                                         <div className="w-1/5 text-center whitespace-nowrap">예약 시간</div>
@@ -1162,7 +1162,7 @@ export default function Chat() {
                                         </Modal>
 
                                         <button id="file" onClick={() => { file.current?.click() }}>
-                                            <img src="/file.png" data-tip="파일" className="file w-[25px] h-[25px] items-center justify-center m-1" />
+                                            <img src="/file.png" data-tip="파일" className="file w-[1.5625rem] h-[1.5625rem] items-center justify-center m-1" />
                                             <input ref={file} type="file" hidden onChange={e => {
                                                 if (e.target.files && e.target.files[0]) {
                                                     const selectedFile = e.target.files[0];
@@ -1179,7 +1179,7 @@ export default function Chat() {
                                             <button >파일 전송</button>
                                         </Tooltip>
                                         <button id="image" onClick={() => { image.current?.click() }}>
-                                            <img src="/image.png" data-tip="이미지" className="image w-[25px] h-[25px] items-center justify-center m-1" />
+                                            <img src="/image.png" data-tip="이미지" className="image w-[1.5625rem] h-[1.5625rem] items-center justify-center m-1" />
                                             <input ref={image} type="file" hidden onChange={e => {
                                                 if (e.target.files && e.target.files[0]) {
                                                     const selectedFile = e.target.files[0];
@@ -1198,7 +1198,7 @@ export default function Chat() {
                                         </Tooltip>
 
                                         <button id="link" onClick={handleOpen3Modal}>
-                                            <img src="/link.png" className="w-[25px] h-[25px] items-center justify-center m-1" />
+                                            <img src="/link.png" className="w-[1.5625rem] h-[1.5625rem] items-center justify-center m-1" />
                                         </button>
 
                                         <Tooltip anchorSelect="#link" clickable>
@@ -1245,7 +1245,7 @@ export default function Chat() {
                                         </Modal>
                                     </div>
                                     <button id="sendMessage">
-                                        <img id="send" src="/send.png" className="send w-[40px] h-[40px] items-center justify-center m-1" onClick={() => {
+                                        <img id="send" src="/send.png" className="send w-[2.5rem] h-[2.5rem] items-center justify-center m-1" onClick={() => {
 
                                             if (isReady && message) {
                                                 socket.publish({
@@ -1268,8 +1268,8 @@ export default function Chat() {
                     <Modal open={isModalOpen} onClose={handleCloseModal} escClose={true} outlineClose={true}>
                         <div>
                             <div className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</div>
-                            <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[50px] mb-5">
-                                <img src="/searchg.png" className="w-[30px] h-[30px] m-2" alt="검색 사진" />
+                            <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[3.125rem] mb-5">
+                                <img src="/searchg.png" className="w-[1.875rem] h-[1.875rem] m-2" alt="검색 사진" />
                                 <input
                                     // ref={addUsersInputRef}
                                     type="text"
@@ -1283,12 +1283,12 @@ export default function Chat() {
                                     검색
                                 </button>
                             </div>
-                            <div className="overflow-auto h-[500px]">
+                            <div className="overflow-auto h-[31.25rem]">
                                 <ul className="m-3">
                                     {searchedUsers.filter(user => !chatroom?.users.includes(user.username)).map((user, index) => (
                                         <li key={index} className="flex justify-between items-center mb-5">
-                                            <span className="w-[50px] h-[50px]">
-                                                <img src={user.url ? user.url : "/pin.png"} alt="User profile" className="w-[50px] h-[50px]" />
+                                            <span className="w-[3.125rem] h-[3.125rem]">
+                                                <img src={user.url ? user.url : "/pin.png"} alt="User profile" className="w-[3.125rem] h-[3.125rem]" />
                                             </span>
                                             <span className="font-bold text-md m-3">{user.name}</span>
                                             <span className=" text-md m-3">부서</span>
