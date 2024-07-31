@@ -912,7 +912,7 @@ export default function Chat() {
                         </div>
                         {/* 공지 */}
                         <div>
-                            {!showNotification && (
+                            {!showNotification && chatroom?.notification?.message && (
                                 <div className="w-full flex justify-start ml-3" onClick={toggleNotification}>
                                     <div className="bg-[#abcdae] w-[70px] h-[70px] rounded-full flex items-center fixed p-4">
                                         <img src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="Notification" />
@@ -920,12 +920,12 @@ export default function Chat() {
                                 </div>
                             )}
 
-                            {showNotification && (
+                            {showNotification && chatroom?.notification?.message && (
                                 <div className="w-full flex justify-center">
                                     <div className="bg-[#abcdae] w-[59%] h-[70px] rounded-md flex items-center fixed p-4">
                                         <img onClick={() => setShowNotification(false)} src="/noti.png" className="w-[60px] h-[60px] mr-2" alt="" />
                                         <div className="w-full text-white" style={{ opacity: 1 }}>
-                                            {chatroom?.notification?.message || '공지가 안 뜹니다'}
+                                            {chatroom.notification.message}
                                         </div>
                                         <button
                                             onClick={() => setShowNotification(false)}
@@ -993,7 +993,10 @@ export default function Chat() {
                                                             ) : t?.messageType === 2 ? (
                                                                 <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
                                                             ) : t?.messageType === 3 ? (
-                                                                <a href={t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                                <a href={t?.message} download target="_blank" rel="noopener noreferrer" className="flex items-center">
+                                                                    <img src={getFileIcon(t?.message)} className="w-[50px] h-[50px] mr-2" alt="" />
+                                                                    {t?.message}
+                                                                </a>
                                                             ) : (
                                                                 <div></div>
                                                             )
