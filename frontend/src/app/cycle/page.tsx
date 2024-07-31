@@ -234,24 +234,40 @@ export default function Cycle() {
         useEffect(() => {
             const interval = setInterval(() => {
                 const now = new Date().getTime();
-                {
-                    const range = 30 * 60 * 1000;
-                    const result = [...personalRef.current[0].cycleDTOList.filter(f => now + range >= f.startDate && now < f.startDate).map(c => {
-                        return { time: c.startDate - now, dto: c };
-                    }), ...groupRef.current[0].cycleDTOList.filter(f => now + range >= f.startDate && now < f.startDate).map(c => {
-                        return { time: c.startDate - now, dto: c };
-                    })];
-                    setUpcoming(result);
-                }
-                {
-                    const result = [...personalRef.current[0].cycleDTOList.filter(f => f.startDate <= now && now <= f.endDate).map(c => {
-                        return { time: c.endDate - now, dto: c };
-                    }), ...groupRef.current[0].cycleDTOList.filter(f => f.startDate <= now && now <= f.endDate).map(c => {
-                        return { time: c.endDate - now, dto: c };
-                    })]
-                    setNow(result);
-                }
+                const range = 30 * 60 * 1000;
+
+                // Check if personalRef.current and groupRef.current are defined
+                const personalList = personalRef.current?.[0]?.cycleDTOList || [];
+                const groupList = groupRef.current?.[0]?.cycleDTOList || [];
+
+                // Upcoming events
+                const upcoming = [
+                    ...personalList.filter(f => now + range >= f.startDate && now < f.startDate).map(c => ({
+                        time: c.startDate - now,
+                        dto: c
+                    })),
+                    ...groupList.filter(f => now + range >= f.startDate && now < f.startDate).map(c => ({
+                        time: c.startDate - now,
+                        dto: c
+                    }))
+                ];
+                setUpcoming(upcoming);
+
+                // Now events
+                const nowEvents = [
+                    ...personalList.filter(f => f.startDate <= now && now <= f.endDate).map(c => ({
+                        time: c.endDate - now,
+                        dto: c
+                    })),
+                    ...groupList.filter(f => f.startDate <= now && now <= f.endDate).map(c => ({
+                        time: c.endDate - now,
+                        dto: c
+                    }))
+                ];
+                setNow(nowEvents);
+
             }, 500);
+
             return () => clearInterval(interval);
         }, []);
 
