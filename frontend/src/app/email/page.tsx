@@ -184,14 +184,14 @@ export default function Email() {
     }
 
     return <Main user={user} isClientLoading={isClientLoading}>
-        <div className="w-4/12 h-full flex items-center justify-center pt-10 pb-4">
+        <div className="w-4/12 h-full flex items-center justify-center pt-10 pb-16">
             <div className="h-full w-11/12 bg-white shadow p-2">
                 <div className="w-full h-30 flex flex-row justify-between">
                     <div className="flex items-center gap-2">
                         {sort == 1 ?
-                            <button className="official-color text-white HD:text-xs SD:text-xxs w-[4rem]" >받은 메일</button>
+                            <button className="official-color text-white HD:text-xs SD:text-xxs w-[4.5rem]" >받은 메일</button>
                             :
-                            <button className="HD:text-xs SD:text-xxs w-[4rem]" onClick={() => { open1 == true ? setOpen1(!open1) : ""; setEmail(null); setPage(0); setStatus(1); getEmail(1, 0).then(r => { setSort(1); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>받은 메일</button>}
+                            <button className="HD:text-xs SD:text-xxs w-[4.5rem]" onClick={() => { open1 == true ? setOpen1(!open1) : ""; setEmail(null); setPage(0); setStatus(1); getEmail(1, 0).then(r => { setSort(1); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>받은 메일</button>}
                         <img src="/plus.png" id="button1" className="w-[1.25rem] h-[1.25rem]" onClick={() => { open1 == false ? "" : setOpen1(!open1); setOpen(!open); }} alt="" />
                         <DropDown open={open} onClose={() => setOpen(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button1">
                             <button className="bg-white">중요</button>
@@ -201,9 +201,9 @@ export default function Email() {
                     </div>
                     <div className="flex items-center gap-2">
                         {sort == 0 ?
-                            <button className="official-color text-white HD:text-xs SD:text-xxs w-[4rem]" >보낸 메일</button>
+                            <button className="official-color text-white HD:text-xs SD:text-xxs w-[4.5rem]" >보낸 메일</button>
                             :
-                            <button className="HD:text-xs SD:text-xxs w-[4rem]" onClick={() => { open == true ? setOpen(!open) : ""; setEmail(null); setPage(1); setStatus(0); getEmail(0, 0).then(r => { setSort(0), setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>보낸 메일</button>}
+                            <button className="HD:text-xs SD:text-xxs w-[4.5rem]" onClick={() => { open == true ? setOpen(!open) : ""; setEmail(null); setPage(1); setStatus(0); getEmail(0, 0).then(r => { setSort(0), setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)); }}>보낸 메일</button>}
                         <img src="/plus.png" id="button2" className="w-[1.25rem] h-[1.25rem]" onClick={() => { open == false ? "" : setOpen(!open); setOpen1(!open1); }} alt="" />
                         <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white overflow-y-scroll" defaultDriection={Direcion.DOWN} width={200} height={100} button="button2">
                             <button>중요</button>
@@ -212,10 +212,10 @@ export default function Email() {
                         </DropDown>
                     </div>
                     {sort == 2 ?
-                        <button className="official-color text-white HD:text-xs SD:text-xxs w-[4rem]" >예약 메일</button>
+                        <button className="official-color text-white HD:text-xs SD:text-xxs w-[4.5rem]" >예약 메일</button>
                         :
-                        <button className="HD:text-xs SD:text-xxs w-[4rem]" onClick={() => { setEmail(null); setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button>}
-                    <button className="mr-2 HD:text-xs SD:text-xxs w-[4rem]" onClick={() => { localStorage.removeItem('email'); window.location.href = "/email/EmailForm" }}>메일쓰기</button>
+                        <button className="HD:text-xs SD:text-xxs w-[4.5rem]" onClick={() => { setEmail(null); setPage(1); open == false ? "" : setOpen(!open); open1 == false ? "" : setOpen1(!open1); setStatus(2); getEmail(2, 0).then(r => { setSort(2); setEmailList(r.content); setMaxPage(r.totalPages) }).catch(e => console.log(e)) }}>예약 메일</button>}
+                    <button className="mr-2 HD:text-xs SD:text-xxs w-[4.5rem]" onClick={() => { localStorage.removeItem('email'); window.location.href = "/email/EmailForm" }}>메일쓰기</button>
                 </div>
                 <div ref={mailBoxRef} onScroll={loadPage} id="mailBox" className="h-[48rem] overflow-y-scroll">
                     {emailList?.map((email: EmailResponseDTO, index: number) => <MailBox key={index} email={email} />)}
@@ -237,7 +237,7 @@ export default function Email() {
                 </div>
             </div>
         </div>
-        <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
+        <div className="w-8/12 flex items-center justify-center pt-10 pb-16">
             <div className="h-full w-11/12 bg-white shadow p-4">
                 {email != null ? <MailDetail /> : <></>}
             </div>

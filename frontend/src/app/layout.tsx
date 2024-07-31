@@ -15,9 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="layout-font h-screen w-screen flex items-center justify-center">
-      {/* <html lang="en" className="layout-font w-full h-full"> */}
-      <body className={inter.className + " layout-fix"}>
+    <html lang="en" className="layout-fix">
+      <body className={inter.className +" overflow-y-hidden w-full h-full"}>
         {children}
         <div id="global-modal">
         </div>
