@@ -434,7 +434,7 @@ export default function Home() {
     }
 
     return <Main user={user} isClientLoading={isClientLoading}>
-        <div className="w-2/12 flex items-center justify-center pt-10 pb-4">
+        <div className="w-2/12 flex items-center justify-center pt-10 pb-12">
             <div className="h-full w-11/12 bg-white shadow p-2 flex flex-col relative ml-12">
                 <div className="overflow-y-auto flex flex-col">
                     <FolderTree name="개인" location={'/api/user/' + user?.username + '/storage'} folderList={baseFolders["개인"]} />
@@ -467,7 +467,7 @@ export default function Home() {
                 </div>
             </div>
         </div>
-        <div className="w-10/12 flex items-center justify-center pt-10 pb-4">
+        <div className="w-10/12 flex items-center justify-center pt-10 pb-12">
             <div className="h-full w-11/12 bg-white shadow p-4 relative">
                 <div className="flex justify-between">
                     <div className="text-lg font-bold flex items-center">

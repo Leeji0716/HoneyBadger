@@ -504,10 +504,11 @@ export default function Cycle() {
 
     return (
         <Main user={user} isClientLoading={isClientLoading}>
-            <div className="flex bg-white w-full p-2">
+            <div className="flex bg-white w-full h-full p-2">
 
                 {/* Calendar Sidebar */}
-                <div className="w-[20%] border-4 rounded-tl-lg rounded-bl-lg">
+                
+                <div className="w-[20%] border-4 rounded-tl-lg rounded-bl-lg mb-8">
                     {/* Month Navigation */}
                     <div className="w-[370px] flex justify-end items-center p-2">
                         <button className="font-bold text-xl" onClick={() => changeMonth(-1)}>▴</button>
@@ -640,21 +641,22 @@ export default function Cycle() {
                         </div> */}
                     </div>
                 </div>
-
+                
                 {/* Schedule Area */}
-                <div className="border-t-4 border-b-4 w-[60%]">
+                <div className="border-t-4 border-b-4 w-[60%] mb-8">
                     <div className="flex justify-start items-center p-2">
                         <span className="text-4xl">
                             <span className="font-bold text-4xl">{monthNames[month]}</span> {year}
                         </span>
                     </div>
-                    <div className="overflow-y-auto max-h-[822px]" style={{ scrollbarWidth: 'none' }}>
+                    <div className="overflow-y-auto max-h-[750px]" style={{ scrollbarWidth: 'none' }}>
                         <ScheduleTable />
                     </div>
                 </div>
 
                 {/* Details and Modals */}
-                <div className="border-t-4 w-[20%]">
+                
+                <div className="border-t-4 w-[20%] mb-8">
                     {/* Schedule Creation and Editing Buttons */}
                     <div className="flex flex-col h-[10%] border-r-4 border-l-4 border-b-4">
                         <button
