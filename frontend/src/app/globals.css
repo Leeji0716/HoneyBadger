@@ -161,7 +161,9 @@ body {
   checkbox {
     @apply focus:outline-none
   }
-
+  layout-font{
+    @apply LAP_16:text-[28px] UHD:text-[32px] QHD:text-[24px] FHD:text-[16px] HD:text-[12px] SD:text-[8px]
+  }
   .layout-fix-x {
     @apply SD:SD-x HD:HD-x FHD:FHD-x QHD:QHD-x UHD:UHD-x LAP_16:LAP_16-x
   }
@@ -179,11 +181,11 @@ body {
   }
 
   .SD-y {
-    @apply h-[353px] min-h-[353px]
+    @apply h-[319px] min-h-[319px]
   }
 
   .SD {
-    @apply SD-x SD-y text-[8px]
+    @apply SD-x SD-y 
   }
 
   .HD-x {
@@ -191,11 +193,11 @@ body {
   }
 
   .HD-y {
-    @apply h-[593px] min-h-[593px]
+    @apply h-[559px] min-h-[559px]
   }
 
   .HD {
-    @apply HD-x HD-y text-[12px]
+    @apply HD-x HD-y
   }
 
   .FHD-x {
@@ -203,40 +205,41 @@ body {
   }
 
   .FHD-y {
-    @apply h-[953px] min-h-[953px]
+    @apply h-[919px] min-h-[919px]
   }
 
   .FHD {
-    @apply FHD-x FHD-y text-[16px]
+    @apply FHD-x FHD-y 
   }
 
   .QHD-x{
     @apply w-[2560px] min-w-[2560px]
   }
   .QHD-y{
-    @apply h-[1313px] min-h-[1313px]
+    @apply h-[1279px] min-h-[1279px]
   }
   .QHD{
-    @apply QHD-x QHD-y text-[24px]
+    @apply QHD-x QHD-y 
   }
   .UHD-x{
     @apply w-[3840px] min-w-[3840px]
   }
   .UHD-y{
-    @apply h-[2033px] min-h-[2033px]
+    @apply h-[1999px] min-h-[1999px]
   }
   .UHD{
-    @apply UHD-x UHD-y text-[32px]
+    @apply UHD-x UHD-y 
   }
   .LAP_16-x{
     @apply w-[2880px] min-w-[2880px]
   }
   .LAP_16-y{
-    @apply h-[1673px] min-h-[1673px]
+    @apply h-[1639px] min-h-[1639px]
   }
   .LAP_16{
-    @apply LAP_16-x LAP_16-y text-[28px]
+    @apply LAP_16-x LAP_16-y 
   }
+  
 }
 
 .truncate {
