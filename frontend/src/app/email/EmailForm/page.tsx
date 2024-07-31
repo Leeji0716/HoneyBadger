@@ -201,7 +201,7 @@ export default function EmailForm() {
         <div className="flex flex-col items-center gap-5 bg-white w-full p-6">
             <h2 className="font-bold">메일 쓰기</h2>
             <div className="w-full border-b-2"></div>
-            <div className="flex flex-row justify-center gap-3">
+            <div className="flex flex-row justify-center gap-3 h-[26px]">
                 <button className="mail-hover w-[100px]" onClick={() => finderror()}>보내기</button>
                 <button className="mail-hover w-[100px]" onClick={() => setOpen(!open)}>예약</button>
                 <DropDown open={open} onClose={() => setOpen(false)} className="mt-8" defaultDriection={Direcion.DOWN} width={200} height={200} button="button1">
@@ -213,7 +213,8 @@ export default function EmailForm() {
                         console.log("플래그값 : " + flag);
                     }} />
                 </DropDown>
-                <button className="mail-hover w-[100px]">임시저장</button>
+                {/* <button className="mail-hover w-[100px]">임시저장</button> */}
+                <button className="mail-hover w-[100px]" onClick={()=>window.location.href="/email"}>작성취소</button>
             </div>
             {error ? <p className="font-bold text-red-600">{error}</p> : <></>}
             <div className="flex w-[1400px] gap-5">

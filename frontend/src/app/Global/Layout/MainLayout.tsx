@@ -27,7 +27,7 @@ export default function Main(props: Readonly<pageInterface>) {
             <img src='/logo_text.png' className="w-[6.25rem] mb-4" />
             <img src="/x.png" className="w-[1.5rem] h-[1.5rem] cursor-pointer" onClick={() => setOpen(false)}></img>
           </div>
-          <a href="/main" className="flex mb-4"><img src='/main.png' className="w-[1.5rem] h-[1.5rem] mr-2" />메인</a>
+          {/* <a href="/main" className="flex mb-4"><img src='/main.png' className="w-[1.5rem] h-[1.5rem] mr-2" />메인</a> */}
           <a href="/chat" className="flex mb-4"><img src='/chat.png' className="w-[1.5rem] h-[1.5rem] mr-2" />채팅</a>
           <a href="/email" className="flex mb-4"><img src='/mailb.png' className="w-[1.5rem] h-[1.5rem] mr-2" />메일</a>
           <a href="/approval" className="flex mb-4"><img src='/approval.png' className="w-[1.5rem] h-[1.5rem] mr-2" />결재</a>

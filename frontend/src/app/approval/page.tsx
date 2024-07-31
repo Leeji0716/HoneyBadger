@@ -547,7 +547,7 @@ export default function Approval() {
     // 페이지
     return <Main user={user} isClientLoading={isClientLoading}>
         {/* 왼쪽 부분 */}
-        <div className="w-4/12 flex items-center justify-center h-full pt-10 pb-4">
+        <div className="w-4/12 flex items-center justify-center h-full pt-10 pb-12">
             <div className="w-11/12 h-full">
                 {/* 검색 인풋 */}
                 <div className="flex items-center border-2 border-gray rounded-full h-[6%] shadow bg-white">
@@ -615,7 +615,7 @@ export default function Approval() {
         </div>
 
         {/* 오른쪽 부분 */}
-        <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
+        <div className="w-8/12 flex items-center justify-center pt-10 pb-12">
             <div className="w-11/12 bg-white h-full flex flex-col shadow">
                 {/* 결재 기안서 상세 보기 */}
                 {approval != null ? <ApprovalDetail /> : <></>}

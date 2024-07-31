@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { getUser, createSchedule, fetchSchedules, updateSchedule, deleteSchedule, getTagList, updateTag, deleteTag } from "@/app/API/UserAPI";
 import Main from "@/app/Global/Layout/MainLayout";
 import { eontransferLocalTime, getDateEmailTime, getScheduleDate, isHoliday, timeToString, transferLocalTime } from "../Global/Method";
-import DropDown, { Direcion } from '../Global/DropDown';
+
 // import MyComponent from "../Global/Accordion";
 
 // 인터페이스 정의
@@ -210,7 +210,7 @@ export default function Cycle() {
         return (
             <div
                 onClick={() => { handleDateClick(date); }}
-                className={`w-[51px] h-[41px] rounded-2xl flex items-center justify-center cursor-pointer
+                className={`SD:h-[1.8rem] HD:h-[2rem]  h-[2.5625rem] rounded-2xl flex items-center justify-center cursor-pointer
                     ${date.getMonth() !== month ? 'opacity-25' : 'opacity-100'}
                     ${isToday ? 'bg-blue-500 text-white' : ''}
                     ${isSelected ? 'border-4 border-red-500' : ''}`}>
@@ -304,7 +304,7 @@ export default function Cycle() {
         return (
             <table className="w-full border-collapse">
                 <thead>
-                    <tr className="h-[50px]">
+                    <tr className="h-[3.125rem]">
                         <th className="border w-[10%]">시간</th>
                         {headerDate.map((headerDate, dateIndex) => (
                             <th key={dateIndex} className={`border w-[10%] ${headerDate.isToday ? 'bg-red-500 text-white' : ''}`}>
@@ -340,8 +340,8 @@ export default function Cycle() {
                                 });
 
                                 return (
-                                    <td key={`${dateIndex}-${slotIndex}`} className="border w-[10%] h-[150px] relative">
-                                        <div className="flex flex-col h-full justify-center items-center overflow-y-auto max-h-[60px]">
+                                    <td key={`${dateIndex}-${slotIndex}`} className="border w-[10%] h-[13.125rem] relative">
+                                        <div className="flex flex-col h-full justify-center items-center overflow-y-auto max-h-[3.75rem]">
                                             {filteredCycles.map((cycle: CycleDTO, index: number) => (
                                                 <div
                                                     key={index}
@@ -352,7 +352,7 @@ export default function Cycle() {
                                                         style={{ backgroundColor: cycle.tag.color }}
                                                         aria-label={`Tag color: ${cycle.tag.name}`}
                                                     />
-                                                    <span className="text-black truncate max-w-[100px]" title={cycle.title}>
+                                                    <span className="text-black truncate max-w-[6.25rem]" title={cycle.title}>
                                                         {cycle.title}
                                                     </span>
                                                 </div>
@@ -375,31 +375,32 @@ export default function Cycle() {
     // 태그 리스트 필터링 함수
     function RenderTagList({ tag }: { tag: CycleTagResponseDTO }) {
         return (
-            <div className="flex items-center gap-4 p-2 border border-gray-300 rounded-lg shadow-sm mb-2 bg-white hover:bg-gray-50 transition-colors duration-300">
-                <div className="flex items-center gap-2" onClick={() => handleTagClick(tag)}>
+            <div className="flex items-center w-full justify-between p-2 border border-gray-300 rounded-lg shadow-sm mb-2 bg-white hover:bg-gray-50 transition-colors duration-300">
+                <div className="flex items-center" onClick={() => handleTagClick(tag)}>
                     <div
-                        className="w-4 h-4 rounded-md"
+                        className="w-4 h-4 rounded-md mr-1"
                         style={{ backgroundColor: tag.color }}
                         aria-label={`Tag color: ${tag.name}`}>
                     </div>
-                    <span className="text-sm font-medium">{tag.name}</span>
+                    <div className="text-sm font-medium SD:w-[4rem] HD:w-[9rem] w-[10rem] overflow-ellipsis whitespace-nowrap overflow-hidden">{tag.name}</div>
                 </div>
-                <div className="flex-grow"></div>
-                <button
-                    onClick={() => handleEditTag(tag)}
-                    className="px-2 py-1 text-blue-500 hover:bg-blue-100 rounded-md border border-blue-300 text-xs transition-colors duration-300">
-                    수정
-                </button>
-                <button
-                    onClick={() => {
-                        deleteTag(tag.id)
-                            .then(() => getTagList(statusid))
-                            .then(r => setTagList(r))
-                            .catch(e => console.log(e));
-                    }}
-                    className="px-2 py-1 text-red-500 hover:bg-red-100 rounded-md border border-red-300 text-xs transition-colors duration-300">
-                    삭제
-                </button>
+                <div className="flex">
+                    <button
+                        onClick={() => handleEditTag(tag)}
+                        className="text-blue-500 mr-1 hover:bg-blue-100 rounded-md border border-blue-300 text-xs transition-colors duration-300 min-w-[2.5rem] min-h-[2rem]">
+                        수정
+                    </button>
+                    <button
+                        onClick={() => {
+                            deleteTag(tag.id)
+                                .then(() => getTagList(statusid))
+                                .then(r => setTagList(r))
+                                .catch(e => console.log(e));
+                        }}
+                        className="text-red-500 hover:bg-red-100 rounded-md border border-red-300 text-xs transition-colors duration-300 min-w-[2.5rem] min-h-[2rem]">
+                        삭제
+                    </button>
+                </div>
             </div>
         );
     }
@@ -504,20 +505,21 @@ export default function Cycle() {
 
     return (
         <Main user={user} isClientLoading={isClientLoading}>
-            <div className="flex bg-white w-full p-2">
+            <div className="flex bg-white w-full h-full p-2">
 
                 {/* Calendar Sidebar */}
-                <div className="w-[20%] border-4 rounded-tl-lg rounded-bl-lg">
+
+                <div className="w-[20%] border-4 rounded-tl-lg rounded-bl-lg mb-8">
                     {/* Month Navigation */}
-                    <div className="w-[370px] flex justify-end items-center p-2">
+                    <div className="w-full flex justify-end items-center p-2">
                         <button className="font-bold text-xl" onClick={() => changeMonth(-1)}>▴</button>
                         <button className="font-bold text-xl" onClick={() => changeMonth(1)}>▾</button>
                     </div>
 
                     {/* Calendar Table */}
-                    <table>
+                    <table className="w-full">
                         <thead>
-                            <tr className="w-[50px] h-[50px]">
+                            <tr className="w-[3.125rem] h-[3.125rem]">
                                 <th>일</th>
                                 <th>월</th>
                                 <th>화</th>
@@ -556,7 +558,7 @@ export default function Cycle() {
                                                     ${isSunday ? "text-red-500" : ""}
                                                     ${isSaturday ? "text-blue-700" : ""}
                                                     hover:bg-purple-100 hover:text-gray-800`}
-                                                style={{ minWidth: "16px", minHeight: "16px", fontSize: "0.8rem", lineHeight: "1" }}
+                                                style={{ minWidth: "1rem", minHeight: "1rem", fontSize: "0.8rem", lineHeight: "1" }}
                                                 onClick={() => handleDateClick(date)}>
                                                 <DateColumn date={date} />
                                             </td>
@@ -596,15 +598,15 @@ export default function Cycle() {
                             </button>
                         </div>
                     ))} */}
-                    <div>
+                    <div className="flex flex-col items-center p-2 overflow-auto h-[20rem]">
                         <div className="collapse collapse-plus official-color" onClick={() => {
                             getTagList(0).then(r => setTagList(r)).catch(e => console.log(e));
                         }}>
                             <input type="radio" name="my-accordion-3" id="personal" defaultChecked />
-                            <label htmlFor="personal" className="collapse-title text-xl font-medium">
+                            <label htmlFor="personal" className="collapse-title text-xl font-medium text-white">
                                 개인
                             </label>
-                            <div className="collapse-content overflow-y-auto max-h-[400px] cursor-pointer" style={{ scrollbarWidth: 'none' }}>
+                            <div className="collapse-content overflow-y-auto max-h-[10rem] cursor-pointer" style={{ scrollbarWidth: 'none' }}>
                                 {tagList.length !== 0 ? tagList?.map((t: CycleTagResponseDTO, index: number) => (
                                     <RenderTagList key={index} tag={t} />
                                 )) : <></>}
@@ -615,10 +617,10 @@ export default function Cycle() {
                             getTagList(1).then(r => setTagList(r)).catch(e => console.log(e));
                         }}>
                             <input type="radio" name="my-accordion-3" id="group" />
-                            <label htmlFor="group" className="collapse-title text-xl font-medium">
+                            <label htmlFor="group" className="collapse-title text-xl font-medium text-white">
                                 그룹
                             </label>
-                            <div className="collapse-content overflow-y-auto max-h-[400px] cursor-pointer" style={{ scrollbarWidth: 'none' }}>
+                            <div className="collapse-content overflow-y-auto max-h-[10rem] cursor-pointer" style={{ scrollbarWidth: 'none' }}>
                                 {tagList.length !== 0 ? tagList?.map((t: CycleTagResponseDTO, index: number) => (
                                     <RenderTagList key={index} tag={t} />
                                 )) : <></>}
@@ -642,19 +644,20 @@ export default function Cycle() {
                 </div>
 
                 {/* Schedule Area */}
-                <div className="border-t-4 border-b-4 w-[60%]">
+                <div className="border-t-4 border-b-4 w-[60%] mb-8">
                     <div className="flex justify-start items-center p-2">
                         <span className="text-4xl">
                             <span className="font-bold text-4xl">{monthNames[month]}</span> {year}
                         </span>
                     </div>
-                    <div className="overflow-y-auto max-h-[822px]" style={{ scrollbarWidth: 'none' }}>
+                    <div className="overflow-y-auto max-h-[46.875rem] HD:max-h-[42rem] SD:max-h-[33.4rem]" style={{ scrollbarWidth: 'none' }}>
                         <ScheduleTable />
                     </div>
                 </div>
 
                 {/* Details and Modals */}
-                <div className="border-t-4 w-[20%]">
+
+                <div className="border-t-4 w-[20%] mb-8">
                     {/* Schedule Creation and Editing Buttons */}
                     <div className="flex flex-col h-[10%] border-r-4 border-l-4 border-b-4">
                         <button
@@ -712,7 +715,7 @@ export default function Cycle() {
 
                 {isModalOpen && (
                     <div className="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-                        <div className="bg-white p-4 rounded-lg w-[400px]">
+                        <div className="bg-white p-4 rounded-lg w-[25rem]">
                             <div className="text-lg font-bold border-b-2 mb-4">
                                 {selectCycle ? '일정 수정' : '일정 생성'}
                             </div>
@@ -821,7 +824,7 @@ export default function Cycle() {
                 {/* Tag Modal */}
                 {isTagModalOpen && selectedTag && (
                     <div className="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-                        <div className="bg-white p-4 rounded-lg w-[400px]">
+                        <div className="bg-white p-4 rounded-lg w-[25rem]">
                             <div className="text-lg font-bold border-b-2 mb-4">
                                 태그 수정
                             </div>
