@@ -1001,7 +1001,7 @@ export default function Chat() {
                                                                         {t?.message}
                                                                     </a>
                                                                 ) : (
-                                                                    <></>
+                                                                    <div></div>
                                                                 )
                                                             }
                                                         </div>
@@ -1010,7 +1010,7 @@ export default function Chat() {
                                             </div>
                                             :
                                             <div className="flex w-6/12 ml-2 mb-3" id={index.toString()}>
-                                                <img src="/pigp.png" className="w-[40px] h-[40px] rounded-full" />
+                                                <img src="/pigp.png" className="w-[2.5rem] h-[2.5rem] rounded-full" />
                                                 <div className="flex flex-col ml-2">
                                                     <div className="text-black font-bold ml-2">
                                                         {t?.name}
@@ -1039,8 +1039,11 @@ export default function Chat() {
                                                         <button
                                                             className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
                                                             onClick={() => {
+
                                                                 notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
                                                                     .then((r) => {
+
+
                                                                         chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
                                                                         setChatrooms([...chatrooms]);
                                                                         setChatroom(r);
@@ -1053,86 +1056,7 @@ export default function Chat() {
                                                         >
                                                             공지 설정
                                                         </button>
-                                                        <button className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
-                                                            onClick={() => {
-                                                                deleteMessage(Number(t?.id))
-                                                                    .then(() => {
-                                                                        setMessageList(prevMessageList => prevMessageList.filter(message => message.id !== t.id));
-                                                                    })
-                                                                    .catch((e) => {
-                                                                        console.error("Error deleting message:", e);
-                                                                    });
-                                                            }}>삭제</button>
-                                                        <div className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</div>
-                                                        <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
-                                                            <div className="mt-2 mb-2 ml-3 mr-3">
-                                                                {
-                                                                    t?.messageType === 0 ? (
-                                                                        <div>{t?.message}</div>
-                                                                    ) : t?.messageType === 1 ? (
-                                                                        <img src={t?.message} />
-                                                                    ) : t?.messageType === 2 ? (
-                                                                        <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                                    ) : t?.messageType === 3 ? (
-                                                                        <a href={t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                                    ) : (
-                                                                        <div></div>
-                                                                    )
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                :
-                                                <div className="flex w-6/12 ml-2 mb-3" id={index.toString()}>
-                                                    <img src="/pigp.png" className="w-[2.5rem] h-[2.5rem] rounded-full" />
-                                                    <div className="flex flex-col ml-2">
-                                                        <div className="text-black font-bold ml-2">
-                                                            {t?.name}
-                                                        </div>
-                                                        <div className="w-full flex">
-                                                            <div className="text-black ml-2">
-                                                                <div className="mt-2 mb-2 ml-3 mr-3">
-                                                                    {
-                                                                        t?.messageType === 0 ? (
-                                                                            <div>{t?.message}</div>
-                                                                        ) : t?.messageType === 1 ? (
-                                                                            <img src={t?.message} />
-                                                                        ) : t?.messageType === 2 ? (
-                                                                            <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                                        ) : t?.messageType === 3 ? (
-                                                                            <a href={t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                                        ) : (
-                                                                            <div></div>
-                                                                        )
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                            <div className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</div>
-                                                            <div className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">삭제</div>
-
-                                                            <button
-                                                                className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
-                                                                onClick={() => {
-
-                                                                    notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
-                                                                        .then((r) => {
-
-
-                                                                            chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
-                                                                            setChatrooms([...chatrooms]);
-                                                                            setChatroom(r);
-
-                                                                        })
-                                                                        .catch((e) => {
-                                                                            console.error(e);
-                                                                        });
-                                                                }}
-                                                            >
-                                                                공지 설정
-                                                            </button>
-                                                            <div className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap"> {t.readUsers}{joinMembers - (t?.readUsers ?? 0)}</div>
-                                                        </div>
+                                                        <div className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap"> {t.readUsers}{joinMembers - (t?.readUsers ?? 0)}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1140,6 +1064,7 @@ export default function Chat() {
                                 </div>)
                                 }
                             </div>
+
 
                             <div className="absolute bottom-0 flex flex-col border-2 border-gray-300 rounded-md w-[100%] h-[9.375rem] items-start">
                                 <div className="h-full m-2 w-[98%]">
