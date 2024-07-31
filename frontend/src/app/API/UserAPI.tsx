@@ -268,8 +268,8 @@ export const addUser = async ({ chatroomId, username }: { chatroomId: number; us
     return response.data;
 };
 
-export const editChatroom = async ({ chatroomId, chatroomResponseDTO }: { chatroomId: number; chatroomResponseDTO: ChatroomResponseDTO }) => {
-    const response = await UserApi.put('/api/chatroom', chatroomResponseDTO, {
+export const editChatroom = async ({ chatroomId, chatroomRequestDTO }: { chatroomId: number; chatroomRequestDTO: ChatroomRequestDTO }) => {
+    const response = await UserApi.put('/api/chatroom', chatroomRequestDTO, {
         headers: {
             chatroomId: chatroomId
         }
