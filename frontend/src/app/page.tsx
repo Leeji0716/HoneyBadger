@@ -14,7 +14,7 @@ export default function Home() {
   }, []);
   useEffect(() => {
     if (ACCESS_TOKEN)
-      getUser().then(() => location.href = "/main").catch(e => console.log(e));
+      getUser().then(() => location.href = "/cycle").catch(e => console.log(e));
   }, [ACCESS_TOKEN])
 
   function Sumbit() {
@@ -27,7 +27,7 @@ export default function Home() {
       localStorage.setItem('tokenType', r.tokenType);
       localStorage.setItem('accessToken', r.accessToken);
       localStorage.setItem('refreshToken', r.refreshToken);
-      window.location.href = "/main";
+      window.location.href = "/cycle";
     }).catch(e => {
       if (e.response.status == 404)
         if (e.response.data.message == "entity not found")

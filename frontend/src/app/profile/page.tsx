@@ -28,7 +28,7 @@ export default function HOME() {
     }, [ACCESS_TOKEN])
 
     return <Main user={user} isClientLoading={isClientLoading}>
-        <div className="w-full flex items-center justify-center p-10">
+        <div className="w-full flex items-center justify-center p-10 pb-12">
             <div className="w-full bg-white h-full shadow p-2 flex flex-col text-lg items-center">
                 <div className="flex items-center mt-10">
                     <div className="flex flex-col items-center">

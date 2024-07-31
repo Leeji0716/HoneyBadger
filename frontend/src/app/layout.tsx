@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="layout-fix">
-      <body className={inter.className + " w-full h-full"}>
+      <body className={inter.className +" overflow-y-hidden w-full h-full"}>
         {children}
         <div id="global-modal">
         </div>

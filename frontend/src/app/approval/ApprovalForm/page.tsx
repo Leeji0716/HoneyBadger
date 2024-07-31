@@ -239,11 +239,14 @@ export default function Approval() {
 
     //페이지
     return <Main user={user} isClientLoading={isClientLoading}>
-        <div className="w-full flex items-center justify-center h-full pt-10 pb-4">
+        <div className="w-full flex items-center justify-center h-full pt-10 pb-12">
             <div className="w-11/12 h-full bg-white shadow flex flex-col justify-center items-center gap-2 ">
                 <div className="flex justify-center items-center w-full relative">
                     <h1 className="font-bold text-2xl flex items-center h-[3.125rem] HD:h-[2.5rem] SD:h-[2rem]">결재 작성</h1>
-                    <a href="#" className="right-16 absolute self-end text-white btn btn-sm official-color w-[6.25rem] h-[1.875rem]" onClick={() => handleCreateApproval()}>보내기</a>
+                    <div className="right-16 absolute">
+                        <a href="#" className="text-white btn btn-sm official-color w-[6.25rem] h-[1.875rem] mr-1" onClick={() => handleCreateApproval()}>보내기</a>
+                        <a href="#" className="text-white btn btn-sm btn-error w-[6.25rem] h-[1.875rem]" onClick={() => window.location.href="/approval"}>취소</a>
+                    </div>
                 </div>
                 <div className="w-11/12 h-[90%]">
 
@@ -439,7 +442,7 @@ export default function Approval() {
                             }} />
                         </div>
                         <div className="w-full h-[21%] border border-gray-300 border-r-2 border-l-2 border-b-2 border-gray-300 flex flex-col flex-wrap overflow-x-scroll relative">
-                            <img src="/plus.png" alt="" className="w-[1.875rem] h-[1.875rem] fixed bottom-12 right-40 cursor-pointer"
+                            <img src="/plus.png" alt="" className="w-[1.875rem] h-[1.875rem] absolute bottom-0 right-5 cursor-pointer"
                                 onClick={() => document.getElementById('file')?.click()}></img>
                             {fileList.length !== 0 && fileList.map((f: File, index: number) => (
                                 <ul key={index}>

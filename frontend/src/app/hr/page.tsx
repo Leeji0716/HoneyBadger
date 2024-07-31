@@ -196,7 +196,7 @@ export default function Page() {
         </>
     }
     return <Main user={user} isClientLoading={isClientLoading}>
-        <div className="w-4/12 flex items-center justify-center pt-10 pb-4">
+        <div className="w-4/12 flex items-center justify-center pt-10 pb-12">
             <div className="h-full w-11/12 bg-white shadow p-2 ">
                 <div className="w-full h-30 flex justify-between gap-20 ">
                     <button className="btn btn-xs btn-error text-white font-bold" onClick={() => {
@@ -218,7 +218,7 @@ export default function Page() {
                 <label className="text-red-500 font-bold hover:underline cursor-pointer" onClick={() => { if (confirm(dropDown?.name + '을 정말 삭제하시겠습니까? 하위 모든 부서도 같이 삭제됩니다.')) deleteDepartment(dropDown?.name).then(r => { setDepartmentList([...r]); setDropDown(null); setSelect(null); }).catch(e => { if (e.response && e.response.status == 403 && e.response.data.includes('부서')) alert(e.response.data); else console.log(e); }) }} >삭제</label>
             </DropDown>
         </div>
-        <div className="w-8/12 flex items-center justify-center pt-10 pb-4">
+        <div className="w-8/12 flex items-center justify-center pt-10 pb-12">
             <div className="h-full w-11/12 bg-white shadow p-4 flex flex-col items-center overflow-y-scroll">
                 <div className="mt-6 w-full">
                     {!select && !departmentUsers ? <label className="text-4xl font-bold">부서를 선택해주세요</label>

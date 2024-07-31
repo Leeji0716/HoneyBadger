@@ -323,24 +323,24 @@ export function getFileIcon(fileName: string) {
     const extension = fileName.split('.').pop()?.toLowerCase();
     switch (extension) {
         case 'jpg':
-            return 'https://w7.pngwing.com/pngs/169/93/png-transparent-jpg-filetype-icon-thumbnail.png';
+            return 'https://i.imgur.com/lkK1QmO.png';
         case 'png':
-            return 'https://w7.pngwing.com/pngs/141/895/png-transparent-png-filetype-icon-thumbnail.png';
+            return 'https://i.imgur.com/miUWDid.png';
         case 'pdf':
-            return 'https://w7.pngwing.com/pngs/182/22/png-transparent-computer-icons-pdf-filename-extension-pdf-icon-angle-text-rectangle-thumbnail.png';
+            return 'https://i.imgur.com/6Jfv2PD.png';
         case 'doc':
         case 'docx':
-            return 'https://w7.pngwing.com/pngs/801/479/png-transparent-microsoft-word-thumbnail-microsoft-word-microsoft-office-365-document-microsoft-blue-angle-text-thumbnail.png';
+            return 'https://i.imgur.com/dGk549P.png';
         case 'xls':
         case 'xlsx':
-            return 'https://w7.pngwing.com/pngs/670/803/png-transparent-excel-logo-logos-logos-and-brands-icon-thumbnail.png';
+            return 'https://i.imgur.com/dcpBHvk.png';
         case 'ppt':
         case 'pptm':
-            return 'https://w7.pngwing.com/pngs/742/145/png-transparent-powerpoint-logo-microsoft-powerpoint-computer-icons-ppt-presentation-microsoft-powerpoint-network-icon-angle-text-rectangle-thumbnail.png';
+            return 'https://i.imgur.com/ceL1muK.png';
         case 'zip':
-            return 'https://w7.pngwing.com/pngs/41/725/png-transparent-computer-icons-zip-file-zip-files-free-miscellaneous-text-rectangle-thumbnail.png';
+            return 'https://i.imgur.com/S0YmwG4.png';
         default:
-            return 'https://w7.pngwing.com/pngs/665/246/png-transparent-blue-folder-illustration-blue-turquoise-angle-aqua-folder-blue-angle-rectangle-thumbnail.png';
+            return 'https://i.imgur.com/v5j9vTM.png';
     }
 }
 
