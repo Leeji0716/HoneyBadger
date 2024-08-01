@@ -4,8 +4,12 @@ import com.team.HoneyBadger.ChatRoomManager;
 import com.team.HoneyBadger.DTO.MessageRequestDTO;
 import com.team.HoneyBadger.DTO.MessageResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
+import com.team.HoneyBadger.Entity.Message;
+import com.team.HoneyBadger.Entity.SiteUser;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.NotAllowedException;
+import com.team.HoneyBadger.Service.Module.MessageService;
+import com.team.HoneyBadger.Service.Module.UserService;
 import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -116,9 +120,32 @@ public class MessageController {
         }
     }
 
+
+    @GetMapping("/test") //테스트용
+    public ResponseEntity<?> test(@RequestHeader Long id, @RequestHeader String username) {
+        try {
+//            String username = messageRequestDTO.username ();
+
+            // 모든 채팅방에서 유저를 제거
+            chatRoomManager.removeUserFromAllRooms (username);
+            // 새로운 채팅방에 유저 추가
+            chatRoomManager.addUser (id, username);
+            this.processMessages (id);
+
+            // 현재 채팅방에 있는 유저들을 확인 (테스트를 위해 큐의 내용을 가져옴)
+            BlockingQueue<String> users = chatRoomManager.getUsers (id);
+            return ResponseEntity.status (HttpStatus.OK).body ("Users in chat room " + id + ": " + users);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
+        }
+    }
+
+    private final MessageService messageService;
     @GetMapping("/readUsernames") //테스트용
     public ResponseEntity<?> readUserMessagesTest(@RequestHeader Long messageId, @RequestHeader String username) {
         try {
+            Message message = messageService.getMessageById(messageId);
+            multiService.readMessage (message.getChatroom().getId(), username);
             List<String> readUsers = multiService.readUserMessage (messageId, username);
             return ResponseEntity.status (HttpStatus.OK).body (readUsers);
         } catch (DataNotFoundException ex) {
@@ -126,7 +153,7 @@ public class MessageController {
         }
     }
 
-    @PutMapping("/unsubscribe") //테스트용
+    @PutMapping("/unsubscribe")
     public ResponseEntity<?> unsubscribe(@RequestHeader("Authorization") String accessToken, @RequestHeader("name") String name) {
         chatRoomManager.removeUserFromAllRooms (name);
         return ResponseEntity.status (HttpStatus.OK).body ("OK");

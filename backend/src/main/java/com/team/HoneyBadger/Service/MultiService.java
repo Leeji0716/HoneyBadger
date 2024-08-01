@@ -941,7 +941,7 @@ public class MultiService {
             Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
             Participant participant = participantService.get(reader, chatroom);
 
-            if (chatroom.getParticipants().contains(participant)){
+            if (participant != null){
                 LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
                 Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
 
