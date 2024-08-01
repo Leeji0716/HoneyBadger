@@ -210,10 +210,10 @@ export default function Cycle() {
         return (
             <div
                 onClick={() => { handleDateClick(date); }}
-                className={`SD:h-[1.8rem] HD:h-[2rem]  h-[2.5625rem] rounded-2xl flex items-center justify-center cursor-pointer
+                className={`SD:h-[1.8rem] HD:h-[2rem] h-[2.5625rem] SD:w-[1.4375rem] rounded-2xl flex items-center justify-center cursor-pointer
                     ${date.getMonth() !== month ? 'opacity-25' : 'opacity-100'}
                     ${isToday ? 'bg-blue-500 text-white' : ''}
-                    ${isSelected ? 'border-4 border-red-500' : ''}`}>
+                    ${isSelected ? 'border-2 border-red-500' : ''}`}>
                 {date.getDate()}
             </div>
         );
@@ -569,7 +569,7 @@ export default function Cycle() {
                                         return (
                                             <td
                                                 key={dayIndex}
-                                                className={`p-0 border border-gray-200 rounded transition-colors duration-200
+                                                className={`p-1 w-[2.5rem] border border-gray-200 rounded transition-colors duration-200
                                                     ${isHolidayDate ? "text-red-500" : isWithinRange() ? "bg-purple-300 text-white" : "bg-white text-gray-800"}
                                                     ${isSunday ? "text-red-500" : ""}
                                                     ${isSaturday ? "text-blue-700" : ""}
@@ -679,6 +679,7 @@ export default function Cycle() {
                         <button
                             className="h-full border-b-2 border-r-2 border-l-2 flex items-center justify-center cursor-pointer text-sm font-medium text-blue-500"
                             onClick={() => {
+                                setSelectCycle(null); // selectCycle 초기화
                                 setIsModalOpen(true);
                             }}>
                             일정 생성
@@ -789,35 +790,37 @@ export default function Cycle() {
                                         onChange={(e) => setColor(e.target.value)}
                                         className="w-full p-2 border border-gray-300 rounded" />
                                 </label>
-                                <div className="flex gap-4">
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            defaultValue="0"
-                                            checked={statusid === 0}
-                                            onChange={() => setStatusid(0)} />
-                                        개인
-                                    </label>
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            defaultValue="1"
-                                            checked={statusid === 1}
-                                            onChange={() => setStatusid(1)} />
-                                        그룹
-                                    </label>
-                                    {/* <label>
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            defaultValue="2"
-                                            checked={statusid === 2}
-                                            onChange={() => setStatusid(2)} />
-                                        팀 (미구현)
-                                    </label> */}
-                                </div>
+                                {!selectCycle && (
+                                    <div className="flex gap-4">
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="status"
+                                                defaultValue="0"
+                                                checked={statusid === 0}
+                                                onChange={() => setStatusid(0)} />
+                                            개인
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="status"
+                                                defaultValue="1"
+                                                checked={statusid === 1}
+                                                onChange={() => setStatusid(1)} />
+                                            그룹
+                                        </label>
+                                        {/* <label>
+                                                <input
+                                                    type="radio"
+                                                    name="status"
+                                                    defaultValue="2"
+                                                    checked={statusid === 2}
+                                                    onChange={() => setStatusid(2)} />
+                                                팀 (미구현)
+                                            </label> */}
+                                    </div>
+                                )}
                                 <div className="flex justify-end gap-2 mt-4">
                                     <button
                                         type="button"
