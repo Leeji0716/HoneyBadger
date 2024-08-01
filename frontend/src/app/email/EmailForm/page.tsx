@@ -127,7 +127,7 @@ export default function EmailForm() {
     function ShowReciver(index: number, name: string) {
         return <div key={index} className="flex flex-wrap mr-1">
             <button className="btn">{name}
-                <img className="w-[15px] h-[15px] mb-6 cursor-pointer " src="/x.PNG" alt="삭제" onClick={() => {
+                <img className="w-[15px] h-[15px] mb-6 cursor-pointer " src="/x.png" alt="삭제" onClick={() => {
                     const out = [...receiverIds];
                     const index = out.findIndex((e) => e == name);
                     out.splice(index, 1);
