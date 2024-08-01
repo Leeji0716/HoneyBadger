@@ -169,7 +169,7 @@ export default function Email() {
                     {email.files.length !== 0 ? email.files.map((f: MailFile, index: number) =>
                         <li key={index}>
                             <div className="flex mb-4 border-solid border-2 border-gray-200 p-4 gap-6">
-                                <img src={getFileIcon(f.original_name)} className="w-[20.375rem] h-[1.9375rem] mr-2" alt="" />
+                                <img src={getFileIcon(f.original_name)} className="w-[1.625rem] h-[1.9375rem] mr-2" alt="" />
                                 {/* <p></p> */}
                                 <a href={f.value}>{sliceText(f.original_name)}</a>
                             </div>

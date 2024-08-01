@@ -770,10 +770,8 @@ export default function Chat() {
                     </div>
                 </div>
             </div>
-
-
-            {/* 오른쪽 부분 */}
-            <div className="w-8/12 flex flex-col items-center justify-center">
+             {/* 오른쪽 부분 */}
+             <div className="w-8/12 flex flex-col items-center justify-center">
                 <div className="w-11/12 bg-white h-full shadow">
                     {chatroom != null ? <ChatDetail key={chatroom.id} Chatroom={chatroom} messageList={messageList} innerRef={chatBoxRef} currentScrollLocation={currentScrollLocation} /> : <></>}
                     <>
@@ -1406,4 +1404,3 @@ export default function Chat() {
         </div>
     </Main>
 }
-
