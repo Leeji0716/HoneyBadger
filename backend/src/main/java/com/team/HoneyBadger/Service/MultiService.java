@@ -1308,6 +1308,8 @@ public class MultiService {
             throw new NotAllowedException("시작 시간을 입력해주세요.");
         } else if (cycleRequestDTO.endDate() == null) {
             throw new NotAllowedException("종료 시간을 입력해주세요.");
+        } else if (cycleRequestDTO.endDate().isBefore(cycleRequestDTO.startDate()) || cycleRequestDTO.startDate().equals(cycleRequestDTO.endDate())) {
+            throw new NotAllowedException("시간 설정을 다시 해주세요.");
         } else if (cycleRequestDTO.tagName() != null && cycleRequestDTO.tagColor() == null) {
             throw new NotAllowedException("색상 설정을 다시 해주세요.");
         } else if (cycleRequestDTO.tagName() == null && cycleRequestDTO.tagColor() != null) {
