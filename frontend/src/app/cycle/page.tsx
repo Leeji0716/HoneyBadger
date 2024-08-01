@@ -35,18 +35,6 @@ interface CycleTagResponseDTO {
     color: string
 }
 
-interface Schedule {
-    id: number;
-    title: string;
-    content: string;
-    startDate: string; // ISO 문자열 형식
-    endDate: string;   // ISO 문자열 형식
-    tagName?: string;
-    tagColor?: string;
-}
-
-
-
 export default function Cycle() {
     // 상태 변수 정의
     const [user, setUser] = useState<any>(null);
