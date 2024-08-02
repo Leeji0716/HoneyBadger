@@ -29,8 +29,10 @@ class HoneyBadgerApplicationTests {
     @Test
     void contextLoads() {
 //        for (int i = 0; i < 50; i++)
-//            userRepository.save(SiteUser.builder().username("user" + i).password(encoder.encode("1")).phoneNumber("011" + String.format("%d", i) + String.format("%04d", i)).name("사원" + i).role(UserRole.STAFF).build());
-        userRepository.save(SiteUser.builder().username("user5").password(encoder.encode("1")).phoneNumber("01011111111" ).name("사원5").role(UserRole.STAFF).build());
+//            userRepository.save(SiteUser.builder().username("user" + i).password(encoder.encode("1")).phoneNumber("011" + String.format("%04d", i) + String.format("%04d", i)).name("사원" + i).role(UserRole.STAFF).build());
+        userRepository.save(SiteUser.builder().username("admin").password(encoder.encode("1")).phoneNumber("00000000000").name("관리자").role(UserRole.ADMIN).build());
+        for (int i = 1; i <= 100; i++)
+            userRepository.save(SiteUser.builder().username("user" + i).password(encoder.encode("1")).phoneNumber("010" + String.format("%04d", i) + String.format("%04d", i)).name("유저" + i).role(UserRole.STAFF).build());
 //        userRepository.save(SiteUser.builder().username("admin5").password(encoder.encode("1")).phoneNumber("01022222343").name("직원").role(UserRole.STAFF).build());
 //        for (int i = 0; i < 5; i++) {
 //            Department top = departmentRepository.save(Department.builder().name("top" + i).build());
@@ -46,16 +48,15 @@ class HoneyBadgerApplicationTests {
     }
 
     @Test
-    void cycle(){
+    void cycle() {
         LocalDateTime startDate = LocalDateTime.now();
         LocalDateTime endDate = LocalDateTime.now().plusDays(5).plusHours(1);
-        for( int i = 0; i < 10; i++){
-            cycleRepository.save(Cycle.builder().title("그룹일정 테스트"+i).content("그룹일정 테스트"+i).k(KeyPreset.DC.getValue("성언이에용")).startDate(startDate).endDate(endDate).tag(null).build());
+        for (int i = 0; i < 10; i++) {
+            cycleRepository.save(Cycle.builder().title("그룹일정 테스트" + i).content("그룹일정 테스트" + i).k(KeyPreset.DC.getValue("성언이에용")).startDate(startDate).endDate(endDate).tag(null).build());
             startDate = startDate.plusDays(1);
             endDate = endDate.plusDays(1);
         }
     }
-
 
 
     @Test
