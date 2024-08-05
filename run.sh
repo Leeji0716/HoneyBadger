@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p /home/ubuntu/honeybadger/data/api/
+
 cd /frontend
 ./run.sh
 

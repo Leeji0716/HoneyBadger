@@ -335,6 +335,7 @@ export function getFileIcon(fileName: string) {
         case 'xlsx':
             return 'https://i.imgur.com/dcpBHvk.png';
         case 'ppt':
+        case 'pptx':
         case 'pptm':
             return 'https://i.imgur.com/ceL1muK.png';
         case 'zip':

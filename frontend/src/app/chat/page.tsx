@@ -8,9 +8,9 @@ import { Tooltip } from 'react-tooltip';
 import {
     chatExit, getChat, getUser, getChatDetail, notification, editChatroom, getUsers, addUser, makeChatroom, deleteMessage,
     chatUploadFile, getUpdateMessageList, createMessageReservation, getMessageReservationList, deleteMessageReservation,
-    unsubscribeChatroom, messageFileList, messageImageList, messageLinkList, searchUsers
+    unsubscribeChatroom, messageFileList, messageImageList, messageLinkList, searchUsers, editMessageReservation
 } from "../API/UserAPI";
-import { getChatDateTimeFormat } from "../Global/Method";
+import { getChatDateTimeFormat,getRole } from "../Global/Method";
 import { getChatShowDateTimeFormat, getFileIcon } from "../Global/Method";
 import { getSocket } from "../API/SocketAPI";
 
@@ -121,8 +121,9 @@ export default function Chat() {
     const [messageSub, setMessageSub] = useState<any>(null);
     const [readSub, setReadSub] = useState<any>(null);
     const [updateSub, setUpdateSub] = useState<any>(null);
-    const [editingReservations, setEditingReservations] = useState({});
-    const [editingContents, setEditingContents] = useState({});
+    const [editingReservationId, setEditingReservationId] = useState<number | null>(null);
+    const [editingContent, setEditingContent] = useState<string>('');
+    const [editingReservationDate, setEditingReservationDate] = useState<Date | null>(null);
     const addUsersInputRef = useRef<HTMLInputElement | null>(null);
     const [showNotification, setShowNotification] = useState(false);
     const toggleNotification = () => {
@@ -187,6 +188,13 @@ export default function Chat() {
     function handleClose6Modal() {
         setIsModalOpen6(false);
     }
+
+    useEffect(() => {
+        if (isModalOpen) {
+            // When the modal opens, load all users
+            handleUserSearch();  // This should fetch and set the full user list to `searchedUsers`
+        }
+    }, [isModalOpen]);
 
     useEffect(() => {
         if (ACCESS_TOKEN)
@@ -273,7 +281,7 @@ export default function Chat() {
     }, []);
 
     const unsubscribe = () => {
-        unsubscribeChatroom(user.username);
+        unsubscribeChatroom(user?.username);
     }
 
     useEffect(() => {
@@ -384,14 +392,14 @@ export default function Chat() {
             const users = Array.from(selectedUsers);
 
             // 현재 사용자가 배열에 포함되어 있는지 확인하고, 포함되지 않았으면 추가
-            if (user && !users.includes(user.username)) {
-                users.push(user.username);
+            if (user && !users.includes(user?.username)) {
+                users.push(user?.username);
             }
 
             let roomName = chatroomName;
             if (!roomName) {
                 // userList에서 사용자 이름을 찾아 결합
-                roomName = userList.filter(u => users.includes(u.username))
+                roomName = userList.filter(u => users.includes(u?.username))
                     .map(u => u.name)
                     .join(', '); // 이름들을 쉼표로 구분
             }
@@ -430,11 +438,21 @@ export default function Chat() {
     const handleUserSearch = () => {
         setPage(0);
         setSize(10);
-        searchUsers(userKeyword, page, size).then(r => {
-            setSearchedUsers(r.content);
-        }).catch(error => {
-            console.error("Search error:", error);
-        });
+        if (userKeyword.trim() === '') {
+            // 검색어가 없을 때 전체 유저 목록 불러오기
+            getUsers().then(r => {
+                setSearchedUsers(r); // 전체 유저 리스트를 설정
+            }).catch(error => {
+                console.error("Fetch users error:", error);
+            });
+        } else {
+            // 검색어가 있을 때 해당 검색어로 유저 검색
+            searchUsers(userKeyword, page, size).then(r => {
+                setSearchedUsers(r.content); // 검색 결과를 설정
+            }).catch(error => {
+                console.error("Search error:", error);
+            });
+        }
     };
 
     function ChatList({ Chatroom, ChatDetail, innerRef }: { Chatroom: chatroomResponseDTO, ChatDetail: messageResponseDTO, innerRef: RefObject<HTMLDivElement> }) {
@@ -489,14 +507,14 @@ export default function Chat() {
                     nowPage = 0;
                     setShowNotification(false);
                     if (messageSub) {
-                        socket.unsubscribe(messageSub.id)
+                        socket.unsubscribe(messageSub?.id)
                     }
                     if (readSub) {
-                        socket.unsubscribe(readSub.id);
+                        socket.unsubscribe(readSub?.id);
                     }
 
                     if (updateSub) {
-                        socket.unsubscribe(updateSub.id);
+                        socket.unsubscribe(updateSub?.id);
                     }
                 }
                 setChatroom(Chatroom);
@@ -599,9 +617,9 @@ export default function Chat() {
                         <div className="text-gray-300 whitespace-nowrap">{getChatShowDateTimeFormat(Chatroom?.latestMessage?.sendTime)}</div>
                     )}
                 </div>
-                {Chatroom?.alarmCount == 0 ? "" : <div className="bg-red-500 rounded-full w-[1.25rem] h-[1.25rem] flex justify-center items-center mt-2">
+                {/* {Chatroom?.alarmCount == 0 ? "" : <div className="bg-red-500 rounded-full w-[1.25rem] h-[1.25rem] flex justify-center items-center mt-2">
                     <div className="text-white text-sm">{Chatroom?.alarmCount}</div>
-                </div>}
+                </div>} */}
 
             </div>
         </div >
@@ -658,10 +676,10 @@ export default function Chat() {
                 <div className=" w-11/12 bg-white h-full shadow relative">
                     <div className="flex justify-start text-xl ml-5 mr-5 mt-5 mb-5 text-black">
                         <button className="font-bold" id="button1" onClick={() => { setOpen(!open), setFilter(!filter) }}>채팅{open ? '▴' : '▾'}</button>
-                        <DropDown open={open} onClose={() => setOpen(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="button1">
+                        {/* <DropDown open={open} onClose={() => setOpen(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="button1">
                             <button>개인</button>
                             <button>단체</button>
-                        </DropDown>
+                        </DropDown> */}
                     </div>
                     <button onClick={handleOpen2Modal} className="absolute bottom-5 left-5 w-[3.125rem] h-[3.125rem] rounded-full bg-blue-300 text-xl font-bold text-white">
                         +
@@ -687,13 +705,13 @@ export default function Chat() {
                                         <li key={index} className="flex justify-between items-center mb-5">
                                             <span className="w-[3.125rem] h-[3.125rem]"><img src="/pin.png" alt="" /></span>
                                             <span className="font-bold text-md m-3">{user.name}</span>
-                                            <span className=" text-md m-3">부서</span>
-                                            <span className="text-md m-3">역할</span>
+                                            <span className=" text-md m-3">{user.DepartmentResponseDTO?.name}</span>
+                                            <span className="text-md m-3">{getRole(user.role)}</span>
                                             {/* 체크박스 */}
                                             <input
                                                 type="checkbox"
-                                                checked={selectedUsers.has(user.username)}
-                                                onChange={() => handleCheckboxChange(user.username)}
+                                                checked={selectedUsers.has(user?.username)}
+                                                onChange={() => handleCheckboxChange(user?.username)}
                                             />
                                         </li>
                                     ))}
@@ -752,12 +770,10 @@ export default function Chat() {
                     </div>
                 </div>
             </div>
-
-
-            {/* 오른쪽 부분 */}
-            <div className="w-8/12 flex flex-col items-center justify-center">
+             {/* 오른쪽 부분 */}
+             <div className="w-8/12 flex flex-col items-center justify-center">
                 <div className="w-11/12 bg-white h-full shadow">
-                    {/* {chatroom != null ? <ChatDetail key={chatroom.id} Chatroom={chatroom} messageList={messageList} innerRef={chatBoxRef} currentScrollLocation={currentScrollLocation} /> : <></>} */}
+                    {chatroom != null ? <ChatDetail key={chatroom.id} Chatroom={chatroom} messageList={messageList} innerRef={chatBoxRef} currentScrollLocation={currentScrollLocation} /> : <></>}
                     <>
 
                         <div className={'h-full flex flex-col relative' + (chatroom != null ? '' : ' hidden')}>
@@ -766,29 +782,38 @@ export default function Chat() {
                                     <img src="/pig.png" className="m-2 w-[4.375rem] h-[4.375rem] rounded-full" />
                                     <div className="flex flex-col justify-center">
                                         <div className="flex">
-                                            <div className="text-black font-bold text-3xl mb-1 whitespace-nowrap">
-                                                {chatroom?.name ? (
-                                                    <span>{chatroom.name}</span>
-                                                ) : (
-                                                    chatroom?.users
-                                                        .filter((u: any) => u?.username !== user?.username) // 현재 사용자 제외
-                                                        .map((u: any, index: number, array: any[]) => (
-                                                            <span key={u?.username}>
-                                                                {u?.username}
-                                                                {index < array.length - 1 && ", "}
-                                                            </span>
-                                                        ))
-                                                )}
-                                            </div>
-                                            <button onClick={handleOpen1Modal}> 이름편집</button>
+                                            <button onClick={handleOpen1Modal}>
+                                                <div className="text-black font-bold text-3xl mb-1 whitespace-nowrap">
+                                                    {chatroom?.name ? (
+                                                        <span>{chatroom.name}</span>
+                                                    ) : (
+                                                        chatroom?.users
+                                                            .filter((u: any) => u?.username !== user?.username) // 현재 사용자 제외
+                                                            .map((u: any, index: number, array: any[]) => (
+                                                                <span key={u?.username}>
+                                                                    {u?.username}
+                                                                    {index < array.length - 1 && ", "}
+                                                                </span>
+                                                            ))
+                                                    )}
+                                                </div>
+                                            </button>
+
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <button onClick={handleOpenModal}>
-                                                <img src="/people.png" className="w-[1.875rem] h-[1.875rem]" />
+
+                                            <button onClick={handleOpen6Modal}>
+                                                <img src="/savebox.png" className="w-[1.5rem] h-[1.5rem]" />
                                             </button>
-                                            <div className="flex items-end text-xl w-[1.875rem] h-[1.875rem] text-official-color">
-                                                {joinMembers}
-                                            </div>
+
+                                            <button className="flex" onClick={handleOpenModal}>
+                                                <img src="/people.png" className="w-[1.875rem] h-[1.875rem]" />
+                                                <div className="flex items-end text-xl w-[1.875rem] h-[1.875rem] text-official-color">
+                                                    {joinMembers}
+                                                </div>
+                                            </button>
+
+
                                         </div>
                                     </div>
                                 </div>
@@ -800,11 +825,15 @@ export default function Chat() {
                                         />
                                         <button onClick={() => {
                                             const updatedChatroom = {
-                                                ...chatroom,
+                                                // ...chatroom,
+                                                users: chatroom.users.map((user: any) => user?.username),
                                                 name: roomName
                                             };
+                                            console.log(updatedChatroom);
 
-                                            editChatroom({ chatroomId: chatroom?.id, chatroomResponseDTO: updatedChatroom }).then(r => {
+                                            editChatroom({ chatroomId: chatroom?.id, chatroomRequestDTO: updatedChatroom }).then(r => {
+                                                console.log(r);
+
                                                 setChatrooms(prev => prev.map(room => room.id === chatroom?.id ? r : room));
                                                 setChatroom(null);
                                                 handleClose1Modal();
@@ -816,23 +845,21 @@ export default function Chat() {
                                     </div>
                                 </Modal>
                                 <div className="mr-5 w-[50%] flex justify-end items-center">
-                                    <button className="hamburger1" id="burger" onClick={() => { setOpen1(!open1), setDrop(!drop) }}>
-                                        <span></span>
-                                        <span></span>
-                                        <span></span>
-                                    </button>
-                                    <DropDown open={open1} onClose={() => setOpen1(false)} className="bg-white border-2 rounded-md" defaultDriection={Direcion.DOWN} width={100} height={100} button="burger">
-
+                                    <div className="flex justify-end">
                                         <button onClick={() => {
-                                            chatExit({ chatroomId: chatroom.id, username: user.username }).then((r) => {
+                                            chatExit({ chatroomId: chatroom.id, username: user?.username }).then((r) => {
                                                 // setChatrooms(r);
                                                 setChatroom(null);
                                                 getChat(keyword, page).then(r => { setChatrooms(r.content); setMaxPage(r.totalPages); }).catch(e => console.log(e));
                                             })
-                                        }}>나가기</button>
-                                        <button onClick={handleOpen6Modal}>보관함</button>
-                                        <button></button>
-                                    </DropDown>
+                                        }}>
+                                            <img src="/exit.png" className="w-[3rem] h-[3rem]" />
+                                        </button>
+
+
+                                    </div>
+
+
 
                                     <Modal open={isModalOpen6} onClose={handleClose6Modal} escClose={true} outlineClose={true}>
                                         <div className="official-color h-[3.125rem] flex justify-center">
@@ -1104,7 +1131,7 @@ export default function Chat() {
                                             </div>
                                         </Tooltip>
                                         <Modal open={isModalOpen4} onClose={handleClose4Modal} escClose={true} outlineClose={true}>
-                                            <div className="flex flex-col items-cnete justify-center m-3">
+                                            <div className="flex flex-col items-center justify-center m-3">
                                                 <div className="flex items-center justify-center font-bold">예약 메시지 보내기</div>
                                                 <div className="flex flex">
                                                     <div className="m-2">예약 시간 입력 : </div>
@@ -1121,7 +1148,7 @@ export default function Chat() {
                                                     }
                                                     } />
 
-                                                <button onClick={() => {
+                                                <button className="login-button flex items-center m-2 w-[100px]" onClick={() => {
 
                                                     const messageReservationRequestDTO = { chatroomId: chatroom?.id, message: message, messageType: 0, reservationDate: sendDate };
 
@@ -1133,6 +1160,7 @@ export default function Chat() {
                                                         console.error(e);
                                                     });
                                                 }}>예약하기</button>
+
                                             </div>
                                         </Modal>
                                         <Modal open={isModalOpen5} onClose={handleClose5Modal} escClose={true} outlineClose={true}>
@@ -1149,23 +1177,83 @@ export default function Chat() {
                                                         {reservationMessageList && reservationMessageList.map((reservationMessage, index) => (
                                                             <li key={index} className="flex justify-between items-center mb-5 border-b pb-2">
                                                                 <span className="text-md w-1/5 text-center">{getChatroomNameById(reservationMessage.chatroomId)}</span>
-                                                                <span className="text-md w-1/5 text-center">{getChatDateTimeFormat(reservationMessage.reservationDate)}</span>
-                                                                <span className="text-md w-2/5 text-center">{reservationMessage.message}</span>
-                                                                <div className="flex w-1/5">
-                                                                    <button className="btn w-1/2 whitespace-nowrap">수정</button>
-                                                                    <button className="btn w-1/2 whitespace-nowrap"
-                                                                        onClick={() => {
-                                                                            deleteMessageReservation(reservationMessage.id).then(r => {
-                                                                                setReservationMessageList(r.content);
-                                                                            })
-                                                                        }}>삭제</button>
-                                                                </div>
+
+                                                                {editingReservationId === reservationMessage.id ? (
+                                                                    <input
+                                                                        type="datetime-local"
+                                                                        className="text-md w-1/5 text-center border"
+                                                                        value={editingReservationDate ? editingReservationDate.toISOString().slice(0, 16) : ''}
+                                                                        onChange={(e) => setEditingReservationDate(e.target.value ? new Date(e.target.value) : null)}
+                                                                    />
+                                                                ) : (
+                                                                    <span className="text-md w-1/5 text-center">{getChatDateTimeFormat(reservationMessage.reservationDate)}</span>
+                                                                )}
+
+                                                                {editingReservationId === reservationMessage.id ? (
+                                                                    <div className="flex w-full">
+                                                                        <input
+                                                                            type="text"
+                                                                            className="text-md w-2/5 text-center border"
+                                                                            value={editingContent}
+                                                                            onChange={(e) => setEditingContent(e.target.value)}
+                                                                        />
+                                                                        <button
+                                                                            className="btn w-1/5 whitespace-nowrap"
+                                                                            onClick={() => {
+                                                                                const updatedReservation = {
+                                                                                    ...reservationMessage,
+                                                                                    message: editingContent,
+                                                                                    reservationDate: editingReservationDate
+                                                                                };
+                                                                                editMessageReservation(reservationMessage.id, updatedReservation).then(r => {
+                                                                                    setReservationMessageList(r.content);
+                                                                                    setEditingReservationId(null); // 편집 모드 해제
+                                                                                }).catch(e => console.log(e));
+                                                                            }}>
+                                                                            저장
+                                                                        </button>
+                                                                        <button
+                                                                            className="btn w-1/5 whitespace-nowrap"
+                                                                            onClick={() => setEditingReservationId(null)}>
+                                                                            취소
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className="text-md w-2/5 text-center">{reservationMessage.message}</span>
+                                                                        <div className="flex w-1/5">
+                                                                            <button
+                                                                                className="btn w-1/2 whitespace-nowrap"
+                                                                                onClick={() => {
+                                                                                    setEditingReservationId(reservationMessage.id);
+                                                                                    setEditingContent(reservationMessage.message);
+                                                                                    setEditingReservationDate(reservationMessage.reservationDate ? new Date(reservationMessage.reservationDate) : null);
+                                                                                }}>
+                                                                                수정
+                                                                            </button>
+                                                                            <button
+                                                                                className="btn w-1/2 whitespace-nowrap"
+                                                                                onClick={() => {
+                                                                                    deleteMessageReservation(reservationMessage.id).then(r => {
+                                                                                        setReservationMessageList(r.content);
+                                                                                    }).catch(e => console.log(e));
+                                                                                }}>
+                                                                                삭제
+                                                                            </button>
+                                                                        </div>
+                                                                    </>
+                                                                )}
                                                             </li>
                                                         ))}
                                                     </ul>
                                                 </div>
                                             </div>
                                         </Modal>
+
+
+
+
+
 
                                         <button id="file" onClick={() => { file.current?.click() }}>
                                             <img src="/file.png" data-tip="파일" className="file w-[1.5625rem] h-[1.5625rem] items-center justify-center m-1" />
@@ -1277,7 +1365,6 @@ export default function Chat() {
                             <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[3.125rem] mb-5">
                                 <img src="/searchg.png" className="w-[1.875rem] h-[1.875rem] m-2" alt="검색 사진" />
                                 <input
-                                    // ref={addUsersInputRef}
                                     type="text"
                                     placeholder="참여자 검색"
                                     className="bolder-0 outline-none bg-white text-black w-[80%]"
@@ -1291,16 +1378,16 @@ export default function Chat() {
                             </div>
                             <div className="overflow-auto h-[31.25rem]">
                                 <ul className="m-3">
-                                    {searchedUsers.filter(user => !chatroom?.users.includes(user.username)).map((user, index) => (
+                                    {searchedUsers.filter(user => !chatroom?.users.includes(user?.username)).map((user, index) => (
                                         <li key={index} className="flex justify-between items-center mb-5">
                                             <span className="w-[3.125rem] h-[3.125rem]">
                                                 <img src={user.url ? user.url : "/pin.png"} alt="User profile" className="w-[3.125rem] h-[3.125rem]" />
                                             </span>
                                             <span className="font-bold text-md m-3">{user.name}</span>
-                                            <span className=" text-md m-3">부서</span>
-                                            <span className="text-md m-3">역할</span>
+                                            <span className=" text-md m-3">{user.DepartmentResponseDTO?.name}</span>
+                                            <span className="text-md m-3">{getRole(user.role)}</span>
                                             <button onClick={() => {
-                                                addUser({ chatroomId: chatroom.id, username: user.username }).then(r => {
+                                                addUser({ chatroomId: chatroom.id, username: user?.username }).then(r => {
 
                                                 }).catch(e => {
                                                     console.log(e)
@@ -1317,4 +1404,3 @@ export default function Chat() {
         </div>
     </Main>
 }
-
