@@ -40,7 +40,7 @@ export default function Email() {
     const [email, setEmail] = useState(null as any);
     const [open3, setOpen3] = useState(null as any);
     const [discernment, setDiscernment] = useState(false);
-    const [status, setStatus] = useState(0);
+    const [status, setStatus] = useState(1);
     const [sort, setSort] = useState(1);
     const [page, setPage] = useState(0);
     const [maxPage, setMaxPage] = useState(0);
