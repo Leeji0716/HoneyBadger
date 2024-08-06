@@ -6,7 +6,7 @@ import com.team.HoneyBadger.DTO.MessageResponseDTO;
 import com.team.HoneyBadger.DTO.TokenDTO;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.NotAllowedException;
-import com.team.HoneyBadger.Enum.Service.MultiService;
+import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,16 +19,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/message")
 public class MessageController {
     private final MultiService multiService;
-    private final ConcurrentLinkedQueue<String> messageQueue = new ConcurrentLinkedQueue<> ();
-
     private final ChatRoomManager chatRoomManager;
 
     @DeleteMapping //메세지 삭제
@@ -115,17 +111,7 @@ public class MessageController {
         }
     }
 
-    @GetMapping("/readUsernames") //테스트용
-    public ResponseEntity<?> readUserMessagesTest(@RequestHeader Long messageId, @RequestHeader String username) {
-        try {
-            List<String> readUsers = multiService.readUserMessage (messageId, username);
-            return ResponseEntity.status (HttpStatus.OK).body (readUsers);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.status (HttpStatus.NOT_FOUND).body (ex.getMessage ());
-        }
-    }
-
-    @PutMapping("/unsubscribe") //테스트용
+    @PutMapping("/unsubscribe")
     public ResponseEntity<?> unsubscribe(@RequestHeader("Authorization") String accessToken, @RequestHeader("name") String name) {
         chatRoomManager.removeUserFromAllRooms (name);
         return ResponseEntity.status (HttpStatus.OK).body ("OK");

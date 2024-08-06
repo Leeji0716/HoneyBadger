@@ -2,7 +2,7 @@ package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.DTO.QuestionDTO;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
-import com.team.HoneyBadger.Enum.Service.MultiService;
+import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;

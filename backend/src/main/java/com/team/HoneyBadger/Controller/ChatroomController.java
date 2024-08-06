@@ -3,7 +3,7 @@ package com.team.HoneyBadger.Controller;
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.NotAllowedException;
-import com.team.HoneyBadger.Enum.Service.MultiService;
+import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -154,15 +154,4 @@ public class ChatroomController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
     }
-
-    @PutMapping("/updateChatroom")
-    public ResponseEntity<?> updateChatRoomTest(@RequestHeader Long id,@RequestHeader String username) {
-        try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(id, username);
-            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-        } catch (DataNotFoundException ex){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-        }
-    }
-
 }

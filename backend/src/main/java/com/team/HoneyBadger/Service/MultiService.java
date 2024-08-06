@@ -1,15 +1,15 @@
-package com.team.HoneyBadger.Enum.Service;
+package com.team.HoneyBadger.Service;
 
 
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.FileSystem;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.*;
-import com.team.HoneyBadger.Enum.Service.Module.*;
 import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
+import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.codec.binary.Base64;
@@ -242,7 +242,6 @@ public class MultiService {
     /*
      * ChatRoom
      */
-
     @Transactional
     public ChatroomResponseDTO getChatRoomType(ChatroomRequestDTO chatroomRequestDTO, String loginUser) throws NotAllowedException {
         ChatroomResponseDTO chatroomResponseDTO;
@@ -273,8 +272,8 @@ public class MultiService {
 
             // 각 채팅방이 정확히 두 명의 참가자를 가지고 있는지 확인
             if (chatroomParticipants.size() == 2) {
-                List<String> chatroomUsernames = chatroomParticipants.stream().map(p -> p.getUser().getUsername()).collect(Collectors.toList());
-
+                List<String> chatroomUsernames = chatroomParticipants.stream()
+                        .map(p -> p.getUser().getUsername()).collect(Collectors.toList());
 
                 // 요청된 사용자 목록과 동일여부
                 if (new HashSet<>(chatroomRequestDTO.users()).containsAll(chatroomUsernames)) {
@@ -310,7 +309,8 @@ public class MultiService {
         Pageable pageable = PageRequest.of(page, 20);
         Page<Chatroom> chatroomPage = chatroomService.getChatRoomListByUser(siteUser, keyword, pageable);
 
-        List<ChatroomResponseDTO> chatroomResponseDTOList = chatroomPage.stream().map(chatroom -> getChatRoom(chatroom, username)).collect(Collectors.toList());
+        List<ChatroomResponseDTO> chatroomResponseDTOList = chatroomPage.stream()
+                .map(chatroom -> getChatRoom(chatroom, username)).collect(Collectors.toList());
 
         return new PageImpl<>(chatroomResponseDTOList, pageable, chatroomPage.getTotalElements());
     }
@@ -354,7 +354,6 @@ public class MultiService {
         }
     }
 
-
     @Transactional
     private List<UserResponseDTO> userChange(Chatroom chatroom, List<String> usernames) {
         List<UserResponseDTO> users = new ArrayList<>();
@@ -368,7 +367,8 @@ public class MultiService {
 
     @Transactional
     private ChatroomResponseDTO getChatRoom(Chatroom chatroom, String username) {
-        List<String> usernames = chatroom.getParticipants().stream().map(participant -> participant.getUser().getUsername()).toList();
+        List<String> usernames = chatroom.getParticipants().stream()
+                .map(participant -> participant.getUser().getUsername()).toList();
 
         List<UserResponseDTO> users = this.userChange(chatroom, usernames);
 
@@ -389,7 +389,6 @@ public class MultiService {
         } else {
             notificationDTO = null;
         }
-
 
         SiteUser user = userService.get(username);
         LastReadMessage lastReadMessage = lastReadMessageService.get(user, chatroom);
@@ -888,7 +887,15 @@ public class MultiService {
             readUsers = message.getReadUsers().size();
         }
 
-        return MessageResponseDTO.builder().id(message.getId()).sendTime(sendTime).username(message.getSender().getUsername()).name(message.getSender().getName()).message(message.getMessage()).messageType(message.getMessageType().ordinal()).readUsers(readUsers).build();
+        return MessageResponseDTO.builder()
+                .id(message.getId())
+                .sendTime(sendTime)
+                .username(message.getSender().getUsername())
+                .name(message.getSender().getName())
+                .message(message.getMessage())
+                .messageType(message.getMessageType().ordinal())
+                .readUsers(readUsers)
+                .build();
     }
 
     @Transactional
@@ -905,9 +912,6 @@ public class MultiService {
         if (Duration.between(send, now).toMinutes() <= 5) {
             // 메시지를 삭제하는 로직을 추가합니다.
             messageService.deleteMessage(message);
-
-            // 삭제된 메시지에 대한 응답을 생성합니다.
-            //TODO:'삭제된메시지입니다'로 변경 or 메세지 아예 삭제
         } else {
             // 메시지가 5분을 초과했을 때의 로직을 추가합니다.
             throw new NotAllowedException("5분이 지나 메세지를 삭제할 수 없습니다.");
@@ -919,7 +923,10 @@ public class MultiService {
 
         String path = HoneyBadgerApplication.getOsType().getLoc();
         UUID uuid = UUID.randomUUID();
-        String fileName = "/api/chatroom/" + chatroomId.toString() + "/" + uuid.toString() + "." + (file.getOriginalFilename().contains(".") ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
+        String fileName = "/api/chatroom/" + chatroomId.toString()
+                + "/" + uuid.toString() + "."
+                + (file.getOriginalFilename().contains(".")
+                ? file.getOriginalFilename().split("\\.")[1] : "");// IMAGE
 
         // 너굴맨이 해치우고 갔어요!
         File dest = new File(path + fileName);
@@ -939,8 +946,7 @@ public class MultiService {
             SiteUser reader = userService.get(username);
             Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
             Participant participant = participantService.get(reader, chatroom);
-
-            if (chatroom.getParticipants().contains(participant)){
+            if (participant != null){
                 LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
                 Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
 
@@ -949,27 +955,12 @@ public class MultiService {
                     sets.add(reader.getUsername());
                     messageService.updateRead(message, sets.stream().toList());
                 }
-            }
-            else {
+            } else {
                 throw new DataNotFoundException("채팅방에 있는 유저가 아닙니다.");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         } finally {
             lock.unlock();
         }
-
-//        return messageService.getUpdatedList(chatroom_id, messageReadDTO.end()).stream().map(this::GetMessageDTO).toList();
-    }
-
-    @Transactional
-    public List<String> readUserMessage(Long messageId, String username) throws DataNotFoundException { //메세지 읽기 처리
-        SiteUser reader = userService.get(username);
-        Message message = messageService.getMessageById(messageId);
-
-        List<String> readUsers = message.getReadUsers();
-
-        return readUsers;
     }
 
     public List<MessageResponseDTO> getImageMessageList(Long chatroomId) throws DataNotFoundException {
@@ -996,7 +987,10 @@ public class MultiService {
         List<MessageReservation> messageReservationList = messageReservationService.getMessageReservationFromDate(LocalDateTime.now());
         for (MessageReservation messageReservation : messageReservationList) {
             if (messageReservation.getSendDate().toLocalTime().isBefore(LocalTime.now())) {
-                MessageRequestDTO messageRequestDTO = new MessageRequestDTO(messageReservation.getMessage(), messageReservation.getSender().getUsername(), messageReservation.getMessageType());
+                MessageRequestDTO messageRequestDTO = new MessageRequestDTO(
+                        messageReservation.getMessage(),
+                        messageReservation.getSender().getUsername(),
+                        messageReservation.getMessageType());
                 sendMessage(messageReservation.getChatroom().getId(), messageRequestDTO);
                 messageReservationService.delete(messageReservation);
             }
@@ -1004,7 +998,8 @@ public class MultiService {
     }
 
     @Transactional
-    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException, NotAllowedException {
+    public MessageReservationResponseDTO reservationMessage(MessageReservationRequestDTO messageReservationRequestDTO, String username)
+            throws DataNotFoundException, NotAllowedException {
         Chatroom chatroom = chatroomService.getChatRoomById(messageReservationRequestDTO.chatroomId());
         SiteUser sender = userService.get(username);
 
@@ -1052,8 +1047,8 @@ public class MultiService {
     }
 
     @Transactional
-
-    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username) throws DataNotFoundException, NotAllowedException {
+    public MessageReservationResponseDTO updateReservationMessage(Long reservationMessageId, MessageReservationRequestDTO messageReservationRequestDTO, String username)
+            throws DataNotFoundException, NotAllowedException {
         MessageReservation messageReservation = messageReservationService.getMessageReservation(reservationMessageId);
 
         if (!messageReservation.getSender().getUsername().equals(username)) {
@@ -1519,6 +1514,9 @@ public class MultiService {
                     return new ArrayList<>();
                 }
             case 1:
+                if (user.getDepartment() == null) {
+                    return new ArrayList<>();
+                }
                 List<CycleTag> cycleTagListDC = cycleTagService.myTag(KeyPreset.DC.getValue(user.getDepartment().getName()));
                 if (!cycleTagListDC.isEmpty()) {
                     return cycleTagListDC.stream().map(this::getTagDto).toList();

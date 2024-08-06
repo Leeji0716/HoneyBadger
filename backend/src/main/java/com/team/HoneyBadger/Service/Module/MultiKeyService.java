@@ -1,4 +1,4 @@
-package com.team.HoneyBadger.Enum.Service.Module;
+package com.team.HoneyBadger.Service.Module;
 
 import com.team.HoneyBadger.Entity.MultiKey;
 import com.team.HoneyBadger.Repository.MultiKeyRepository;

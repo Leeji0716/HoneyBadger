@@ -1,4 +1,4 @@
-package com.team.HoneyBadger.Enum.Service.Module;
+package com.team.HoneyBadger.Service.Module;
 
 import com.team.HoneyBadger.DTO.MessageReservationRequestDTO;
 import com.team.HoneyBadger.DTO.MessageReservationResponseDTO;

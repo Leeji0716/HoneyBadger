@@ -604,7 +604,7 @@ export default function Cycle() {
                     ))} */}
                     <div className="flex flex-col items-center p-2 overflow-auto h-[20rem]">
                         <div className="collapse collapse-plus official-color" onClick={() => {
-                            getTagList(0).then(r => setTagList(r)).catch(e => console.log(e));
+                            getTagList(0).then(r =>  setTagList(r)).catch(e => console.log(e));
                         }}>
                             <input type="radio" name="my-accordion-3" id="personal" defaultChecked />
                             <label htmlFor="personal" className="collapse-title text-xl font-medium text-white">

@@ -5,7 +5,7 @@ import com.team.HoneyBadger.Enum.FileOrder;
 import com.team.HoneyBadger.Enum.FileType;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.NotAllowedException;
-import com.team.HoneyBadger.Enum.Service.MultiService;
+import com.team.HoneyBadger.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
