@@ -154,15 +154,4 @@ public class ChatroomController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
     }
-
-    @PutMapping("/updateChatroom")
-    public ResponseEntity<?> updateChatRoomTest(@RequestHeader Long id,@RequestHeader String username) {
-        try {
-            ChatroomResponseDTO chatroomResponseDTO = multiService.getChatRoomById(id, username);
-            return ResponseEntity.status(HttpStatus.OK).body(chatroomResponseDTO);
-        } catch (DataNotFoundException ex){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-        }
-    }
-
 }
