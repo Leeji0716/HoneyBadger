@@ -583,7 +583,7 @@ export default function Approval() {
 
                         {/* 필터링 된 리스트 -> 누르면 읽음 & 상세보기 */}
                         <div className="relative flex flex-col justify-center w-full h-[100%]">
-                            <div ref={appBoxRef} onScroll={loadPage} className="w-full h-full overflow-x-hidden overflow-y-scroll">
+                            <div ref={appBoxRef} onScroll={loadPage} className="w-full h-[600px] overflow-x-hidden overflow-y-scroll">
                                 {approvalList.filter(approval => filter === -1 || approval.approvalStatus === filter).map((approval, index) => (
                                     <div key={index}
                                         className="w-[98%] h-[3.125rem] border-2 border-gray-300 mb-1 ml-1 rounded-lg shadow-md flex justify-between">
