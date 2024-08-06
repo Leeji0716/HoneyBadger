@@ -102,6 +102,14 @@ export default function Email() {
         return trimText?.substring(0, maxLength) + '...';
     };
 
+    const titleruncateText = ({ text }: { text: string }) => {
+        const trimText = text?.replace(/<p><br><\/p>/g, '').trim();
+        if (trimText?.length <= 18) {
+            return trimText;
+        }
+        return trimText?.substring(0, 18) + '...';
+    };
+
     const storageItems = (email: EmailResponseDTO, index: number) => {
         const items = {
             email: email,
@@ -134,7 +142,7 @@ export default function Email() {
                     </button>
                 </div>
                 <div className="flex flex-row w-full h-1/3">
-                    <p className="text-blue-400 font-bold text-base">{truncateText({ text: email?.title, maxLength: maxLength })}</p>
+                    <p className="text-blue-400 font-bold text-base">{titleruncateText({ text: email?.title })}</p>
                     <p className="flex ml-auto text-gray-500 text-sm HD:text-xs SD:text-xxs">{getDateEmailTime(email.senderTime)}</p>
                 </div>
                 <div className="h-[1.25rem] overflow-hidden" >
@@ -165,7 +173,7 @@ export default function Email() {
                 <p className="text-sm">{getDateEmailTime(email.senderTime)}</p>
             </div>
             <div className={"w-full h-[60%] border-t-2 flex flex-col justify-center overflow-y-auto" + (email.files.length !== 0 ? '  mt-2 p-4' : ' my-2')}>
-                <ul className={"h-[12.5rem] HD:h-[9rem] SD:h-[6rem]" + (email.files.length !== 0 ? '' : ' hidden')}>
+                <ul className={"h-[12.5rem] HD:h-[9rem] SD:h-[6rem] overflow-y-auto mb-4" + (email.files.length !== 0 ? '' : ' hidden')} style={{ scrollbarWidth: "none" }}>
                     {email.files.length !== 0 ? email.files.map((f: MailFile, index: number) =>
                         <li key={index}>
                             <div className="flex mb-4 border-solid border-2 border-gray-200 p-4 gap-6">
@@ -178,7 +186,11 @@ export default function Email() {
                         :
                         <></>}
                 </ul>
-                <p className="w-[80%] font-bold" dangerouslySetInnerHTML={{ __html: email.content }}></p>
+                {email.files.length !== 0 ? 
+                <div className="w-[100%] h-[350px] font-bold overflow-y-auto" dangerouslySetInnerHTML={{ __html: email.content }}></div>
+                :
+                <div className="w-[100%] h-[600px] font-bold overflow-y-auto" dangerouslySetInnerHTML={{ __html: email.content }}></div>
+                }
             </div>
         </div>
     }
