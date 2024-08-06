@@ -11,15 +11,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 @RequiredArgsConstructor
 public class EmailReceiverRepositoryCustomImpl implements EmailReceiverRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
     QEmail qEmail = QEmail.email;
     QEmailReceiver qEmailReceiver = QEmailReceiver.emailReceiver;
-    QEmailReservation qEmailReservation = QEmailReservation.emailReservation;
 
     @Override
     @Transactional

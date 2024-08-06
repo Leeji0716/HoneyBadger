@@ -17,7 +17,7 @@ import java.util.Map;
 @Setter
 @NoArgsConstructor
 public class Email {
-    // 이메일
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,7 +36,7 @@ public class Email {
     private List<String> recipients = new ArrayList<>();
 
     @ElementCollection
-    private Map<String, Boolean> readStatus = new HashMap<>();  // 읽은 사용자 목록 저장
+    private Map<String, Boolean> readStatus = new HashMap<>();
 
     @Builder
     public Email(String title, String content, SiteUser sender) {

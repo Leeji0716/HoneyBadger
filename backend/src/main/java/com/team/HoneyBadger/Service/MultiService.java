@@ -475,7 +475,7 @@ public class MultiService {
      * Email
      */
 
-    @Transactional//이메일 파일 업로드
+    @Transactional //이메일 파일 업로드
     public void emailFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         String keyValue = KeyPreset.EMAIL_MULTI.getValue(email_id.toString());
@@ -669,7 +669,6 @@ public class MultiService {
                         }
                         multiKeyService.delete(key);
                     }
-
                 }
                 {
                     String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(emailReservation.getId().toString());
