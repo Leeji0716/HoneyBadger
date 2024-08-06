@@ -947,7 +947,6 @@ public class MultiService {
             SiteUser reader = userService.get(username);
             Chatroom chatroom = chatroomService.getChatRoomById(chatroomId);
             Participant participant = participantService.get(reader, chatroom);
-
             if (participant != null){
                 LastReadMessage lastReadMessage = lastReadMessageService.get(reader, chatroom);
                 Long startId = (lastReadMessage != null) ? lastReadMessage.getLastReadMessage() : null; //마지막 메세지가 있으면 startId, 없으면 null
@@ -957,8 +956,7 @@ public class MultiService {
                     sets.add(reader.getUsername());
                     messageService.updateRead(message, sets.stream().toList());
                 }
-            }
-            else {
+            } else {
                 throw new DataNotFoundException("채팅방에 있는 유저가 아닙니다.");
             }
         } finally {
@@ -1517,6 +1515,9 @@ public class MultiService {
                     return new ArrayList<>();
                 }
             case 1:
+                if (user.getDepartment() == null) {
+                    return new ArrayList<>();
+                }
                 List<CycleTag> cycleTagListDC = cycleTagService.myTag(KeyPreset.DC.getValue(user.getDepartment().getName()));
                 if (!cycleTagListDC.isEmpty()) {
                     return cycleTagListDC.stream().map(this::getTagDto).toList();
