@@ -164,7 +164,7 @@ export default function Email() {
                 </div>
                 <p className="text-sm">{getDateEmailTime(email.senderTime)}</p>
             </div>
-            <div className={"w-full h-[60%] border-t-2 flex flex-col justify-center overflow-y-auto"+(email.files.length !== 0 ? '  mt-2 p-4' : ' my-2')}>
+            <div className={"w-full h-[60%] border-t-2 flex flex-col justify-center overflow-y-auto" + (email.files.length !== 0 ? '  mt-2 p-4' : ' my-2')}>
                 <ul className={"h-[12.5rem] HD:h-[9rem] SD:h-[6rem]" + (email.files.length !== 0 ? '' : ' hidden')}>
                     {email.files.length !== 0 ? email.files.map((f: MailFile, index: number) =>
                         <li key={index}>
@@ -178,8 +178,8 @@ export default function Email() {
                         :
                         <></>}
                 </ul>
+                <p className="w-[80%] font-bold" dangerouslySetInnerHTML={{ __html: email.content }}></p>
             </div>
-            <p className="w-[80%] font-bold" dangerouslySetInnerHTML={{ __html: email.content }}></p>
         </div>
     }
 
@@ -224,7 +224,7 @@ export default function Email() {
                             <>
                                 <button onClick={() => { router.push(`/email/EmailForm`); localStorage.setItem("email", JSON.stringify(storageItems(email, 0))) }}>전달</button>
                                 <button onClick={() => { router.push(`/email/EmailForm`); localStorage.setItem("email", JSON.stringify(storageItems(email, 1))) }}>답장</button>
-                                <button onClick={() => { mailDelete(open3.id).then(r => window.location.href = "/email").catch(e => console.log(e)) }}>삭제</button>
+                                {status == 1 ? <button onClick={() => { mailDelete(open3.id).then(r => window.location.href = "/email").catch(e => console.log(e)) }}>삭제</button> : <></>}
                             </>
                             :
                             <>
