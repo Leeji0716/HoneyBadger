@@ -1,15 +1,15 @@
-package com.team.HoneyBadger.Service;
+package com.team.HoneyBadger.Enum.Service;
 
 
 import com.team.HoneyBadger.DTO.*;
 import com.team.HoneyBadger.Entity.FileSystem;
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.*;
+import com.team.HoneyBadger.Enum.Service.Module.*;
 import com.team.HoneyBadger.Exception.*;
 import com.team.HoneyBadger.HoneyBadgerApplication;
 import com.team.HoneyBadger.Security.CustomUserDetails;
 import com.team.HoneyBadger.Security.JWT.JwtTokenProvider;
-import com.team.HoneyBadger.Service.Module.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.tomcat.util.codec.binary.Base64;
@@ -476,7 +476,7 @@ public class MultiService {
      * Email
      */
 
-    @Transactional//이메일 파일 업로드
+    @Transactional //이메일 파일 업로드
     public void emailFilesUpload(Long email_id, List<MultipartFile> files) throws IOException {
         String path = HoneyBadgerApplication.getOsType().getLoc();
         String keyValue = KeyPreset.EMAIL_MULTI.getValue(email_id.toString());
@@ -670,7 +670,6 @@ public class MultiService {
                         }
                         multiKeyService.delete(key);
                     }
-
                 }
                 {
                     String keyValue = KeyPreset.EMAIL_RESERVATION_MULTI.getValue(emailReservation.getId().toString());

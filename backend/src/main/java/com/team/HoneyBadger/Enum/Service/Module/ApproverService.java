@@ -1,4 +1,4 @@
-package com.team.HoneyBadger.Service.Module;
+package com.team.HoneyBadger.Enum.Service.Module;
 
 import com.team.HoneyBadger.Entity.*;
 import com.team.HoneyBadger.Enum.ApprovalStatus;

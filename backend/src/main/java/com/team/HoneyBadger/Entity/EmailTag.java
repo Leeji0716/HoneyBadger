@@ -8,7 +8,6 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 public class EmailTag {
-    // 이메일 태그
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)

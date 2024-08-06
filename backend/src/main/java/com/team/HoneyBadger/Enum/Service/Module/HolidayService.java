@@ -1,4 +1,4 @@
-package com.team.HoneyBadger.Service.Module;
+package com.team.HoneyBadger.Enum.Service.Module;
 
 import com.team.HoneyBadger.Entity.Holiday;
 import com.team.HoneyBadger.Repository.HolidayRepository;

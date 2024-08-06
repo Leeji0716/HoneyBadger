@@ -8,7 +8,7 @@ import com.team.HoneyBadger.Exception.DataDuplicateException;
 import com.team.HoneyBadger.Exception.DataNotFoundException;
 import com.team.HoneyBadger.Exception.DataNotSameException;
 import com.team.HoneyBadger.Exception.InvalidFileTypeException;
-import com.team.HoneyBadger.Service.MultiService;
+import com.team.HoneyBadger.Enum.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;

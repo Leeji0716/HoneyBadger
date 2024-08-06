@@ -1,7 +1,7 @@
 package com.team.HoneyBadger.Controller;
 
 import com.team.HoneyBadger.DTO.TokenDTO;
-import com.team.HoneyBadger.Service.MultiService;
+import com.team.HoneyBadger.Enum.Service.MultiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

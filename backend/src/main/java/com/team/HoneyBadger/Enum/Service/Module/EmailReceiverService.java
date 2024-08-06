@@ -1,4 +1,4 @@
-package com.team.HoneyBadger.Service.Module;
+package com.team.HoneyBadger.Enum.Service.Module;
 
 import com.team.HoneyBadger.Entity.Email;
 import com.team.HoneyBadger.Entity.EmailReceiver;
@@ -29,11 +29,11 @@ public class EmailReceiverService {
     }
 
     public Page<Email> getSentEmailsForUser(String userId, Pageable pageable) {
-        return emailReceiverRepository.findSentEmailsByUserId(userId, pageable); // 사용자에 대해 보낸 이메일 목록을 반환하는 로직
+        return emailReceiverRepository.findSentEmailsByUserId(userId, pageable);
     }
 
     public Page<Email> getReceivedEmailsForUser(String userId, Pageable pageable) {
-        return emailReceiverRepository.findReceivedEmailsByUserId(userId, pageable); // 사용자에 대해 받은 이메일 목록을 반환하는 로직
+        return emailReceiverRepository.findReceivedEmailsByUserId(userId, pageable);
     }
 
     public EmailReceiver getReadStatus(Email email, SiteUser user) {

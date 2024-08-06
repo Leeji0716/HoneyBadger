@@ -9,7 +9,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 public class EmailReceiver {
-    // 이메일 받는 사람
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
@@ -18,7 +18,7 @@ public class EmailReceiver {
     private Email email;
     @ManyToOne(fetch = FetchType.EAGER)
     private SiteUser receiver;
-    private boolean status; // 읽음 여부
+    private boolean status;
 
     @Builder
     public EmailReceiver(Email email, SiteUser receiver) {

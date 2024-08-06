@@ -15,7 +15,6 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class EmailReservation {
-    // 이메일
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
