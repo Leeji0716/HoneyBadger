@@ -29,7 +29,7 @@ const nextConfig  = {
 			{
 				source: '/api/:path*',
 				destination: 'http://localhost:8080/api/:path*'
-				// destination: 'http://www.벌꿀오소리.메인.한국:8080/api/:path*'
+				// destination: 'http://server.starj.kro.kr:18186/api/:path*'
 			}
 		]
 	},
