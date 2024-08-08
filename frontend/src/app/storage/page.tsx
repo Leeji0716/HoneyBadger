@@ -131,6 +131,7 @@ export default function Home() {
                                 if (res.statusCodeValue == 200) {
                                     if (receive.index <= upload.index)
                                         return;
+                                    
                                     upload.index = receive.index;
                                     if (receive.name)
                                         upload.name = receive.name;
@@ -162,10 +163,10 @@ export default function Home() {
                                             upload.status = 0;
                                             // const interval = setInterval(() => { setReload(true); clearInterval(interval) }, 100);
                                             setReload(true);
-
                                         }
-                                    }
+                                    }                                      
                                 } else {// 오류로 인한 취소
+                                    console.log(res.body);
                                     upload.status = -1;
                                     cancelUpload({ Location: upload.url, Name: upload.name, Key: upload.key });
                                     if (res.body.name == "storage")
@@ -1034,7 +1035,8 @@ export default function Home() {
                                         chunk: chunk,
                                         location: upload.url,
                                         name: upload.name,
-                                        uploadType: upload.uploadType
+                                        uploadType: upload.uploadType,
+                                        baseLocation: upload.baseLocation
                                     })
                                 });
                                 confirmRef.current = confirmRef.current.filter(f => f != confirm);
@@ -1044,6 +1046,7 @@ export default function Home() {
                                 const confirm = uploadConfirm[uploadConfirm.length - 1];
                                 const upload = confirm.upload;
                                 upload.uploadType = 1;
+
                                 const start = upload.index * chunkSize;
                                 let binary = "";
                                 for (let i = 0; i < chunkStack; i++)
@@ -1057,7 +1060,8 @@ export default function Home() {
                                         chunk: chunk,
                                         location: upload.url,
                                         name: upload.name,
-                                        uploadType: upload.uploadType
+                                        uploadType: upload.uploadType,
+                                        baseLocation: upload.baseLocation
                                     })
                                 });
                                 confirmRef.current = confirmRef.current.filter(f => f != confirm);
