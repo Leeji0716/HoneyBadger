@@ -195,6 +195,15 @@ export default function Chat() {
         setIsModalOpen6(false);
     }
 
+    function formatMessage(message: string) {
+        return message.split('\n').map((line, index) => (
+            <React.Fragment key={index}>
+                {line}
+                <br />
+            </React.Fragment>
+        ));
+    }
+
 
     useEffect(() => {
         if (isModalOpen) {
@@ -392,47 +401,71 @@ export default function Chat() {
         });
     };
 
+
     const handleCreateChatroom = () => {
         // 선택된 사용자가 있는지 확인
         if (selectedUsers.size > 0) {
-            // 선택된 사용자의 Set 객체를 배열로 변환
             const users = Array.from(selectedUsers);
-
-            // 현재 사용자가 배열에 포함되어 있는지 확인하고, 포함되지 않았으면 추가
             if (user && !users.includes(user?.username)) {
                 users.push(user?.username);
             }
 
             let roomName = chatroomName;
             if (!roomName) {
-                // userList에서 사용자 이름을 찾아 결합
                 roomName = userList.filter(u => users.includes(u?.username))
                     .map(u => u.name)
-                    .join(', '); // 이름들을 쉼표로 구분
+                    .join(', ');
             }
 
-            // 채팅방 요청 객체 생성
-            const chatroomRequest: chatroomRequestDTO = { name: roomName, users };
-
-            // 채팅방 생성 API 호출
+            const chatroomRequest = { name: roomName, users };
             makeChatroom(chatroomRequest)
                 .then(r => {
-                    // 채팅방 생성 성공 시 모달 닫기, 선택된 사용자 및 채팅방 이름 초기화
+                    // 채팅방 목록을 업데이트하는 로직
+                    setChatrooms(prevChatrooms => [...prevChatrooms, r]);
+                    // 모달 닫기 및 상태 초기화
                     setIsModalOpen2(false);
                     setSelectedUsers(new Set());
                     setChatroomName('');
-                    setMessageList([]);
-                    getChat(keyword, page).then(r => { setChatrooms(r.content); setMaxPage(r.totalPages); }).catch(e => console.log(e));
+                    // 기타 UI 업데이트
                 })
                 .catch(e => {
-                    // 채팅방 생성 실패 시 콘솔에 오류 출력
                     console.error(e);
                 });
         } else {
-            // 선택된 사용자가 없을 경우 콘솔에 오류 출력
             console.error("유저를 선택해주세요");
         }
     };
+
+    const handleUserAdd = (user: any) => {
+        addUser({ chatroomId: chatroom.id, username: user?.username })
+            .then((updatedChatroom) => {
+                // 채팅방 상태 업데이트
+                setChatroom(updatedChatroom);
+                // 기존 채팅방 목록도 업데이트
+                setChatrooms((prevChatrooms) =>
+                    prevChatrooms.map((room) =>
+                        room.id === updatedChatroom.id ? updatedChatroom : room
+                    )
+                );
+                // 모달 닫기
+                handleCloseModal();
+            })
+            .catch(e => {
+                console.log(e);
+            });
+    };
+
+    const handleComplete = () => {
+        selectedUsers.forEach((username) => {
+            const user = userList.find(u => u.username === username);
+            if (user) {
+                handleUserAdd(user);
+            }
+        });
+        // 추가 작업이 완료되면 모달 닫기
+        handleCloseModal();
+    };
+
     const handleSearch = () => {
         setPage(0);
         getChat(keyword, page).then(r => {
@@ -675,6 +708,53 @@ export default function Chat() {
         return <></>;
     }
 
+    function getValue() {
+        const joinMembers = chatroom?.users || [];  // chatroom이 있을 경우에만 접근
+        const targets = joinMembers.filter((f: any) => f?.name !== user?.username);
+
+        switch (joinMembers.length) {
+            case 2:
+                return <img src={targets[0]?.url ? targets[0]?.url : "/pin.png"} className="m-2 w-[5rem] h-[5rem] rounded-full" />;
+            case 3:
+                return (
+                    <div className="m-2 w-[5rem] h-[5rem] flex flex-col justify-center items-center ">
+                        <div className="w-[5rem] h-[2.5rem] flex">
+                            <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full ml-2 mt-2" />
+                        </div>
+                        <div className="w-[5rem] h-[2.5rem] flex justify-end">
+                            <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full mr-2 mb-2" />
+                        </div>
+                    </div>
+                );
+            case 4:
+                return (
+                    <div className="m-2 w-[5rem] h-[5rem] flex flex-col justify-center items-center ">
+                        <div className="w-[5rem] h-[2.5rem] flex justify-center">
+                            <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                        </div>
+                        <div className="w-[5rem] h-[2.5rem] flex">
+                            <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                            <img src={targets[2]?.url ? targets[2].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                        </div>
+                    </div>
+                );
+            default:
+                return (
+                    <div className="m-2 w-[5rem] h-[5rem] flex flex-col justify-center items-center ">
+                        <div className="w-[5rem] h-[2.5rem] flex">
+                            <img src={targets[0]?.url ? targets[0].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                            <img src={targets[1]?.url ? targets[1].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                        </div>
+                        <div className="w-[5rem] h-[2.5rem] flex">
+                            <img src={targets[2]?.url ? targets[2].url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                            <img src={targets[3]?.url ? targets[3]?.url : "/pigp.png"} className="w-[2.5rem] h-[2.5rem] rounded-full" />
+                        </div>
+                    </div>
+                );
+        }
+    }
+
+
     return <Main user={user} isClientLoading={isClientLoading}>
         <div className="flex pt-10 pb-12 w-full h-full">
 
@@ -786,7 +866,8 @@ export default function Chat() {
                         <div className={'h-full flex flex-col relative' + (chatroom != null ? '' : ' hidden')}>
                             <div className="flex w-full justify-between border-b-2">
                                 <div className="text-black flex w-[50%]">
-                                    <img src="/pig.png" className="m-2 w-[4.375rem] h-[4.375rem] rounded-full" />
+                                    {getValue()}
+                                    {/* <img src="/pig.png" className="m-2 w-[4.375rem] h-[4.375rem] rounded-full" /> */}
                                     <div className="flex flex-col justify-center">
                                         <div className="flex">
                                             <button onClick={handleOpen1Modal}>
@@ -1039,22 +1120,20 @@ export default function Chat() {
                                                     </div>
                                                     <div className="inline-flex rounded-2xl text-sm text-white justify-center items-center m-2 official-color">
                                                         <div className="mt-2 mb-2 ml-3 mr-3">
-                                                            {
-                                                                t?.messageType === 0 ? (
-                                                                    <div>{t?.message}</div>
-                                                                ) : t?.messageType === 1 ? (
-                                                                    <img src={t?.message} />
-                                                                ) : t?.messageType === 2 ? (
-                                                                    <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                                ) : t?.messageType === 3 ? (
-                                                                    <a href={t?.message} download target="_blank" rel="noopener noreferrer" className="flex items-center">
-                                                                        <img src={getFileIcon(t?.message)} className="w-[50px] h-[50px] mr-2" alt="" />
-                                                                        {t?.message}
-                                                                    </a>
-                                                                ) : (
-                                                                    <div></div>
-                                                                )
-                                                            }
+                                                            {t?.messageType === 0 ? (
+                                                                <div>{formatMessage(t?.message)}</div>
+                                                            ) : t?.messageType === 1 ? (
+                                                                <img src={t?.message} />
+                                                            ) : t?.messageType === 2 ? (
+                                                                <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                            ) : t?.messageType === 3 ? (
+                                                                <a href={t?.message} download target="_blank" rel="noopener noreferrer" className="flex items-center">
+                                                                    <img src={getFileIcon(t?.message)} className="w-[50px] h-[50px] mr-2" alt="" />
+                                                                    {t?.message}
+                                                                </a>
+                                                            ) : (
+                                                                <div></div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1070,19 +1149,17 @@ export default function Chat() {
                                                         <div className="w-full flex">
                                                             <div className="text-black ml-2">
                                                                 <div className="mt-2 mb-2 ml-3 mr-3">
-                                                                    {
-                                                                        t?.messageType === 0 ? (
-                                                                            <div>{t?.message}</div>
-                                                                        ) : t?.messageType === 1 ? (
-                                                                            <img src={t?.message} />
-                                                                        ) : t?.messageType === 2 ? (
-                                                                            <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                                        ) : t?.messageType === 3 ? (
-                                                                            <a href={t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                                        ) : (
-                                                                            <div></div>
-                                                                        )
-                                                                    }
+                                                                    {t?.messageType === 0 ? (
+                                                                        <div>{formatMessage(t?.message)}</div>
+                                                                    ) : t?.messageType === 1 ? (
+                                                                        <img src={t?.message} />
+                                                                    ) : t?.messageType === 2 ? (
+                                                                        <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                                    ) : t?.messageType === 3 ? (
+                                                                        <a href={t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                                    ) : (
+                                                                        <div></div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1417,24 +1494,23 @@ export default function Chat() {
                                             <span className="font-bold text-md m-3">{user.name}</span>
                                             <span className=" text-md m-3">{user.DepartmentResponseDTO?.name}</span>
                                             <span className="text-md m-3">{getRole(user.role)}</span>
-                                            <button onClick={() => {
-                                                addUser({ chatroomId: chatroom.id, username: user?.username }).then(r => {
-
-                                                }).catch(e => {
-                                                    console.log(e)
-                                                })
-                                            }} className="font-bold text-3xl m-3">+</button>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedUsers.has(user?.username)}
+                                                onChange={() => handleCheckboxChange(user?.username)}
+                                            />
                                         </li>
                                     ))}
                                 </ul>
                             </div>
                             <div className="flex items-center justify-center">
-                                <button className="btn">
+                                <button onClick={handleComplete} className="btn">
                                     완료
                                 </button>
                             </div>
                         </div>
                     </Modal>
+
                 </div>
             </div>
         </div>
