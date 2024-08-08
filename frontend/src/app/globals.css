@@ -151,6 +151,28 @@ body {
   border-radius: 0.09375rem;
 }
 
+.notification-content {
+  cursor: pointer;
+  padding: 10px;
+  background-color: #abcdae;
+  margin: 10px;
+  position: relative;
+  width: 90%;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+}
+
+.collapsed {
+  max-height: 3.375rem; /* Initial height when collapsed */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.expanded {
+  max-height: 10rem; /* Enough height to show full content or adjust as needed */
+}
+
 
 @layer components {
   .checkbox-div:has(input:checked) {

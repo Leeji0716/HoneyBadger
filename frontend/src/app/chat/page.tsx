@@ -10,7 +10,7 @@ import {
     chatUploadFile, getUpdateMessageList, createMessageReservation, getMessageReservationList, deleteMessageReservation,
     unsubscribeChatroom, messageFileList, messageImageList, messageLinkList, searchUsers, editMessageReservation
 } from "../API/UserAPI";
-import { getChatDateTimeFormat,getRole } from "../Global/Method";
+import { getChatDateTimeFormat, getRole } from "../Global/Method";
 import { getChatShowDateTimeFormat, getFileIcon } from "../Global/Method";
 import { getSocket } from "../API/SocketAPI";
 
@@ -129,6 +129,12 @@ export default function Chat() {
     const toggleNotification = () => {
         setShowNotification(!showNotification);
     };
+    const [isExpanded, setIsExpanded] = useState(false);
+    const toggleExpand = () => {
+        setIsExpanded(!isExpanded);
+    };
+    const [isTextExpanded, setTextExpanded] = useState(false);  // 텍스트 펼침 상태를 제어하는 상태 변수
+    const toggleTextExpand = () => setTextExpanded(!isTextExpanded);
 
 
 
@@ -188,6 +194,7 @@ export default function Chat() {
     function handleClose6Modal() {
         setIsModalOpen6(false);
     }
+
 
     useEffect(() => {
         if (isModalOpen) {
@@ -770,8 +777,8 @@ export default function Chat() {
                     </div>
                 </div>
             </div>
-             {/* 오른쪽 부분 */}
-             <div className="w-8/12 flex flex-col items-center justify-center">
+            {/* 오른쪽 부분 */}
+            <div className="w-8/12 flex flex-col items-center justify-center">
                 <div className="w-11/12 bg-white h-full shadow">
                     {chatroom != null ? <ChatDetail key={chatroom.id} Chatroom={chatroom} messageList={messageList} innerRef={chatBoxRef} currentScrollLocation={currentScrollLocation} /> : <></>}
                     <>
@@ -801,6 +808,12 @@ export default function Chat() {
 
                                         </div>
                                         <div className="flex items-center gap-1">
+
+                                            {chatroom?.notification?.message && (
+                                                <button onClick={toggleNotification} className="flex items-center">
+                                                    <img src="/noti.png" className="w-[1.875rem] h-[1.875rem]" alt="Notification" />
+                                                </button>
+                                            )}
 
                                             <button onClick={handleOpen6Modal}>
                                                 <img src="/savebox.png" className="w-[1.5rem] h-[1.5rem]" />
@@ -941,31 +954,37 @@ export default function Chat() {
                                 </div>
                             </div>
                             {/* 공지 */}
-                            <div className={chatroom?.notification?.message ? '' : ' hidden'}>
-                                {!showNotification && (
-                                    <div className="w-full flex justify-start ml-3" onClick={toggleNotification}>
-                                        <div className="bg-[#abcdae] w-[4.375rem] h-[4.375rem] rounded-full flex items-center fixed p-4">
-                                            <img src="/noti.png" className="w-[3.75rem] h-[3.75rem] mr-2" alt="Notification" />
-                                        </div>
-                                    </div>
-                                )}
-
+                            <div className={`${isExpanded ? 'expanded' : 'collapsed'} ${chatroom?.notification?.message ? '' : 'hidden'}`} onClick={toggleExpand}>
                                 {showNotification && (
                                     <div className="w-full flex justify-center">
-                                        <div className="bg-[#abcdae] w-[59%] h-[4.375rem] rounded-md flex items-center fixed p-4">
-                                            <img onClick={() => setShowNotification(false)} src="/noti.png" className="w-[3.75rem] h-[3.75rem] mr-2" alt="" />
-                                            <div className="w-full text-white" style={{ opacity: 1 }}>
-                                                {chatroom?.notification?.message}
+                                        <div className="notification-box bg-[#abcdae] w-[59%] flex items-center fixed cursor-pointer">
+                                            <img
+                                                src="/noti-w.png"
+                                                className="w-[3.75rem] h-[3.75rem] m-2"
+                                                alt=""
+                                                onClick={() => setShowNotification(false)}
+                                            />
+                                            <div className="notification-text w-full text-white m-2">
+                                                <div className={`${isExpanded ? 'expanded' : 'collapsed'} notification-content`} onClick={toggleExpand}>
+                                                    {chatroom?.notification?.message}
+                                                </div>
+                                                <div className="flex mt-2 ml-5">
+                                                    <p className="mr-3">{chatroom?.notification?.username}</p>
+                                                    <p>{getChatDateTimeFormat(chatroom?.notification?.sendTime)}</p>
+                                                </div>
                                             </div>
                                             <button
                                                 onClick={() => setShowNotification(false)}
-                                                className="h-full flex items-start mr-2 text-white text-3xl" style={{ opacity: 1 }}>
+                                                className="h-full flex items-start mr-2 text-white text-3xl"
+                                            >
                                                 ⨯
                                             </button>
                                         </div>
                                     </div>
                                 )}
                             </div>
+
+
 
                             <div ref={chatBoxRef} onScroll={loadPage} className="SD:h-[20rem] HD:h-[25rem] h-[35.9375rem] w-[100%] overflow-x-hidden overflow-y-auto">
                                 {/* 날짜 */}
@@ -982,38 +1001,43 @@ export default function Chat() {
                                         t.username == user?.username ?
                                             <div className="flex w-full justify-end" id={index.toString()}>
                                                 <div className="w-6/12 flex justify-end mr-2">
+                                                    <div className="flex flex-col">
+                                                        <div className="flex">
+                                                            <div className="text-sm text-red-600 ml-3 mt-2 whitespace-nowrap" >{joinMembers - (t?.readUsers ?? 0)}</div>
+                                                            <div className="text-sm text-gray-300 ml-3 mt-2 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</div>
+                                                        </div>
+                                                        <div className="flex justify-end">
+                                                            <button
+                                                                className="text-sm text-gray-300 font-bold whitespace-nowrap"
+                                                                onClick={() => {
+                                                                    notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
+                                                                        .then((r) => {
+                                                                            chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
+                                                                            setChatrooms([...chatrooms]);
+                                                                            setChatroom(r);
 
-                                                    <div className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap" >{t?.readUsers}, {joinMembers - (t?.readUsers ?? 0)}</div>
+                                                                        })
+                                                                        .catch((e) => {
+                                                                            console.error(e);
+                                                                        });
+                                                                }}
+                                                            >
+                                                                공지 설정
+                                                            </button>
+                                                            <button className="text-sm text-gray-300 ml-2 font-bold whitespace-nowrap"
+                                                                onClick={() => {
+                                                                    deleteMessage(Number(t?.id))
+                                                                        .then(() => {
+                                                                            setMessageList(prevMessageList => prevMessageList.filter(message => message.id !== t.id));
+                                                                        })
+                                                                        .catch((e) => {
+                                                                            console.error("Error deleting message:", e);
+                                                                        });
+                                                                }}>삭제</button>
+                                                        </div>
 
-                                                    <button
-                                                        className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
-                                                        onClick={() => {
-                                                            notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
-                                                                .then((r) => {
-                                                                    chatrooms[(chatrooms)?.findIndex(room => room.id == r?.id)] = r;
-                                                                    setChatrooms([...chatrooms]);
-                                                                    setChatroom(r);
-
-                                                                })
-                                                                .catch((e) => {
-                                                                    console.error(e);
-                                                                });
-                                                        }}
-                                                    >
-                                                        공지 설정
-                                                    </button>
-                                                    <button className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
-                                                        onClick={() => {
-                                                            deleteMessage(Number(t?.id))
-                                                                .then(() => {
-                                                                    setMessageList(prevMessageList => prevMessageList.filter(message => message.id !== t.id));
-                                                                })
-                                                                .catch((e) => {
-                                                                    console.error("Error deleting message:", e);
-                                                                });
-                                                        }}>삭제</button>
-                                                    <div className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</div>
-                                                    <div className="inline-flex rounded-2xl text-sm text-white justify-center m-2 official-color">
+                                                    </div>
+                                                    <div className="inline-flex rounded-2xl text-sm text-white justify-center items-center m-2 official-color">
                                                         <div className="mt-2 mb-2 ml-3 mr-3">
                                                             {
                                                                 t?.messageType === 0 ? (
@@ -1038,33 +1062,38 @@ export default function Chat() {
                                             :
                                             <div className="flex w-6/12 ml-2 mb-3" id={index.toString()}>
                                                 <img src="/pigp.png" className="w-[2.5rem] h-[2.5rem] rounded-full" />
-                                                <div className="flex flex-col ml-2">
-                                                    <div className="text-black font-bold ml-2">
-                                                        {t?.name}
-                                                    </div>
-                                                    <div className="w-full flex">
-                                                        <div className="text-black ml-2">
-                                                            <div className="mt-2 mb-2 ml-3 mr-3">
-                                                                {
-                                                                    t?.messageType === 0 ? (
-                                                                        <div>{t?.message}</div>
-                                                                    ) : t?.messageType === 1 ? (
-                                                                        <img src={t?.message} />
-                                                                    ) : t?.messageType === 2 ? (
-                                                                        <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                                    ) : t?.messageType === 3 ? (
-                                                                        <a href={t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
-                                                                    ) : (
-                                                                        <div></div>
-                                                                    )
-                                                                }
+                                                <div className="flex ml-2">
+                                                    <div className="flex flex-col">
+                                                        <div className="text-black font-bold ml-2">
+                                                            {t?.name}
+                                                        </div>
+                                                        <div className="w-full flex">
+                                                            <div className="text-black ml-2">
+                                                                <div className="mt-2 mb-2 ml-3 mr-3">
+                                                                    {
+                                                                        t?.messageType === 0 ? (
+                                                                            <div>{t?.message}</div>
+                                                                        ) : t?.messageType === 1 ? (
+                                                                            <img src={t?.message} />
+                                                                        ) : t?.messageType === 2 ? (
+                                                                            <a href={t?.message} target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                                        ) : t?.messageType === 3 ? (
+                                                                            <a href={t?.message} download target="_blank" rel="noopener noreferrer">{t?.message}</a>
+                                                                        ) : (
+                                                                            <div></div>
+                                                                        )
+                                                                    }
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</div>
-                                                        <div className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap">삭제</div>
-
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <div className="flex">
+                                                            <div className="text-sm text-gray-300 ml-3 mt-3 whitespace-nowrap">{getChatDateTimeFormat(t?.sendTime)}</div>
+                                                            <div className="text-sm text-red-600 ml-3 mt-3 whitespace-nowrap">{joinMembers - (t?.readUsers ?? 0)}</div>
+                                                        </div>
                                                         <button
-                                                            className="text-sm text-gray-300 ml-3 mt-5 whitespace-nowrap"
+                                                            className="text-sm text-gray-300 ml-3 whitespace-nowrap flex justify-start font-bold"
                                                             onClick={() => {
 
                                                                 notification({ chatroomId: chatroom?.id, messageId: Number(t?.id) })
@@ -1083,8 +1112,8 @@ export default function Chat() {
                                                         >
                                                             공지 설정
                                                         </button>
-                                                        <div className="text-sm text-red-600 ml-3 mt-5 whitespace-nowrap"> {t.readUsers}{joinMembers - (t?.readUsers ?? 0)}</div>
                                                     </div>
+
                                                 </div>
                                             </div>
                                     }
@@ -1250,11 +1279,6 @@ export default function Chat() {
                                             </div>
                                         </Modal>
 
-
-
-
-
-
                                         <button id="file" onClick={() => { file.current?.click() }}>
                                             <img src="/file.png" data-tip="파일" className="file w-[1.5625rem] h-[1.5625rem] items-center justify-center m-1" />
                                             <input ref={file} type="file" hidden onChange={e => {
@@ -1360,8 +1384,15 @@ export default function Chat() {
 
                     </>
                     <Modal open={isModalOpen} onClose={handleCloseModal} escClose={true} outlineClose={true}>
-                        <div>
+                        <div className="w-[20.25rem]">
                             <div className="font-bold text-3xl m-3 mb-8 flex justify-center">멤버 추가하기</div>
+                            <div className="flex flex-wrap mr-2 mb-2">
+                                {chatroom?.users.map((user: any) => (
+                                    <div key={user.id} className="flex items-center justify-center bg-white text-black rounded-l-full rounded-r-full h-8 pl-3 pr-3 m-1 border border-gray-300 flex-shrink-0">
+                                        {user.name}
+                                    </div>
+                                ))}
+                            </div>
                             <div className="flex justify-items-center flex-row border-2 border-gray rounded-full w-[90%] h-[3.125rem] mb-5">
                                 <img src="/searchg.png" className="w-[1.875rem] h-[1.875rem] m-2" alt="검색 사진" />
                                 <input
@@ -1396,6 +1427,11 @@ export default function Chat() {
                                         </li>
                                     ))}
                                 </ul>
+                            </div>
+                            <div className="flex items-center justify-center">
+                                <button className="btn">
+                                    완료
+                                </button>
                             </div>
                         </div>
                     </Modal>
