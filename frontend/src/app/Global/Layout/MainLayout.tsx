@@ -44,7 +44,7 @@ export default function Main(props: Readonly<pageInterface>) {
           <span></span>
           <span></span>
         </button>
-        <a href="/main" className="text-white m-3 cursor-pointer">HoneyBadger</a>
+        <a href="/cycle" className="text-white m-3 cursor-pointer">HoneyBadger</a>
         {/* <div className="flex flex-row border-2 border-white rounded-md ml-60">
           <img src="/search.png" className="w-[1.875rem] h-[1.875rem] m-1 cursor-pointer" alt="검색 사진" />
           <input type="text" placeholder="search" className="bolder-0 px-2 outline-none bg-white text-black" />
