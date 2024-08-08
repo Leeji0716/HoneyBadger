@@ -10,7 +10,7 @@ export function getSocket(subs: Subscribe[], setIsReady: () => void) {
     const Socket = new Client({
         webSocketFactory: () => {
             // return new SockJS("http://localhost:8080/api/ws-stomp");
-            return new SockJS("http://www.벌꿀오소리.메인.한국:8080/api/ws-stomp");
+            return new SockJS("http://server.starj.kro.kr:18186/api/ws-stomp");
         },
         // beforeConnect: () => {
         //     console.log("beforeConnect");
