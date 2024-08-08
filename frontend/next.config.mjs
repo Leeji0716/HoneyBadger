@@ -28,8 +28,8 @@ const nextConfig  = {
 		return [
 			{
 				source: '/api/:path*',
-				// destination: 'http://localhost:8080/api/:path*'
-				destination: 'http://www.벌꿀오소리.메인.한국/api/:path*'
+				destination: 'http://localhost:8080/api/:path*'
+				// destination: 'http://www.벌꿀오소리.메인.한국:8080/api/:path*'
 			}
 		]
 	},
