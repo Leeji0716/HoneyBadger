@@ -46,7 +46,7 @@ export default function Home() {
                         setAdmin(true);
                         const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
                     } else
-                        location.href = '/main';
+                        location.href = '/cycle';
                 })
                 .catch(e => {
                     const interval = setInterval(() => { setClientLoading(false); clearInterval(interval); }, 1000);
@@ -245,7 +245,7 @@ export default function Home() {
                     {questions.map((question, index) => <Question key={index} question={question} />)}
                 </div>
             </div>
-            <button className="self-end btn btn-xs btn-error text-white mt-1" onClick={() => location.href = isAdmin ? '/main' : "/"}>돌아가기</button>
+            <button className="self-end btn btn-xs btn-error text-white mt-1" onClick={() => location.href = isAdmin ? '/cycle' : "/"}>돌아가기</button>
         </div>
     </main>
 }
