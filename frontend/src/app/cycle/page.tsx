@@ -262,7 +262,7 @@ export default function Cycle() {
         return (
             <div className="h-[50%] border-r-4 border-l-4 border-b-4">
                 <div className="h-[50%] border-r-4 border-l-4 border-b-4 p-4">
-                    <h2 className="text-xl font-bold mb-2">시작 예졍 일정</h2>
+                    <h2 className="text-xl font-bold mb-2">시작 예정 일정</h2>
                     <ul className="h-[80%] overflow-y-auto">
                         {upcoming.length > 0
                             ?
@@ -602,9 +602,10 @@ export default function Cycle() {
                             </button>
                         </div>
                     ))} */}
+
                     <div className="flex flex-col items-center p-2 overflow-auto h-[20rem]">
                         <div className="collapse collapse-plus official-color" onClick={() => {
-                            getTagList(0).then(r =>  setTagList(r)).catch(e => console.log(e));
+                            getTagList(0).then(r => setTagList(r)).catch(e => console.log(e));
                         }}>
                             <input type="radio" name="my-accordion-3" id="personal" defaultChecked />
                             <label htmlFor="personal" className="collapse-title text-xl font-medium text-white">
